@@ -113,6 +113,56 @@ image::wave-render.png[A wave surface with contour lines]
 z = f(x, y) on a grafted grid, a smooth surface and contour lines. +
 menu:Examples[Wave surface with contours]
 ****
+
+[.card]
+****
+image::phyllotaxis-render.png[A sunflower head of golden seeds]
+
+*xref:tutorial-phyllotaxis.adoc[10. A sunflower (phyllotaxis)]*
+
+The golden angle and √n: spirals from two formulas. +
+menu:Examples[Sunflower (phyllotaxis)]
+****
+
+[.card]
+****
+image::hyperboloid-render.png[A Shukhov lattice tower]
+
+*xref:tutorial-hyperboloid.adoc[11. A Shukhov tower]*
+
+Straight struts, a curved tower, and rings from a data tree. +
+menu:Examples[Shukhov tower (hyperboloid)]
+****
+
+[.card]
+****
+image::staircase-render.png[A spiral staircase]
+
+*xref:tutorial-staircase.adoc[12. A spiral staircase]*
+
+Treads, column, balusters and a handrail from three lists. +
+menu:Examples[Spiral staircase]
+****
+
+[.card]
+****
+image::city-render.png[A Voronoi city]
+
+*xref:tutorial-city.adoc[13. A Voronoi city]*
+
+Plots, streets and a skyline with repeatable variety. +
+menu:Examples[Voronoi city]
+****
+
+[.card]
+****
+image::weave-render.png[A woven mat]
+
+*xref:tutorial-weave.adoc[14. A woven mat]*
+
+Over and under: two thread families from one tree. +
+menu:Examples[Woven mat]
+****
 --
 
 == Conventions

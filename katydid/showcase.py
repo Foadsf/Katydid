@@ -231,4 +231,253 @@ def build_wave(scene) -> dict:
     return c
 
 
-SHOWCASE = {"voronoi": build_voronoi, "tower": build_tower, "waffle": build_waffle, "wave": build_wave}
+def build_phyllotaxis(scene) -> dict:
+    """A sunflower head: seeds placed one golden angle (137.5°) apart at a
+    radius growing with the square root of their number, on a shallow dome."""
+    c = {
+        "seeds": _slider("Seeds", 400, 50, 1000, 0),
+        "spacing": _slider("Spacing", 2.2, 0.5, 5, 2),
+        "angle": _slider("Angle", 137.508, 130, 145, 3),
+        "height": _slider("Dome height", 18, 0, 60),
+        "size": _slider("Seed size", 2.0, 0.3, 4, 2),
+        "n": lib.Series(), "x": lib.Expression(), "y": lib.Expression(), "z": lib.Expression(),
+        "r": lib.Expression(), "sphere": lib.Sphere(), "seed": lib.Move(),
+    }
+    c["n"].nickname = "Seed no."
+    for key, nick, f in (("x", "X", "y*sqrt(x)*cos(radians(x*z))"), ("y", "Y", "y*sqrt(x)*sin(radians(x*z))"),
+                         ("z", "Z", "z*(1 - x/y)"), ("r", "Size", "z*(0.6 + 0.4*sqrt(x/y))")):
+        c[key].nickname = nick
+        _set(c[key], F=f)
+    c["sphere"].preview = False
+    _place(scene, c, {
+        "seeds": (-640, -150), "spacing": (-640, -90), "angle": (-640, -30), "height": (-640, 70),
+        "size": (-640, 170), "n": (-340, -150), "x": (-120, -200), "y": (-120, -90), "z": (-120, 20),
+        "r": (-120, 140), "sphere": (90, 150), "seed": (280, -40)})
+    _wire(scene, c, [
+        ("seeds", 0, "n", 2),
+        ("n", 0, "x", 1), ("spacing", 0, "x", 2), ("angle", 0, "x", 3),
+        ("n", 0, "y", 1), ("spacing", 0, "y", 2), ("angle", 0, "y", 3),
+        ("n", 0, "z", 1), ("seeds", 0, "z", 2), ("height", 0, "z", 3),
+        ("n", 0, "r", 1), ("seeds", 0, "r", 2), ("size", 0, "r", 3),
+        ("r", 0, "sphere", 0),
+        ("sphere", 0, "seed", 0), ("x", 0, "seed", 1), ("y", 0, "seed", 2), ("z", 0, "seed", 3)])
+    return c
+
+
+def build_hyperboloid(scene) -> dict:
+    """A Shukhov tower: straight struts between two rings, shifted round by a
+    few points, form a hyperboloid; a second family twists the other way, and
+    horizontal rings are traced by evaluating every strut at the same height."""
+    c = {
+        "struts": _slider("Struts", 24, 8, 72, 0),
+        "height": _slider("Height", 120, 40, 200),
+        "base": _slider("Base radius", 30, 10, 60),
+        "top": _slider("Top radius", 16, 5, 50),
+        "twist": _slider("Twist", 5, 1, 20, 0),
+        "rings": _slider("Rings", 7, 0, 15, 0),
+        "thick": _slider("Strut radius", 0.7, 0.2, 2, 2),
+        "bottom": lib.Circle(), "top_c": lib.Circle(), "div_b": lib.DivideCurve(), "div_t": lib.DivideCurve(),
+        "left": lib.ShiftList(), "neg": lib.Multiplication(), "right": lib.ShiftList(),
+        "struts_l": lib.Line(), "struts_r": lib.Line(),
+        "steps": lib.Addition(), "t": lib.Range(), "eval": lib.EvaluateCurve(), "ring": lib.Interpolate(),
+        "ring_r": lib.Multiplication(), "pipes_l": lib.Pipe(), "pipes_r": lib.Pipe(), "ring_pipes": lib.Pipe(),
+    }
+    c["top_c"].nickname = "Top ring"
+    c["bottom"].nickname = "Base ring"
+    c["t"].nickname = "Ring heights"
+    _set(c["neg"], B=-1.0)
+    _set(c["steps"], B=1.0)
+    _set(c["ring"], P=True)
+    _set(c["ring_r"], B=1.4)
+    c["eval"].inputs[1].modifier = "graft"   # one branch per ring height
+    for key in ("bottom", "top_c", "div_b", "div_t", "left", "right", "struts_l", "struts_r", "eval", "ring"):
+        c[key].preview = False
+    _place(scene, c, {
+        "struts": (-760, -200), "height": (-760, -140), "base": (-760, -80), "top": (-760, -20),
+        "twist": (-760, 80), "rings": (-760, 200), "thick": (-760, 300),
+        "bottom": (-470, -200), "top_c": (-470, -90), "div_b": (-300, -200), "div_t": (-300, -90),
+        "neg": (-300, 40), "left": (-120, -110), "right": (-120, 10), "struts_l": (60, -190),
+        "struts_r": (60, -60), "steps": (-470, 200), "t": (-300, 180), "eval": (240, 120),
+        "ring": (420, 120), "ring_r": (240, 280), "pipes_l": (420, -200), "pipes_r": (420, -60),
+        "ring_pipes": (600, 160)})
+    _wire(scene, c, [
+        ("base", 0, "bottom", 0), ("top", 0, "top_c", 0), ("height", 0, "top_c", 1),
+        ("bottom", 0, "div_b", 0), ("struts", 0, "div_b", 1),
+        ("top_c", 0, "div_t", 0), ("struts", 0, "div_t", 1),
+        ("div_t", 0, "left", 0), ("twist", 0, "left", 1),
+        ("twist", 0, "neg", 0), ("div_t", 0, "right", 0), ("neg", 0, "right", 1),
+        ("div_b", 0, "struts_l", 0), ("left", 0, "struts_l", 1),
+        ("div_b", 0, "struts_r", 0), ("right", 0, "struts_r", 1),
+        ("rings", 0, "steps", 0), ("steps", 0, "t", 2),
+        ("struts_l", 0, "eval", 0), ("t", 0, "eval", 1), ("eval", 0, "ring", 0),
+        ("thick", 0, "ring_r", 0),
+        ("struts_l", 0, "pipes_l", 0), ("thick", 0, "pipes_l", 1),
+        ("struts_r", 0, "pipes_r", 0), ("thick", 0, "pipes_r", 1),
+        ("ring", 0, "ring_pipes", 0), ("ring_r", 0, "ring_pipes", 1)])
+    return c
+
+
+def build_staircase(scene) -> dict:
+    """A spiral staircase: one tread per step, lifted and turned a little
+    more each time round a central column, with balusters and a handrail
+    interpolated through their tops."""
+    c = {
+        "steps": _slider("Steps", 22, 6, 40, 0),
+        "rise": _slider("Rise", 3.2, 2, 5),
+        "turn": _slider("Turn per step", 16, 5, 30),
+        "col": _slider("Column radius", 3, 1, 8),
+        "width": _slider("Step width", 18, 8, 30),
+        "rail_h": _slider("Rail height", 15, 8, 25),
+        "n": lib.Series(), "z": lib.Multiplication(), "angle": lib.Multiplication(),
+        "tread": lib.Box(), "reach": lib.Expression(), "out": lib.Move(), "stair": lib.Rotate(),
+        "length": lib.Expression(), "column": lib.Cylinder(),
+        "rail_r": lib.Expression(), "px": lib.Expression(), "py": lib.Expression(), "pz": lib.Addition(),
+        "foot": lib.ConstructPoint(), "head": lib.ConstructPoint(), "post": lib.Line(),
+        "balusters": lib.Pipe(), "rail": lib.Interpolate(), "handrail": lib.Pipe(),
+    }
+    c["n"].nickname = "Step no."
+    c["z"].nickname = "Heights"
+    c["angle"].nickname = "Angles"
+    c["foot"].nickname = "Foot"
+    c["head"].nickname = "Head"
+    _set(c["tread"], Y=8.0, Z=1.2)
+    _set(c["reach"], F="x + y/2")
+    _set(c["length"], F="(x - 1)*y + z")   # up to the top of the last baluster
+    _set(c["rail_r"], F="x + y - 1.2")
+    _set(c["px"], F="z*cos(radians(x*y))")
+    _set(c["py"], F="z*sin(radians(x*y))")
+    _set(c["balusters"], R=0.3)
+    _set(c["handrail"], R=0.6)
+    for key in ("tread", "out", "foot", "head", "post", "rail"):
+        c[key].preview = False
+    _place(scene, c, {
+        "steps": (-760, -220), "rise": (-760, -160), "turn": (-760, -100), "col": (-760, 0),
+        "width": (-760, 60), "rail_h": (-760, 160),
+        "n": (-470, -230), "z": (-300, -230), "angle": (-300, -130), "tread": (-300, -20),
+        "reach": (-470, 20), "out": (-120, -60), "stair": (60, -120), "length": (-300, 330),
+        "column": (-120, 330), "rail_r": (-470, 150), "px": (-300, 100), "py": (-300, 200),
+        "pz": (-120, 220), "foot": (60, 60), "head": (60, 200), "post": (240, 120),
+        "balusters": (420, 100), "rail": (240, 250), "handrail": (420, 250)})
+    _wire(scene, c, [
+        ("steps", 0, "n", 2), ("n", 0, "z", 0), ("rise", 0, "z", 1),
+        ("n", 0, "angle", 0), ("turn", 0, "angle", 1),
+        ("width", 0, "tread", 0), ("col", 0, "reach", 1), ("width", 0, "reach", 2),
+        ("tread", 0, "out", 0), ("reach", 0, "out", 1), ("z", 0, "out", 3),
+        ("out", 0, "stair", 0), ("angle", 0, "stair", 1),
+        ("steps", 0, "length", 1), ("rise", 0, "length", 2), ("rail_h", 0, "length", 3),
+        ("col", 0, "column", 0), ("length", 0, "column", 1),
+        ("col", 0, "rail_r", 1), ("width", 0, "rail_r", 2),
+        ("n", 0, "px", 1), ("turn", 0, "px", 2), ("rail_r", 0, "px", 3),
+        ("n", 0, "py", 1), ("turn", 0, "py", 2), ("rail_r", 0, "py", 3),
+        ("z", 0, "pz", 0), ("rail_h", 0, "pz", 1),
+        ("px", 0, "foot", 0), ("py", 0, "foot", 1), ("z", 0, "foot", 2),
+        ("px", 0, "head", 0), ("py", 0, "head", 1), ("pz", 0, "head", 2),
+        ("foot", 0, "post", 0), ("head", 0, "post", 1), ("post", 0, "balusters", 0),
+        ("head", 0, "rail", 0), ("rail", 0, "handrail", 0)])
+    return c
+
+
+def build_city(scene) -> dict:
+    """A Voronoi city: relaxed cells become plots with streets between them,
+    extruded into blocks that rise towards a centre, with some variety."""
+    S = 160.0
+    c = {
+        "plots": _slider("Plots", 160, 30, 400, 0),
+        "seed": _slider("Seed", 7, 1, 50, 0),
+        "gap": _slider("Street gap", 0.82, 0.5, 0.98, 2),
+        "peak": _slider("Peak height", 60, 5, 120),
+        "spread": _slider("Spread", 45, 10, 120),
+        "cx": _slider("Centre X", 10, -80, 80),
+        "cy": _slider("Centre Y", -5, -80, 80),
+        "pop": lib.Populate2D(), "voronoi": lib.Voronoi(), "area": lib.Area(), "plot": lib.Scale(),
+        "floor": lib.PlanarSurface(), "centre": lib.ConstructPoint(), "dist": lib.Distance(),
+        "height": lib.Expression(), "xy": lib.Deconstruct(), "variety": lib.Expression(),
+        "h": lib.Multiplication(), "up": lib.VectorXYZ(), "blocks": lib.Extrude(),
+        "base": lib.Box(), "ground": lib.Move(),
+    }
+    c["centre"].nickname = "Centre"
+    c["height"].nickname = "Height"
+    c["variety"].nickname = "Variety"
+    _set(c["pop"], W=S, H=S, R=2.0)
+    _set(c["voronoi"], W=S, H=S)
+    _set(c["height"], F="3 + z*exp(-(x/y)**2)")
+    _set(c["variety"], F="0.55 + 0.45*abs(sin(x*12.9898 + y*78.233))")
+    _set(c["base"], X=S + 6, Y=S + 6, Z=2.0)
+    _set(c["ground"], Z=-2.0)   # the Box stands on z = 0: drop it so its top is the street level
+    for key in ("pop", "voronoi", "area", "plot", "floor", "centre", "base"):
+        c[key].preview = False
+    _place(scene, c, {
+        "plots": (-760, -200), "seed": (-760, -140), "gap": (-760, -40), "peak": (-760, 60),
+        "spread": (-760, 120), "cx": (-760, 220), "cy": (-760, 280),
+        "pop": (-470, -190), "voronoi": (-300, -170), "area": (-130, -90), "plot": (60, -190),
+        "floor": (230, -190), "centre": (-470, 230), "dist": (60, 40), "height": (230, 60),
+        "xy": (60, 160), "variety": (230, 190), "h": (400, 100), "up": (560, 100),
+        "blocks": (720, -60), "base": (560, 280), "ground": (720, 280)})
+    _wire(scene, c, [
+        ("plots", 0, "pop", 2), ("seed", 0, "pop", 3),
+        ("pop", 0, "voronoi", 0), ("voronoi", 0, "area", 0),
+        ("voronoi", 0, "plot", 0), ("gap", 0, "plot", 1), ("area", 1, "plot", 2),
+        ("plot", 0, "floor", 0),
+        ("cx", 0, "centre", 0), ("cy", 0, "centre", 1),
+        ("area", 1, "dist", 0), ("centre", 0, "dist", 1),
+        ("dist", 0, "height", 1), ("spread", 0, "height", 2), ("peak", 0, "height", 3),
+        ("area", 1, "xy", 0), ("xy", 0, "variety", 1), ("xy", 1, "variety", 2),
+        ("height", 0, "h", 0), ("variety", 0, "h", 1), ("h", 0, "up", 2),
+        ("floor", 0, "blocks", 0), ("up", 0, "blocks", 1),
+        ("base", 0, "ground", 0)])
+    return c
+
+
+def build_weave(scene) -> dict:
+    """A woven mat: two families of threads that pass over and under each
+    other, from one formula on a grafted grid, interpolated and piped."""
+    c = {
+        "threads": _slider("Threads", 14, 4, 30, 0),
+        "spacing": _slider("Spacing", 6, 3, 12),
+        "amp": _slider("Amplitude", 1.3, 0.2, 3, 2),
+        "radius": _slider("Thread radius", 1, 0.2, 2.5, 2),
+        "i": lib.Series(), "pos": lib.Multiplication(),
+        "n2": lib.Addition(), "j": lib.Series(), "along": lib.Multiplication(),
+        "wave": lib.Expression(), "neg": lib.Multiplication(),
+        "warp_pts": lib.ConstructPoint(), "weft_pts": lib.ConstructPoint(),
+        "warp_c": lib.Interpolate(), "weft_c": lib.Interpolate(), "warp": lib.Pipe(), "weft": lib.Pipe(),
+    }
+    c["i"].nickname = "Thread no."
+    c["pos"].nickname = "Thread positions"
+    c["j"].nickname = "Point no."
+    c["along"].nickname = "Along"
+    c["wave"].nickname = "Over-under"
+    c["warp_pts"].nickname = "Warp points"
+    c["weft_pts"].nickname = "Weft points"
+    # Each thread runs one spacing past the outermost crossing (points -1 .. n):
+    # an interpolated curve dives at its free ends, and edge threads cut into each other.
+    _set(c["n2"], B=2.0)
+    _set(c["j"], S=-1.0)
+    _set(c["wave"], F="z*cos(pi*(x + y))")
+    _set(c["neg"], B=-1.0)
+    c["wave"].inputs[2].modifier = "graft"       # y: one branch per thread
+    c["warp_pts"].inputs[1].modifier = "graft"   # warp threads run along X, one per Y
+    c["weft_pts"].inputs[0].modifier = "graft"   # weft threads run along Y, one per X
+    for key in ("warp_pts", "weft_pts", "warp_c", "weft_c"):
+        c[key].preview = False
+    _place(scene, c, {
+        "threads": (-700, -140), "spacing": (-700, -80), "amp": (-700, 20), "radius": (-700, 140),
+        "i": (-420, -220), "pos": (-240, -220), "n2": (-420, -100), "j": (-420, 10), "along": (-240, -100),
+        "wave": (-240, 40), "neg": (-60, 100),
+        "warp_pts": (120, -170), "weft_pts": (120, 30), "warp_c": (300, -170), "weft_c": (300, 30),
+        "warp": (480, -160), "weft": (480, 40)})
+    _wire(scene, c, [
+        ("threads", 0, "i", 2), ("i", 0, "pos", 0), ("spacing", 0, "pos", 1),
+        ("threads", 0, "n2", 0), ("n2", 0, "j", 2), ("j", 0, "along", 0), ("spacing", 0, "along", 1),
+        ("j", 0, "wave", 1), ("i", 0, "wave", 2), ("amp", 0, "wave", 3), ("wave", 0, "neg", 0),
+        ("along", 0, "warp_pts", 0), ("pos", 0, "warp_pts", 1), ("wave", 0, "warp_pts", 2),
+        ("pos", 0, "weft_pts", 0), ("along", 0, "weft_pts", 1), ("neg", 0, "weft_pts", 2),
+        ("warp_pts", 0, "warp_c", 0), ("weft_pts", 0, "weft_c", 0),
+        ("warp_c", 0, "warp", 0), ("radius", 0, "warp", 1),
+        ("weft_c", 0, "weft", 0), ("radius", 0, "weft", 1)])
+    return c
+
+
+SHOWCASE = {"voronoi": build_voronoi, "tower": build_tower, "waffle": build_waffle, "wave": build_wave,
+            "phyllotaxis": build_phyllotaxis, "hyperboloid": build_hyperboloid,
+            "staircase": build_staircase, "city": build_city, "weave": build_weave}

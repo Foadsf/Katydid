@@ -786,7 +786,10 @@ class Pipe(Component):
         first = rail.Edges[0]
         start, tangent = first.valueAt(first.FirstParameter), first.tangentAt(first.FirstParameter)
         profile = Part.Wire(Part.makeCircle(r, start, tangent))
-        return rail.makePipeShell([profile], True, True)
+        # Not Frenet: where a rail changes the way it bends (an S curve) the
+        # Frenet frame flips and the sweep twists through itself. A wave rail
+        # gave 2.4x pi r^2 L with Frenet and exactly pi r^2 L without.
+        return rail.makePipeShell([profile], True, False)
 
 
 class CapHoles(Component):

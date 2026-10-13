@@ -33,15 +33,21 @@ def canvas(panel, name, run):
     save(panel.grab(), name, run)
 
 
-LOW_VIEW = {"tower-render.png", "tower-preview.png"}
+LOW_VIEW = {"tower-render.png", "tower-preview.png", "hyperboloid-render.png", "hyperboloid-preview.png",
+            "staircase-render.png", "staircase-preview.png"}
 
 
-ZOOM = {"voronoi": 0.88,"waffle": 0.72, "wave": 0.7}   # fitAll fits a bounding sphere: close in
+ZOOM = {"voronoi": 0.88, "waffle": 0.72, "wave": 0.7, "phyllotaxis": 0.78, "city": 0.8, "weave": 0.75,
+        "staircase": 0.85}
+TILT = {"phyllotaxis": 35}   # degrees back from a top view   # fitAll fits a bounding sphere: close in
 
 
 def view3d(name, run, w=1200, h=640):
     v = FreeCADGui.ActiveDocument.ActiveView
-    if name in LOW_VIEW:
+    tilt = TILT.get(name.split("-")[0])
+    if tilt is not None:   # from above, tipped back: a pattern in plan reads best
+        v.setCameraOrientation(FreeCAD.Rotation(FreeCAD.Vector(1, 0, 0), tilt))
+    elif name in LOW_VIEW:
         v.viewDimetric()   # a lower eye: tall towers and stacked ribs read better
     else:
         v.viewIsometric()
@@ -61,6 +67,13 @@ RENDERS = {  # showcase key -> [(component, colour, transparency %, lift in mm)]
     "tower": [("facade", (0.56, 0.74, 0.88), 55, 0.0), ("slabs", (0.93, 0.93, 0.91), 0, 0.0)],
     "waffle": [("x_ribs", (0.87, 0.72, 0.53), 0, 0.0), ("y_ribs", (0.80, 0.64, 0.45), 0, 0.0)],
     "wave": [("surface", (0.91, 0.92, 0.94), 0, 0.0), ("contours", (0.13, 0.36, 0.62), 0, 0.15)],
+    "phyllotaxis": [("seed", (0.96, 0.70, 0.16), 0, 0.0)],
+    "hyperboloid": [("pipes_l", (0.72, 0.30, 0.18), 0, 0.0), ("pipes_r", (0.72, 0.30, 0.18), 0, 0.0),
+                    ("ring_pipes", (0.85, 0.85, 0.82), 0, 0.0)],
+    "staircase": [("stair", (0.80, 0.58, 0.36), 0, 0.0), ("column", (0.92, 0.92, 0.90), 0, 0.0),
+                  ("balusters", (0.20, 0.21, 0.23), 0, 0.0), ("handrail", (0.20, 0.21, 0.23), 0, 0.0)],
+    "city": [("blocks", (0.90, 0.88, 0.84), 0, 0.0), ("ground", (0.42, 0.52, 0.40), 0, 0.0)],
+    "weave": [("warp", (0.12, 0.55, 0.60), 0, 0.0), ("weft", (0.93, 0.47, 0.36), 0, 0.0)],
 }
 
 

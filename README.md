@@ -20,7 +20,10 @@ Each of these loads from the canvas's **Examples** menu and has a step-by-step t
 | | |
 |---|---|
 | ![Voronoi screen](docs/images/voronoi-render.png) **Voronoi screen:** relaxed Voronoi cells shrunk by distance to an attractor, cut through a plate | ![Twisted tower](docs/images/tower-render.png) **Twisted tower:** one polygon per floor, twisted and swelling, lofted into a facade with slabs |
-| ![Waffle dome](docs/images/waffle-render.png) **Waffle dome:** a capped loft sliced into two families of interlocking ribs | ![Wave surface](docs/images/wave-render.png) **Wave surface:** z = f(x, y) on a grafted grid, with contour lines | Tested on FreeCAD 1.1 on Windows; it should run wherever FreeCAD 1.0+ with PySide6 runs.
+| ![Waffle dome](docs/images/waffle-render.png) **Waffle dome:** a capped loft sliced into two families of interlocking ribs | ![Wave surface](docs/images/wave-render.png) **Wave surface:** z = f(x, y) on a grafted grid, with contour lines |
+| ![Sunflower](docs/images/phyllotaxis-render.png) **Sunflower:** seeds one golden angle apart; the spirals appear on their own | ![Shukhov tower](docs/images/hyperboloid-render.png) **Shukhov tower:** straight struts forming a hyperboloid, with rings traced through a data tree |
+| ![Voronoi city](docs/images/city-render.png) **Voronoi city:** plots, streets and a skyline rising to a centre | ![Woven mat](docs/images/weave-render.png) **Woven mat:** two thread families over and under each other, from one grafted formula |
+| ![Spiral staircase](docs/images/staircase-render.png) **Spiral staircase:** treads, column, balusters and an interpolated handrail | | Tested on FreeCAD 1.1 on Windows; it should run wherever FreeCAD 1.0+ with PySide6 runs.
 
 ## Install
 

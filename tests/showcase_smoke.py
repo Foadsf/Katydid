@@ -17,7 +17,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.realpath
 from guitest import Run, pump  # noqa: E402
 
 SHOWS = [("Voronoi screen", "seed"), ("Twisted tower", "twist"), ("Waffle dome", "pitch"),
-         ("Wave surface with contours", "freq")]
+         ("Wave surface with contours", "freq"), ("Sunflower (phyllotaxis)", "angle"),
+         ("Shukhov tower (hyperboloid)", "twist"), ("Spiral staircase", "turn"),
+         ("Voronoi city", "spread"), ("Woven mat", "amp")]
 
 
 def body(run):

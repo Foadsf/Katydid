@@ -22,7 +22,9 @@ EXAMPLES = [  # (menu label, key); None draws a separator
     ("Quick start: one slider, one box", "first"), ("Row of boxes", "boxes"),
     ("Lofted rings (data trees)", "tree"), ("Attractor grid", "attractor"), (None, None),
     ("Voronoi screen", "voronoi"), ("Twisted tower", "tower"), ("Waffle dome", "waffle"),
-    ("Wave surface with contours", "wave"), (None, None),
+    ("Wave surface with contours", "wave"), ("Sunflower (phyllotaxis)", "phyllotaxis"),
+    ("Shukhov tower (hyperboloid)", "hyperboloid"), ("Spiral staircase", "staircase"),
+    ("Voronoi city", "city"), ("Woven mat", "weave"), (None, None),
     ("Tolerance stack-up", "stackup"), ("GD&T calculators", "gdt")]
 
 

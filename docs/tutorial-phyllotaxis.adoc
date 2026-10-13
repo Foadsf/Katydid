@@ -1,0 +1,53 @@
+= Tutorial 10: A sunflower (phyllotaxis)
+:page-id: tutorial-phyllotaxis
+include::_attributes.adoc[]
+
+[.lead]
+Sunflower seeds, pine cones and daisies all grow the same way: each new seed sits one _golden angle_, about 137.5°, round from the last, a little further out. Two formulas give the whole pattern. You will turn a list of seed numbers into positions with *Expression*, and see how sensitive the spirals are to that one angle.
+
+image::phyllotaxis-render.png[Golden seeds arranged in interlocking spirals on a shallow dome]
+
+Reference: choose menu:Examples[Sunflower (phyllotaxis)] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== Seed numbers
+
+. Place five sliders: _Seeds: 400 (50 – 1000)_ with Decimals `0`, _Spacing: 2.2 (0.5 – 5)_ and _Seed size: 2 (0.3 – 4)_ with Decimals `2`, _Angle: 137.508 (130 – 145)_ with Decimals `3`, and _Dome height: 18 (0 – 60)_.
+. Place a *Series* (Sets), _Seed no._, and wire *Seeds → C*: the numbers 0 … 399.
+
+=== Positions
+
+[start=3]
+. Place an *Expression* (Maths), _X_, with *F* set to `y*sqrt(x)*cos(radians(x*z))`. Wire *Seed no. → x*, *Spacing → y* and *Angle → z*.
+. Place a second *Expression*, _Y_, with *F* set to `y*sqrt(x)*sin(radians(x*z))` and the same three wires. Seed _n_ now sits at angle _n_ × 137.508° and radius 2.2 × √_n_.
+. Place a third *Expression*, _Z_, with *F* set to `z*(1 - x/y)`. Wire *Seed no. → x*, *Seeds → y* and *Dome height → z*. The first seed sits 18 mm up, the last at 0: a shallow dome.
+
+=== Seeds
+
+[start=6]
+. Place a fourth *Expression*, _Size_, with *F* set to `z*(0.6 + 0.4*sqrt(x/y))`. Wire *Seed no. → x*, *Seeds → y* and *Seed size → z*. Young seeds in the middle are smaller.
+. Place a *Sphere* (Surface) and wire *Size R → R*: 400 spheres at the origin.
+. Place a *Move* (Transform). Wire *Sphere S → G*, *X R → X*, *Y R → Y* and *Z R → Z*. Each sphere moves to its own seed position.
+. Turn menu:Preview[] off on Sphere.
+
+.The finished definition
+image::phyllotaxis-canvas.png[The phyllotaxis definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::phyllotaxis-preview.png[The red preview of the sunflower]
+
+== What is happening
+
+Why √_n_? Each seed needs the same area. The first _n_ seeds fill a disc of area proportional to _n_, so its radius grows with √_n_ and the seeds pack evenly from the middle to the rim.
+
+Why 137.5°? It divides the circle in the golden ratio, the "most irrational" number. Any simple fraction of a turn would line the seeds up in straight spokes with gaps between them; the golden angle never lines them up, so every new seed lands in the biggest gap left. The spirals you see, 13, 21 or 34 of them depending on where you look, are Fibonacci numbers, and they appear on their own: nothing in the definition draws a spiral.
+
+Each update takes just under a second: about 0.15 s to solve, the rest to mesh 400 spheres for the preview. With this many curved faces the preview uses a coarser mesh; baked seeds are smooth.
+
+== Things to try
+
+* Drag *Angle* slowly. At 137.508 the seeds pack tightly; a few tenths of a degree off, gaps open and the seeds line up in curved spokes. At 135° (3/8 of a turn) they form eight straight arms.
+* Raise *Seeds* to 1000 for a full sunflower head.
+* Set *Dome height* to 0 for a flat daisy, or to 60 for a pine cone.
+* Replace the Sphere with a *Center Box* for square seeds, or with a small *Cylinder* for pins in a cushion.

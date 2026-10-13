@@ -78,8 +78,20 @@ def _triangulate(shapes, tol):
     except ImportError:
         return compound.tessellate(tol)
     mesh = MeshPart.meshFromShape(Shape=compound, LinearDeflection=tol,
-                                  AngularDeflection=0.5, Relative=False)
+                                  AngularDeflection=_angle(compound), Relative=False)
     return mesh.Topology
+
+
+CURVED_FACES = 24   # above this many, mesh curved faces coarser (28 woven pipes must qualify)
+
+
+def _angle(compound) -> float:
+    """Angular deflection for the preview: 0.5 rad normally, 1.0 rad when there
+    are many curved faces. Measured on fresh shapes: 400 spheres 953 -> 302 ms,
+    28 woven pipes 2106 -> 1110 ms, a lattice of 57 pipes 798 -> 337 ms. Flat
+    faces do not depend on it, and baked objects keep FreeCAD's own quality."""
+    curved = sum(1 for f in compound.Faces if f.Surface.TypeId != "Part::GeomPlane")
+    return 1.0 if curved > CURVED_FACES else 0.5
 
 
 def _polylines(shapes, tol):

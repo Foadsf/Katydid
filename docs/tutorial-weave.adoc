@@ -1,0 +1,55 @@
+= Tutorial 14: A woven mat
+:page-id: tutorial-weave
+include::_attributes.adoc[]
+
+[.lead]
+In a plain weave every thread goes over one crossing thread and under the next. One formula does it: the height of thread _i_ at point _j_ is `cos(π(i + j))`, which alternates +1, -1, +1… and flips sign from one thread to the next. You will build both families of threads from one grafted tree, interpolate them and turn them into pipes.
+
+image::weave-render.png[A plain-weave mat of teal and coral threads passing over and under each other]
+
+Reference: choose menu:Examples[Woven mat] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== Threads and points
+
+. Place four sliders: _Threads: 14 (4 – 30)_ with Decimals `0`, _Spacing: 6 (3 – 12)_, _Amplitude: 1.3 (0.2 – 3)_ and _Thread radius: 1 (0.2 – 2.5)_ with Decimals `2`.
+. Place a *Series* (Sets), _Thread no._, and wire *Threads → C*: 0 … 13. Place a *Multiplication* (Maths), _Thread positions_, and wire *Thread no. → A* and *Spacing → B*.
+. Place an *Addition* (Maths) with *B* set to `2` and wire *Threads → A*. Place a second *Series*, _Point no._, with *S* set to `-1`, and wire *Addition R → C*: -1 … 14. Each thread gets a point one spacing beyond the outermost crossing at both ends.
+. Place a *Multiplication*, _Along_, and wire *Point no. → A* and *Spacing → B*.
+
+=== Over and under
+
+[start=5]
+. Place an *Expression* (Maths), _Over-under_, with *F* set to `z*cos(pi*(x + y))`. Wire *Point no. → x*, *Thread no. → y* and *Amplitude → z*, then tick menu:Graft[] on *y*. You get 14 branches, one per thread, of 16 heights each.
+. Place a *Multiplication* with *B* set to `-1` and wire *Over-under R → A*: the same heights, upside down, for the other family.
+
+=== Warp and weft
+
+[start=7]
+. Place a *Construct Point* (Vector), _Warp points_. Wire *Along → X*, *Thread positions → Y* with menu:Graft[] on *Y*, and *Over-under R → Z*. Each branch is one warp thread running along X.
+. Place a second *Construct Point*, _Weft points_. Wire *Thread positions → X* with menu:Graft[] on *X*, *Along → Y*, and the negated heights *→ Z*. Each branch is one weft thread running along Y.
+. Place two *Interpolate* (Curve) components and wire each set of points into its own *V*: one smooth curve per branch.
+. Place two *Pipe* (Surface) components. Wire each Interpolate into its own *C* and *Thread radius → R* on both.
+. Turn menu:Preview[] off on both Construct Points and both Interpolates.
+
+.The finished definition
+image::weave-canvas.png[The woven mat definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::weave-preview.png[The red preview of the woven mat]
+
+== What is happening
+
+Where warp thread _b_ crosses weft thread _a_, the warp is at height `A·cos(π(a + b))` and the weft at `-A·cos(π(b + a))`: always the same distance apart on opposite sides. With an amplitude of 1.3 and thread radius 1, the centre lines are 2.6 apart at each crossing, so the pipes clear each other by 0.6 in the middle of the mat (0.17 at the corners, where the curves are less symmetric). The geometry tests check that no warp touches a weft.
+
+The extra point at each end matters. An interpolated curve dives at its free ends, and in an earlier version the outermost threads cut into each other at the corners. Running each thread one spacing past the last crossing keeps every crossing in the smooth middle of both curves.
+
+The pipe sweep needed care too: Katydid's *Pipe* first used a Frenet frame, which flips at every change of bending direction, so pipes along these S-shaped threads twisted through themselves and came out 2.4 times too heavy. It now uses a frame that does not flip. Each update takes about 2.5 s: 1 s to build the pipes and 1.5 s to mesh them for the preview.
+
+== Things to try
+
+* Lower *Amplitude* below 1, twice the thread radius: the threads now collide at every crossing. Raise it to 3 for an open, springy weave.
+* Set *Threads* to 6 for a coarse basket, or to 24 for fine cloth.
+* Lower *Spacing* to 4. The threads now bend so sharply between crossings that they touch: tight cloth needs thinner threads, so lower *Thread radius* too.
+* Use two different radii for warp and weft, as in real fabric.

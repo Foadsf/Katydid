@@ -107,6 +107,15 @@ class Surfaces(unittest.TestCase):
         self.assertTrue(pipe.isValid())
         self.assertAlmostEqual(pipe.Volume, math.pi * 10, places=3)
 
+    def test_pipe_along_an_s_curve_does_not_twist(self):
+        # A rail that changes the way it bends: the Frenet frame flips at each
+        # inflection, and a Frenet sweep came out 2.4x too big.
+        wave = lib.Interpolate().solve_instance(
+            [V(6 * j, 0, 1.1 * math.cos(math.pi * j)) for j in range(14)], False)
+        pipe = lib.Pipe().solve_instance(wave, 1.0)
+        self.assertTrue(pipe.isValid())
+        self.assertAlmostEqual(pipe.Volume, math.pi * wave.Length, delta=0.01 * pipe.Volume)
+
 
 class Transforms(unittest.TestCase):
     def test_rotate_scale_mirror_array(self):
@@ -217,6 +226,79 @@ class Demos(unittest.TestCase):
         mid = levels.branches()[len(levels.branches()) // 2]
         level_z = mid[1][0].BoundBox.ZMin
         self.assertEqual(len(mid[1]), len(surface.slice(V(0, 0, 1), level_z)))
+
+    def test_phyllotaxis_golden_angle_and_sqrt_radius(self):
+        from katydid import showcase
+        c = self.build(showcase.build_phyllotaxis)
+        seeds = list(c["seed"].outputs[0].data)
+        self.assertEqual(len(seeds), int(c["seeds"].value))
+        centres = [s.BoundBox.Center for s in seeds]
+        step = math.degrees(math.atan2(centres[11].y, centres[11].x) - math.atan2(centres[10].y, centres[10].x)) % 360
+        self.assertAlmostEqual(step, c["angle"].value % 360, places=6)
+        r100 = math.hypot(centres[100].x, centres[100].y)
+        self.assertAlmostEqual(r100, c["spacing"].value * 10, places=6)
+
+    def test_hyperboloid_struts_rings_and_twist(self):
+        from katydid import showcase
+        c = self.build(showcase.build_hyperboloid)
+        n, k = int(c["struts"].value), int(c["twist"].value)
+        lines = list(c["struts_l"].outputs[0].data)
+        self.assertEqual((len(lines), len(list(c["pipes_r"].outputs[0].data))), (n, n))
+        a, b = lines[0].Vertexes[0].Point, lines[0].Vertexes[-1].Point
+        self.assertAlmostEqual(math.hypot(a.x, a.y), c["base"].value, places=6)
+        self.assertAlmostEqual(math.hypot(b.x, b.y), c["top"].value, places=6)
+        turn = math.degrees(math.atan2(b.y, b.x) - math.atan2(a.y, a.x)) % 360
+        self.assertAlmostEqual(turn, 360.0 * k / n, places=6)
+        rings = c["ring"].outputs[0].data
+        self.assertEqual(rings.branch_count, int(c["rings"].value) + 2)
+        # every ring is a horizontal circle: its points share one radius and one height
+        for _, pts in c["eval"].outputs[0].data.branches():
+            radii = [math.hypot(p.Point.x, p.Point.y) for p in pts]
+            self.assertLess(max(radii) - min(radii), 1e-6)
+            self.assertLess(max(p.Point.z for p in pts) - min(p.Point.z for p in pts), 1e-6)
+        self.assertTrue(all(p.isValid() for p in c["ring_pipes"].outputs[0].data))
+
+    def test_spiral_staircase(self):
+        from katydid import showcase
+        c = self.build(showcase.build_staircase)
+        steps = int(c["steps"].value)
+        treads = list(c["stair"].outputs[0].data)
+        self.assertEqual(len(treads), steps)
+        self.assertAlmostEqual(treads[-1].BoundBox.ZMin, (steps - 1) * c["rise"].value, places=6)  # Box sits on z
+        heads = [v.Point for v in c["head"].outputs[0].data]
+        rail = list(c["rail"].outputs[0].data)[0]
+        self.assertLess(max(rail.distToShape(Part.Vertex(p))[0] for p in heads), 1e-6)
+        column = list(c["column"].outputs[0].data)[0]
+        self.assertAlmostEqual(column.BoundBox.ZMax, max(p.z for p in heads), places=6)
+
+    def test_voronoi_city_blocks(self):
+        from katydid import showcase
+        c = self.build(showcase.build_city)
+        blocks = list(c["blocks"].outputs[0].data)
+        self.assertEqual(len(blocks), int(c["plots"].value))
+        heights = list(c["h"].outputs[0].data)
+        floors = list(c["floor"].outputs[0].data)
+        for blk, h, fl in zip(blocks, heights, floors):
+            self.assertAlmostEqual(blk.Volume, fl.Area * h, delta=1e-6 * blk.Volume)
+        ground = list(c["ground"].outputs[0].data)[0].BoundBox
+        for b in (blk.BoundBox for blk in blocks):   # every block stands on the ground plate
+            self.assertTrue(ground.XMin <= b.XMin and b.XMax <= ground.XMax
+                            and ground.YMin <= b.YMin and b.YMax <= ground.YMax)
+            self.assertAlmostEqual(b.ZMin, ground.ZMax, places=6)
+
+    def test_woven_threads_alternate_and_never_touch(self):
+        from katydid import showcase
+        c = self.build(showcase.build_weave)
+        n = int(c["threads"].value)
+        warp, weft = list(c["warp"].outputs[0].data), list(c["weft"].outputs[0].data)
+        self.assertEqual((len(warp), len(weft)), (n, n))
+        # corners and edges too: free thread ends once dived into the crossing threads
+        for i, j in ((0, 0), (0, n - 1), (n - 1, 0), (n - 1, n - 1), (n - 1, 2), (3, 4)):
+            self.assertGreater(warp[i].distToShape(weft[j])[0], 0.05, (i, j))
+        # over, under, over: neighbouring crossings on one warp thread swap sides
+        pts = list(c["warp_pts"].outputs[0].data.branches())[2][1]
+        signs = [p.Point.z > 0 for p in pts]
+        self.assertTrue(all(a != b for a, b in zip(signs, signs[1:])))
 
     def test_surface_from_points_passes_through_its_grid(self):
         pts = [V(x, y, (x * y) / 50.0) for y in range(0, 40, 10) for x in range(0, 50, 10)]

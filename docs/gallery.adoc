@@ -4,7 +4,7 @@ include::_attributes.adoc[]
 :toc!:
 
 [.lead]
-Four classic parametric designs, each built only from the components that ship with Katydid. Load any of them with btn:[Examples] on the canvas toolbar, drag the sliders, and bake the result into your document. Each one has a step-by-step tutorial.
+Nine classic parametric designs, each built only from the components that ship with Katydid. Load any of them with btn:[Examples] on the canvas toolbar, drag the sliders, and bake the result into your document. Each one has a step-by-step tutorial.
 
 [.cards.gallery]
 --
@@ -47,13 +47,63 @@ image::wave-render.png[A white wave surface with blue contour lines]
 A surface from a formula over a grafted grid, with contour lines like a topographic map. +
 menu:Examples[Wave surface with contours]
 ****
+
+[.card]
+****
+image::phyllotaxis-render.png[Golden seeds in interlocking spirals on a shallow dome]
+
+*xref:tutorial-phyllotaxis.adoc[Sunflower]*
+
+Seeds one golden angle apart at a radius growing with √n: the spirals appear on their own. +
+menu:Examples[Sunflower (phyllotaxis)]
+****
+
+[.card]
+****
+image::hyperboloid-render.png[A red lattice tower of straight struts with white rings]
+
+*xref:tutorial-hyperboloid.adoc[Shukhov tower]*
+
+Straight struts between two rings sweep out a hyperboloid; rings are traced through a data tree. +
+menu:Examples[Shukhov tower (hyperboloid)]
+****
+
+[.card]
+****
+image::staircase-render.png[An oak spiral staircase round a white column with a black handrail]
+
+*xref:tutorial-staircase.adoc[Spiral staircase]*
+
+One tread, lifted and turned per step, with balusters and an interpolated handrail. +
+menu:Examples[Spiral staircase]
+****
+
+[.card]
+****
+image::city-render.png[A model city of Voronoi blocks rising to a cluster of towers]
+
+*xref:tutorial-city.adoc[Voronoi city]*
+
+Voronoi plots with streets between them, extruded into a skyline around a centre. +
+menu:Examples[Voronoi city]
+****
+
+[.card]
+****
+image::weave-render.png[A plain-weave mat of teal and coral threads]
+
+*xref:tutorial-weave.adoc[Woven mat]*
+
+Two families of threads over and under each other, from one formula on a grafted grid. +
+menu:Examples[Woven mat]
+****
 --
 
 == The Examples menu
 
 image::ui-examples-menu.png[The Examples menu on the canvas toolbar]
 
-btn:[Examples] lists every ready-made definition: the four above, the tutorial definitions and the tolerance examples. Choosing one replaces what is on the canvas, so save first if you want to keep your own work. Each loads in a second or two; the preview then updates as you drag.
+btn:[Examples] lists every ready-made definition: the nine above, the tutorial definitions and the tolerance examples. Choosing one replaces what is on the canvas, so save first if you want to keep your own work. Each loads in a second or two; the preview then updates as you drag.
 
 These pictures come from the same definitions. The red preview is what you see while you work; the colours come from baking the final components and setting their colour in FreeCAD, which is how you would prepare a render of your own.
 
@@ -66,6 +116,11 @@ These pictures come from the same definitions. The red preview is what you see w
 |xref:tutorial-tower.adoc[Twisted tower] |One item per floor from *Series*, a shaping formula in *Expression*, *Regular Polygon*, *Loft* with Flatten, *Planar Surface* slabs
 |xref:tutorial-waffle.adoc[Waffle dome] |A profile curve from a formula, *Cap Holes* to close a loft, *Section* with a list of offsets, centring a series, thickening flat regions
 |xref:tutorial-wave.adoc[Wave surface] |A 2D grid with Graft, a formula of two variables, *Surface From Points*, *Contour* at a list of heights
+|xref:tutorial-phyllotaxis.adoc[Sunflower] |Positions from formulas of an item's number, *Sphere* and *Move* with lists, the golden angle
+|xref:tutorial-hyperboloid.adoc[Shukhov tower] |*Divide Curve*, *Shift List* to pair offset points, *Line*, *Evaluate Curve* with Graft, a periodic *Interpolate*, *Pipe*
+|xref:tutorial-staircase.adoc[Spiral staircase] |*Rotate* with a list of angles, *Cylinder*, cos/sin positions, a rail interpolated through baluster tops
+|xref:tutorial-city.adoc[Voronoi city] |Plots and streets with *Scale*, a Gaussian height formula, repeatable noise from *Deconstruct* and *Expression*
+|xref:tutorial-weave.adoc[Woven mat] |Two families from one grafted tree, over-under with `cos(π(i + j))`, free curve ends, *Pipe* along S-curves
 |===
 
 If you are new to Katydid, do the xref:quick-start.adoc[quick start] and the xref:tutorial-attractor.adoc[attractor grid] first: these examples use the same moves at a larger scale.
