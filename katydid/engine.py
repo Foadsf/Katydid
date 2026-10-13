@@ -1,9 +1,22 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-"""Katydid solver: components, parameters and expire-then-solve.
+"""Katydid solver: components, parameters, data trees and expire-then-solve.
 
 Pure Python. Nothing here imports FreeCAD or Qt, so the engine runs and is
-tested headless. Data is flat lists for now; data trees replace them later
-without changing the component API.
+tested headless.
+
+Matching rules (our reading of Grasshopper's, not verified against it):
+- An input's data is a Tree. Wires into one input merge by path.
+- Item and list inputs are matched branch by branch; an input with fewer
+  branches repeats its last branch. Output branches take their paths from the
+  first input with the most branches.
+- Within a branch, item inputs are matched longest-list (the last item repeats);
+  a list input receives the whole branch; a tree input receives the whole tree
+  and the component solves once.
+- An item output collects one value per iteration in the branch's path. A list
+  output gets a branch per iteration: the branch path plus the iteration index,
+  so dividing three curves in {0} gives {0;0}, {0;1}, {0;2}.
+- Flatten, Graft, Simplify and Reverse can be set on any grip: on inputs they
+  apply to the collected data, on outputs to the solved data.
 """
 
 from __future__ import annotations
@@ -13,7 +26,10 @@ import itertools
 import time
 from typing import Any, Callable
 
+from .tree import MODIFIERS, Tree
+
 OK, WARNING, ERROR = "ok", "warning", "error"
+ITEM, LIST, TREE = "item", "list", "tree"
 
 _ids = itertools.count(1)
 
@@ -22,8 +38,8 @@ class Param:
     """An input or output grip on a component."""
 
     def __init__(self, owner: "Component", name: str, nickname: str,
-                 description: str = "", default: Any = None,
-                 optional: bool = False, is_input: bool = True):
+                 description: str = "", default: Any = None, optional: bool = False,
+                 is_input: bool = True, access: str = ITEM):
         self.owner = owner
         self.name = name
         self.nickname = nickname
@@ -31,9 +47,22 @@ class Param:
         self.default = default
         self.optional = optional
         self.is_input = is_input
+        self.access = access
+        self.modifier: str | None = None   # flatten | graft | simplify
+        self.reverse = False
         self.sources: list[Param] = []      # inputs only
         self.recipients: list[Param] = []   # outputs only
-        self.data: list = []
+        self.data = Tree()
+
+    def set_modifier(self, modifier: str | None) -> None:
+        if modifier not in (None, *MODIFIERS):
+            raise ValueError(f"Unknown modifier {modifier!r}")
+        self.modifier = modifier
+        self.owner.expire()
+
+    def set_reverse(self, on: bool) -> None:
+        self.reverse = bool(on)
+        self.owner.expire()
 
     def __repr__(self) -> str:
         side = "in" if self.is_input else "out"
@@ -42,7 +71,9 @@ class Param:
 
 class Component:
     """Base class. Subclasses declare grips in setup() and implement
-    solve_instance(), which is called once per matched set of input items."""
+    solve_instance(), called once per matched set of inputs. Its return value is
+    one value per output (a tuple when there are several); a list output
+    returns a list."""
 
     name = "Component"
     nickname = "Comp"
@@ -65,14 +96,14 @@ class Component:
     def setup(self) -> None:
         """Declare inputs and outputs."""
 
-    def add_input(self, name, nickname, description="", default=None,
-                  optional=False) -> Param:
-        p = Param(self, name, nickname, description, default, optional, True)
+    def add_input(self, name, nickname, description="", default=None, optional=False,
+                  access=ITEM) -> Param:
+        p = Param(self, name, nickname, description, default, optional, True, access)
         self.inputs.append(p)
         return p
 
-    def add_output(self, name, nickname, description="") -> Param:
-        p = Param(self, name, nickname, description, is_input=False)
+    def add_output(self, name, nickname, description="", access=ITEM) -> Param:
+        p = Param(self, name, nickname, description, is_input=False, access=access)
         self.outputs.append(p)
         return p
 
@@ -92,46 +123,92 @@ class Component:
         if self.graph is not None:
             self.graph.expire(self)
 
-    def collect(self, param: Param) -> list:
+    def collect(self, param: Param) -> Tree:
+        """An input's data: merged sources (or its default), then its modifiers."""
         if param.sources:
-            items: list = []
+            tree = Tree()
             for src in param.sources:
-                items.extend(src.data)
-            return items
-        if param.default is not None:
-            return [param.default]
-        return []
+                tree.merge(src.data)
+        elif param.default is not None:
+            tree = Tree.from_list([param.default])
+        else:
+            tree = Tree()
+        return tree.mapped(param.modifier, param.reverse)
 
-    def compute(self) -> None:
-        """Collect inputs, match them longest-list style and solve."""
+    def run(self) -> None:
+        """Solve, then apply the output grips' modifiers."""
         self.state, self.messages = OK, []
         for out in self.outputs:
-            out.data = []
-        lists = [self.collect(p) for p in self.inputs]
-        for p, items in zip(self.inputs, lists):
-            if not items and not p.optional:
+            out.data = Tree()
+        self.compute()
+        for out in self.outputs:
+            if out.modifier or out.reverse:
+                out.data = out.data.mapped(out.modifier, out.reverse)
+
+    def warn_missing(self, trees) -> bool:
+        for p, tree in zip(self.inputs, trees):
+            if not tree and not p.optional:
                 self.state = WARNING
                 self.messages.append(f"Input parameter {p.nickname} failed to collect data")
-        if self.state == WARNING:
+        return self.state == WARNING
+
+    def error(self, exc: Exception) -> None:
+        self.state = ERROR
+        message = str(exc) or type(exc).__name__
+        if message not in self.messages:
+            self.messages.append(message)
+
+    def compute(self) -> None:
+        trees = [self.collect(p) for p in self.inputs]
+        if self.warn_missing(trees):
             return
-        count = max((len(items) for items in lists), default=1) if lists else 1
-        for i in range(count):
-            args = [items[min(i, len(items) - 1)] if items else None for items in lists]
-            try:
-                result = self.solve_instance(*args)
-            except Exception as exc:  # a failing iteration marks the component, the rest continue
-                self.state = ERROR
-                self.messages.append(str(exc) or type(exc).__name__)
+        matched = [(i, p) for i, p in enumerate(self.inputs) if p.access != TREE]
+        if not matched:  # tree access throughout: one solve with whole trees
+            self._emit((0,), 0, trees)
+            return
+        branches = {i: trees[i].branches() or [((0,), [])] for i, _ in matched}
+        count = max(len(b) for b in branches.values())
+        master = next(i for i, _ in matched if len(branches[i]) == count)
+        for b in range(count):
+            picked = {i: branches[i][min(b, len(branches[i]) - 1)][1] for i, _ in matched}
+            path = branches[master][b][0]
+            item_lists = [picked[i] for i, p in matched if p.access == ITEM]
+            if any(not picked[i] for i, p in matched if p.access == ITEM and not p.optional):
+                for out in self.outputs:  # keep the branch, with nothing in it
+                    if out.access == ITEM:
+                        out.data.branch(path)
                 continue
-            if len(self.outputs) == 1:
-                result = (result,)
-            for out, value in zip(self.outputs, result):
-                out.data.append(value)
+            iterations = max((len(items) for items in item_lists), default=1) or 1
+            for it in range(iterations):
+                args = []
+                for i, p in enumerate(self.inputs):
+                    if p.access == TREE:
+                        args.append(trees[i])
+                    elif p.access == LIST:
+                        args.append(list(picked[i]))
+                    else:
+                        items = picked[i]
+                        args.append(items[min(it, len(items) - 1)] if items else None)
+                self._emit(path, it, args)
+
+    def _emit(self, path, iteration, args) -> None:
+        try:
+            result = self.solve_instance(*args)
+        except Exception as exc:  # a failing iteration marks the component, the rest continue
+            self.error(exc)
+            return
+        if len(self.outputs) == 1:
+            result = (result,)
+        for out, value in zip(self.outputs, result):
+            if out.access == LIST:
+                out.data.extend(path + (iteration,), value)
+            else:
+                out.data.append(path, value)
 
     def shapes(self) -> list:
-        """Output items that can be previewed (anything with tessellate())."""
+        """Output items that can be previewed (anything with a BoundBox)."""
         return [item for out in self.outputs for item in out.data
-                if hasattr(item, "tessellate")]
+                if hasattr(item, "BoundBox") and hasattr(item, "isNull")]
 
     def __repr__(self) -> str:
         return f"<{type(self).__name__} {self.nickname}#{self.uid}>"
@@ -213,7 +290,7 @@ class Graph:
         solved = []
         for comp in sorter.static_order():
             if comp.expired:
-                comp.compute()
+                comp.run()
                 comp.expired = False
                 solved.append(comp)
         self.last_solve_ms = (time.perf_counter() - t0) * 1000.0

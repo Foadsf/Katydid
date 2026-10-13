@@ -8,7 +8,8 @@ Format, version 1:
     {"format": "katydid", "version": 1,
      "components": [{"id", "type", "nickname", "x", "y", "preview",
                      "inputs": [nicknames], "outputs": [nicknames],
-                     "defaults": [per-input default], "state": {...}}],
+                     "defaults": [per-input default], "state": {...},
+                     "mods": {"in"|"out": [[flatten|graft|simplify|null, reverse]]}}],
      "wires": [[source id, output index, target id, input index]]}
 """
 
@@ -18,6 +19,7 @@ import json
 
 from . import components as lib
 from .engine import ERROR, Component, Graph
+from .tree import MODIFIERS
 
 FORMAT = "katydid"
 VERSION = 1
@@ -47,8 +49,6 @@ class Missing(Component):
     def compute(self):
         self.state = ERROR
         self.messages = [f"Component type '{self.record.get('type')}' is not available"]
-        for out in self.outputs:
-            out.data = []
 
 
 def dump(graph: Graph, positions: dict | None = None) -> dict:
@@ -67,6 +67,11 @@ def dump(graph: Graph, positions: dict | None = None) -> dict:
             state = c.write_state()
             if state:
                 rec["state"] = state
+            mods = {side: [[p.modifier, p.reverse] for p in params]
+                    for side, params in (("in", c.inputs), ("out", c.outputs))
+                    if any(p.modifier or p.reverse for p in params)}
+            if mods:
+                rec["mods"] = mods
         x, y = positions.get(c, (rec.get("x", 0.0), rec.get("y", 0.0)))
         rec.update(id=ids[c], x=round(float(x), 2), y=round(float(y), 2))
         records.append(rec)
@@ -108,6 +113,14 @@ def build(graph: Graph, data) -> tuple[dict, list[str]]:
                 if value is not None:
                     p.default = value
             comp.read_state(rec.get("state", {}))
+            for side, params in (("in", comp.inputs), ("out", comp.outputs)):
+                for p, mod in zip(params, rec.get("mods", {}).get(side, [])):
+                    modifier, reverse = (list(mod) + [None, False])[:2]
+                    if modifier in MODIFIERS:
+                        p.modifier = modifier
+                    elif modifier is not None:
+                        warnings.append(f"Unknown modifier {modifier!r} on {comp.nickname} ignored")
+                    p.reverse = bool(reverse)
         graph.add(comp)
         by_id[rec.get("id")] = comp
         positions[comp] = (float(rec.get("x", 0)), float(rec.get("y", 0)))

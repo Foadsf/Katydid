@@ -123,6 +123,10 @@ def load_phase(run):
     doc = FreeCAD.openDocument(path)   # the observer must switch the canvas to it
     pump(900)
     check("canvas_follows_opened_file", panel.doc_name == doc.Name, [panel.doc_name, doc.Name])
+    run.res["debug_after_open"] = {"pending": panel.scene._pending,
+                                   "expired": [c.nickname for c in panel.graph.components if c.expired],
+                                   "outputs": {c.nickname: len(c.outputs[0].data)
+                                               for c in panel.graph.components if c.outputs}}
     got = snapshot(panel)
     check("same_components", got["components"] == expected["components"],
           {"got": got["components"], "expected": expected["components"]})

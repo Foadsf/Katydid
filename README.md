@@ -23,9 +23,17 @@ Restart FreeCAD, pick **Katydid** in the workbench list. The canvas opens as a f
 | Change a slider | Drag along its rail |
 | Toggle preview | Select, Ctrl+Q (preview-off components turn darker grey) |
 | Delete components | Select, Delete (only canvas components; document objects are safe) |
+| Flatten / Graft / Simplify / Reverse | Right-click a grip (a right-drag still pans); a yellow F/G/S/R badge marks it |
+| Component menu | Right-click a component: Preview, Delete |
 | Bake | **Bake**: selected components, or everything previewed if none selected |
 
-Component colours: grey OK, orange warning (missing input), red error (hover for the message), green selected. Wires: solid = one item, double = list, dashed orange = empty.
+Component colours: grey OK, orange warning (missing input), red error (hover for the message), green selected. Wires: solid = one item, double = list, dashed = a tree of several branches, thin dashed orange = empty.
+
+## Data trees
+
+Data flows as trees: branches of items addressed by paths like `{0;1}`. Each input is item, list or tree access. Components match inputs branch by branch (a tree with fewer branches repeats its last one; outputs take the paths of the first input with the most branches) and, within a branch, item by item (longest list). A list output gets a branch per iteration, so dividing three circles in `{0}` gives `{0;0}`, `{0;1}`, `{0;2}`. The Panel lists data under its branch paths. These rules are our reading of Grasshopper's, written down in `katydid/engine.py`; they have not been checked against Grasshopper itself.
+
+**Tree Demo** shows it: stacked circles → Divide Curve (a branch of points per circle) → a closed Polyline per branch → Loft with **Flatten** on its input, so one surface runs through every ring. Turn Flatten off and Loft goes red, because each branch then holds only one curve.
 
 ## Saving
 
@@ -42,13 +50,13 @@ The canvas follows the active FreeCAD document. Its definition is stored on a **
 ## Tests
 
 ```powershell
-& "$env:LOCALAPPDATA\Programs\FreeCAD 1.1\bin\python.exe" -I tests\test_engine.py       # engine, headless
-& "$env:LOCALAPPDATA\Programs\FreeCAD 1.1\bin\python.exe" -I tests\test_document.py     # save format, headless
-pwsh tests\run_gui_tests.ps1                                                             # everything in real FreeCAD
+$py = "$env:LOCALAPPDATA\Programs\FreeCAD 1.1\bin\python.exe"
+& $py -I tests\mutate.py          # engine, tree and save-format tests, plus 5 deliberate breaks that must be caught
+python tests\run_gui_tests.py     # everything in real FreeCAD, on a hidden desktop
 ```
 
-`run_gui_tests.ps1` runs four FreeCAD processes: `gui_smoke.py` (canvas driven with real mouse and key events, speed, bake; 20 checks), `persist_smoke.py` in a save phase and then a reopen phase in a fresh FreeCAD (7 + 15 checks, judged on the saved file), and `persist_headless.py` in console FreeCAD (4 checks: the definition recomputes with no GUI). Screenshots and results go to `../_runs/`; nothing is saved to your settings. `paint_profile.py` and `preview_profile.py` measure where frame time goes.
+`run_gui_tests.py` starts each FreeCAD on a private Win32 desktop through `surfacekit` (from `C:\dev\scripts`), so nothing appears on your screen and focus never moves; every run reports both controls. It runs `gui_smoke.py` (canvas driven with real mouse and key events, bake), `tree_smoke.py` (the tree demo, the grip menu by real right-clicks, Flatten/Simplify, save, reopen, bake), `persist_smoke.py` in a save phase and then a reopen phase in a fresh FreeCAD, and `persist_headless.py` in console FreeCAD. Drag speed is only judged with `--visible`: on the hidden desktop FreeCAD's 3D repaint is several times slower than on the real display. Screenshots and results go to `../_runs/`; nothing is saved to your settings. `paint_profile.py` and `preview_profile.py` measure where frame time goes.
 
 ## Not yet
 
-Data trees (only flat lists so far), undo on the canvas, radial menu, clusters, script component, `.ghx` import.
+Undo on the canvas, radial menu, a Param Viewer, Path Mapper and other tree components, clusters, script component, `.ghx` import.

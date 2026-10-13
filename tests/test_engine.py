@@ -46,14 +46,14 @@ class EngineTests(unittest.TestCase):
         a = self.g.add(Add())
         self.assertTrue(self.g.connect(s.outputs[0], a.inputs[0]))
         self.g.solve()
-        self.assertEqual(a.outputs[0].data, [3.0])
+        self.assertEqual(list(a.outputs[0].data), [3.0])
         self.assertEqual(a.state, OK)
 
     def test_missing_input_is_a_warning_not_an_error(self):
         a = self.g.add(Add())
         self.g.solve()
         self.assertEqual(a.state, WARNING)
-        self.assertEqual(a.outputs[0].data, [])
+        self.assertEqual(list(a.outputs[0].data), [])
 
     def test_exception_marks_error_and_other_iterations_survive(self):
         ser = self.g.add(Series())
@@ -63,7 +63,7 @@ class EngineTests(unittest.TestCase):
         self.g.connect(ser.outputs[0], f.inputs[0])
         self.g.solve()
         self.assertEqual(f.state, ERROR)
-        self.assertEqual(f.outputs[0].data, [0.0, 1.0])
+        self.assertEqual(list(f.outputs[0].data), [0.0, 1.0])
         self.assertIn("negative", f.messages)
 
     def test_longest_list_matching_repeats_last_item(self):
@@ -73,7 +73,7 @@ class EngineTests(unittest.TestCase):
         self.g.connect(ser.outputs[0], a.inputs[0])
         self.g.connect(one.outputs[0], a.inputs[1])
         self.g.solve()
-        self.assertEqual(a.outputs[0].data, [100.0 + i for i in range(10)])
+        self.assertEqual(list(a.outputs[0].data), [100.0 + i for i in range(10)])
 
     def test_cycles_and_wrong_direction_are_refused(self):
         a, b = self.g.add(Add()), self.g.add(Add())
@@ -95,8 +95,8 @@ class EngineTests(unittest.TestCase):
         solved = self.g.solve()
         self.assertEqual(set(solved), {s1, a1})
         self.assertEqual(Add.calls, 1)
-        self.assertEqual(a1.outputs[0].data, [5.0])
-        self.assertEqual(a2.outputs[0].data, [2.0])
+        self.assertEqual(list(a1.outputs[0].data), [5.0])
+        self.assertEqual(list(a2.outputs[0].data), [2.0])
 
     def test_solve_order_follows_dependencies_not_insertion(self):
         a2 = self.g.add(Add())
@@ -105,7 +105,7 @@ class EngineTests(unittest.TestCase):
         self.g.connect(s.outputs[0], a1.inputs[0])
         self.g.connect(a1.outputs[0], a2.inputs[0])
         self.g.solve()
-        self.assertEqual(a2.outputs[0].data, [4.0])
+        self.assertEqual(list(a2.outputs[0].data), [4.0])
 
     def test_disconnect_expires_and_empties_downstream(self):
         s = self.g.add(NumberSlider(4, 0, 10))
@@ -115,7 +115,7 @@ class EngineTests(unittest.TestCase):
         self.g.disconnect(s.outputs[0], a.inputs[0])
         self.g.solve()
         self.assertEqual(a.state, WARNING)
-        self.assertEqual(a.outputs[0].data, [])
+        self.assertEqual(list(a.outputs[0].data), [])
 
     def test_slider_clamps_and_rounds(self):
         s = NumberSlider(5, 1, 8, 0)

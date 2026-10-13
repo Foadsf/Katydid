@@ -75,19 +75,9 @@ def _triangulate(shape, tol):
     return mesh.Topology
 
 
-def _mesh_node(shapes, colour) -> coin.SoSeparator:
-    import Part
-    shapes = [s for s in shapes if not s.isNull()]
-    # One meshing call for the whole group is ~40% cheaper than one per shape
-    # (measured: 4 boxes, 5.3 ms -> 3.1 ms; tests/preview_profile.py).
-    compound = Part.makeCompound(shapes)
-    tol = max(compound.BoundBox.DiagonalLength * 0.002, 0.01)
-    verts, tris = _triangulate(compound, tol)
-    points = [(v.x, v.y, v.z) for v in verts]
-    index = []
-    for a, b, c in tris:
-        index.extend((a, b, c, -1))
-    edge_points, edge_counts = [], []
+def _polylines(shapes, tol):
+    """Discretised edges as (points, counts) for an SoLineSet."""
+    points, counts = [], []
     for shape in shapes:
         for edge in shape.Edges:
             try:
@@ -95,37 +85,79 @@ def _mesh_node(shapes, colour) -> coin.SoSeparator:
             except Exception:  # degenerate edges, e.g. sphere poles
                 continue
             if len(pts) > 1:
-                edge_points.extend((v.x, v.y, v.z) for v in pts)
-                edge_counts.append(len(pts))
+                points.extend((v.x, v.y, v.z) for v in pts)
+                counts.append(len(pts))
+    return points, counts
 
+
+def _flat(colour, width=None, point=None, nodes=()):
+    """Unlit, opaque styling for lines and points."""
     sep = coin.SoSeparator()
-    hints = coin.SoShapeHints()
-    hints.vertexOrdering = coin.SoShapeHints.COUNTERCLOCKWISE
-    hints.shapeType = coin.SoShapeHints.UNKNOWN_SHAPE_TYPE  # two-sided lighting
+    light = coin.SoLightModel()
+    light.model = coin.SoLightModel.BASE_COLOR
     mat = coin.SoMaterial()
     mat.diffuseColor.setValue(*colour)
-    mat.emissiveColor.setValue(colour[0] * 0.25, colour[1] * 0.25, colour[2] * 0.25)
-    mat.transparency.setValue(0.45)
-    coords = coin.SoCoordinate3()
-    coords.point.setValues(0, len(points), points)
-    faces = coin.SoIndexedFaceSet()
-    faces.coordIndex.setValues(0, len(index), index)
-    for node in (hints, mat, coords, faces):
+    style = coin.SoDrawStyle()
+    if width:
+        style.lineWidth = width
+    if point:
+        style.pointSize = point
+    for node in (light, mat, style, *nodes):
         sep.addChild(node)
+    return sep
 
-    if edge_counts:
-        edges = coin.SoSeparator()
-        light = coin.SoLightModel()
-        light.model = coin.SoLightModel.BASE_COLOR
-        emat = coin.SoMaterial()
-        emat.diffuseColor.setValue(*EDGE[colour])
-        style = coin.SoDrawStyle()
-        style.lineWidth = 1.5
-        ecoords = coin.SoCoordinate3()
-        ecoords.point.setValues(0, len(edge_points), edge_points)
-        lines = coin.SoLineSet()
-        lines.numVertices.setValues(0, len(edge_counts), edge_counts)
-        for node in (light, emat, style, ecoords, lines):
-            edges.addChild(node)
-        sep.addChild(edges)
+
+def _coords(points):
+    c = coin.SoCoordinate3()
+    c.point.setValues(0, len(points), points)
+    return c
+
+
+def _mesh_node(shapes, colour) -> coin.SoSeparator:
+    """Grasshopper-style preview: translucent faces with dark outlines, curves
+    as thick lines in the preview colour, points as dots."""
+    import Part
+    shapes = [s for s in shapes if not s.isNull()]
+    faced = [s for s in shapes if s.Faces]
+    curves = [s for s in shapes if not s.Faces and s.Edges]
+    vertices = [s for s in shapes if s.ShapeType == "Vertex"]
+    whole = Part.makeCompound(shapes)
+    tol = max(whole.BoundBox.DiagonalLength * 0.002, 0.01)
+    sep = coin.SoSeparator()
+
+    if faced:
+        # One meshing call for the whole group is ~40% cheaper than one per shape
+        # (measured: 4 boxes, 5.3 ms -> 3.1 ms; tests/preview_profile.py).
+        verts, tris = _triangulate(Part.makeCompound(faced), tol)
+        index = []
+        for a, b, c in tris:
+            index.extend((a, b, c, -1))
+        hints = coin.SoShapeHints()
+        hints.vertexOrdering = coin.SoShapeHints.COUNTERCLOCKWISE
+        hints.shapeType = coin.SoShapeHints.UNKNOWN_SHAPE_TYPE  # two-sided lighting
+        mat = coin.SoMaterial()
+        mat.diffuseColor.setValue(*colour)
+        mat.emissiveColor.setValue(colour[0] * 0.25, colour[1] * 0.25, colour[2] * 0.25)
+        mat.transparency.setValue(0.45)
+        faces = coin.SoIndexedFaceSet()
+        faces.coordIndex.setValues(0, len(index), index)
+        for node in (hints, mat, _coords([(v.x, v.y, v.z) for v in verts]), faces):
+            sep.addChild(node)
+        pts, counts = _polylines(faced, tol)
+        if counts:
+            lines = coin.SoLineSet()
+            lines.numVertices.setValues(0, len(counts), counts)
+            sep.addChild(_flat(EDGE[colour], width=1.5, nodes=(_coords(pts), lines)))
+
+    if curves:
+        pts, counts = _polylines(curves, tol)
+        if counts:
+            lines = coin.SoLineSet()
+            lines.numVertices.setValues(0, len(counts), counts)
+            sep.addChild(_flat(colour, width=2.5, nodes=(_coords(pts), lines)))
+
+    if vertices:
+        dots = coin.SoPointSet()
+        sep.addChild(_flat(colour, point=6, nodes=(
+            _coords([(v.Point.x, v.Point.y, v.Point.z) for v in vertices]), dots)))
     return sep

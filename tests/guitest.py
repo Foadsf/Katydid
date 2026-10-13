@@ -25,12 +25,12 @@ def pump(ms=150):
         time.sleep(0.005)
 
 
-def mouse(view, kind, pos, buttons=Qt.MouseButton.LeftButton, mods=Qt.KeyboardModifier.NoModifier):
+def mouse(view, kind, pos, button=Qt.MouseButton.LeftButton, mods=Qt.KeyboardModifier.NoModifier):
     types = {"press": QtCore.QEvent.Type.MouseButtonPress, "move": QtCore.QEvent.Type.MouseMove,
              "release": QtCore.QEvent.Type.MouseButtonRelease,
              "double": QtCore.QEvent.Type.MouseButtonDblClick}
-    button = Qt.MouseButton.NoButton if kind == "move" else Qt.MouseButton.LeftButton
-    held = Qt.MouseButton.NoButton if kind == "release" else buttons
+    held = Qt.MouseButton.NoButton if kind == "release" else button
+    button = Qt.MouseButton.NoButton if kind == "move" else button
     vp = view.viewport()
     ev = QtGui.QMouseEvent(types[kind], QtCore.QPointF(pos), QtCore.QPointF(vp.mapToGlobal(pos)),
                            button, held, mods)
@@ -64,6 +64,11 @@ class Run:
         self.res = {"out": self.out, "checks": {}}
         sys.stderr = open(os.path.join(self.out, f"stderr_{name}.txt"), "w", encoding="utf-8")
         self.name = name
+        # An exception inside a Qt callback (a timer, a signal) never reaches the
+        # test body; record it so it fails the run instead of vanishing.
+        self.res["callback_exceptions"] = []
+        sys.excepthook = lambda *exc: self.res["callback_exceptions"].append(
+            "".join(traceback.format_exception(*exc)))
 
     def check(self, label, ok, detail=None):
         self.res["checks"][label] = {"ok": bool(ok), "detail": detail}
@@ -99,6 +104,8 @@ class Run:
         QtCore.QTimer.singleShot(delay_ms, wrapped)
 
     def finish(self):
+        self.check("no_callback_exceptions", not self.res["callback_exceptions"],
+                   self.res["callback_exceptions"][:3])
         self.res["passed"] = sum(c["ok"] for c in self.res["checks"].values())
         self.res["total"] = len(self.res["checks"])
         with open(os.path.join(self.out, f"results_{self.name}.json"), "w", encoding="utf-8") as fh:

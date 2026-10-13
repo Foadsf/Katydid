@@ -45,7 +45,7 @@ WIRE_HOT = QColor(70, 170, 30, 235)
 PANEL_FILL = QColor(252, 248, 196)
 CATEGORY_COLOURS = {
     "Params": QColor(90, 90, 90), "Maths": QColor(40, 110, 170),
-    "Sets": QColor(120, 80, 160), "Surface": QColor(40, 140, 90),
+    "Sets": QColor(120, 80, 160), "Curve": QColor(30, 130, 150), "Surface": QColor(40, 140, 90),
     "Transform": QColor(190, 110, 30), "Intersect": QColor(170, 50, 60),
 }
 
@@ -108,8 +108,14 @@ class GripItem(QtWidgets.QGraphicsEllipseItem):
 
     def hoverEnterEvent(self, event):
         p = self.param
-        self.setToolTip(f"{p.name} ({p.nickname})\n{p.description}\n{len(p.data)} item(s)"
-                        if not p.is_input else f"{p.name} ({p.nickname})\n{p.description}")
+        lines = [f"{p.name} ({p.nickname}) · {p.access} access", p.description]
+        if not p.is_input:
+            lines.append(p.data.describe())
+        mods = [m for m in (p.modifier, "reverse" if p.reverse else None) if m]
+        if mods:
+            lines.append("Modifiers: " + ", ".join(mods))
+        lines.append("Right-click for Flatten / Graft / Simplify / Reverse")
+        self.setToolTip("\n".join(line for line in lines if line))
         self.setBrush(WIRE_HOT)
         super().hoverEnterEvent(event)
 
@@ -126,7 +132,8 @@ def wire_path(p1: QPointF, p2: QPointF) -> QtGui.QPainterPath:
 
 
 class WireItem(QtWidgets.QGraphicsPathItem):
-    """Solid for one item, double for a list, dashed orange when empty."""
+    """Solid for one item, double for a list, dashed for a tree of several
+    branches, thin dashed orange when empty."""
 
     def __init__(self, src: GripItem, dst: GripItem):
         super().__init__()
@@ -142,10 +149,16 @@ class WireItem(QtWidgets.QGraphicsPathItem):
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         hot = self.src.parentItem().isSelected() or self.dst.parentItem().isSelected()
         colour = WIRE_HOT if hot else WIRE
-        n = len(self.src.param.data)
+        data = self.src.param.data
+        n = len(data)
         path = self.path()
         if n == 0:
             painter.strokePath(path, _pen(WIRE_EMPTY, 1.5, Qt.PenStyle.DashLine))
+        elif data.branch_count > 1:
+            pen = _pen(colour, 3.0, Qt.PenStyle.CustomDashLine)
+            pen.setCapStyle(Qt.PenCapStyle.FlatCap)
+            pen.setDashPattern([2.5, 1.5])
+            painter.strokePath(path, pen)
         elif n == 1:
             painter.strokePath(path, _pen(colour, 2.0))
         else:
@@ -193,7 +206,7 @@ class ComponentItem(QtWidgets.QGraphicsItem):
                 self.grips[p] = grip
 
     def boundingRect(self):
-        return QRectF(-10, -22, self.w + 20, self.h + 32)
+        return QRectF(-24, -22, self.w + 48, self.h + 32)
 
     def shape(self):
         path = QtGui.QPainterPath()
@@ -243,6 +256,27 @@ class ComponentItem(QtWidgets.QGraphicsItem):
                          Qt.AlignmentFlag.AlignCenter, self.comp.nickname)
         painter.restore()
         self._paint_balloon(painter)
+        self._paint_modifiers(painter)
+
+    def _paint_modifiers(self, painter):
+        """Badges outside a grip: F flatten, G graft, S simplify, R reverse."""
+        font = QtGui.QFont(self.font)
+        font.setPointSizeF(self.font.pointSizeF() * 0.85)
+        font.setBold(True)
+        painter.setFont(font)
+        for p, grip in self.grips.items():
+            letters = {"flatten": "F", "graft": "G", "simplify": "S"}.get(p.modifier, "")
+            letters += "R" if p.reverse else ""
+            if not letters:
+                continue
+            w = 9 + 6 * len(letters)
+            x = grip.pos().x() - 8 - w if p.is_input else grip.pos().x() + 8
+            rect = QRectF(x, grip.pos().y() - 6, w, 12)
+            painter.setPen(QtGui.QPen(OUTLINE, 1))
+            painter.setBrush(QColor(255, 236, 140))
+            painter.drawRoundedRect(rect, 3, 3)
+            painter.setPen(TEXT)
+            painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, letters)
 
     def _paint_balloon(self, painter):
         if self.comp.state == OK:
@@ -355,7 +389,7 @@ class SliderItem(ComponentItem):
 
 
 class PanelItem(ComponentItem):
-    W, H = 170, 110
+    W, H = 190, 150
 
     def layout(self):
         self.w, self.h = self.W, self.H
@@ -372,18 +406,24 @@ class PanelItem(ComponentItem):
         font = QtGui.QFont("Consolas")
         font.setPointSizeF(self.font.pointSizeF())
         painter.setFont(font)
-        lines = getattr(self.comp, "text_lines", [])
+        rows = getattr(self.comp, "rows", [])
         fm = QtGui.QFontMetrics(font)
-        y = 6
-        for i, line in enumerate(lines):
+        y = 5
+        for n, row in enumerate(rows):
             if y + fm.height() > self.h - 4:
+                left = sum(1 for r in rows[n:] if r[0] == "item")
                 painter.setPen(QColor(120, 120, 120))
-                painter.drawText(QPointF(8, y + fm.ascent()), f"… {len(lines) - i} more")
+                painter.drawText(QPointF(8, y + fm.ascent()), f"… {left} more item(s)")
                 break
-            painter.setPen(QColor(130, 130, 130))
-            painter.drawText(QPointF(8, y + fm.ascent()), str(i))
-            painter.setPen(TEXT)
-            painter.drawText(QPointF(30, y + fm.ascent()), line)
+            if row[0] == "path":  # branch header, as in Grasshopper's panel
+                painter.fillRect(QRectF(3, y, self.w - 6, fm.height()), QColor(232, 224, 150))
+                painter.setPen(QColor(90, 80, 20))
+                painter.drawText(QPointF(8, y + fm.ascent()), row[1])
+            else:
+                painter.setPen(QColor(130, 130, 130))
+                painter.drawText(QPointF(10, y + fm.ascent()), str(row[1]))
+                painter.setPen(TEXT)
+                painter.drawText(QPointF(32, y + fm.ascent()), row[2])
             y += fm.height()
 
 
@@ -410,6 +450,13 @@ class KatydidScene(QtWidgets.QGraphicsScene):
         self.items_by_comp: dict = {}
         self.wire_items: list[WireItem] = []
         self._pending = False
+        # A timer object owned by the scene, not QTimer.singleShot(0, callable):
+        # a static single-shot scheduled while FreeCAD was opening a document
+        # was measured never to fire (tests/persist_smoke.py, 2026-10-13).
+        self._solve_timer = QtCore.QTimer(self)
+        self._solve_timer.setSingleShot(True)
+        self._solve_timer.setInterval(0)
+        self._solve_timer.timeout.connect(self.solve_now)
         self.setSceneRect(-20000, -20000, 40000, 40000)
         self.setItemIndexMethod(QtWidgets.QGraphicsScene.ItemIndexMethod.NoIndex)
         graph.listeners.append(self._on_solved)
@@ -442,7 +489,8 @@ class KatydidScene(QtWidgets.QGraphicsScene):
         for comp in self.graph.components:
             self._add_item(comp, QPointF(*positions[comp]))
         self.rebuild_wires()
-        self.request_solve()
+        self.edited.emit()
+        self.solve_now()  # a load is one discrete event: solve it now, deterministically
         return warnings
 
     def remove_components(self, comps):
@@ -472,6 +520,22 @@ class KatydidScene(QtWidgets.QGraphicsScene):
             if item is None or item in (w.src.parentItem(), w.dst.parentItem()):
                 w.update_path()
 
+    def set_modifier(self, param, modifier):
+        param.set_modifier(modifier)
+        self.items_by_comp[param.owner].update()
+        self.request_solve()
+
+    def set_reverse(self, param, on):
+        param.set_reverse(on)
+        self.items_by_comp[param.owner].update()
+        self.request_solve()
+
+    def set_preview(self, comp, on):
+        comp.preview = bool(on)
+        self.items_by_comp[comp].update()
+        self.solved.emit([])   # refresh the 3D preview without a solve
+        self.edited.emit()
+
     def connect_params(self, a, b, add=False) -> bool:
         out, inp = (a, b) if not a.is_input else (b, a)
         if not self.graph.can_connect(out, inp):
@@ -489,10 +553,11 @@ class KatydidScene(QtWidgets.QGraphicsScene):
         self.edited.emit()
         if not self._pending:
             self._pending = True
-            QtCore.QTimer.singleShot(0, self.solve_now)
+            self._solve_timer.start()
 
     def solve_now(self):
         self._pending = False
+        self._solve_timer.stop()
         self.graph.solve()
 
     def _on_solved(self, solved):
@@ -529,8 +594,10 @@ class KatydidView(QtWidgets.QGraphicsView):
         self.setAcceptDrops(True)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self._pan = None
+        self._right_press = QPointF()
         self._drag = None   # (anchor grip, temp path item)
         self._search = None
+        self.menu = None    # the last grip/component menu (kept for tests)
 
     # background ---------------------------------------------------------------
     def drawBackground(self, painter, rect):
@@ -585,6 +652,7 @@ class KatydidView(QtWidgets.QGraphicsView):
         pos = event.position().toPoint()
         if event.button() == Qt.MouseButton.RightButton:
             self._pan = event.position()
+            self._right_press = event.position()
             self.viewport().setCursor(Qt.CursorShape.ClosedHandCursor)
             event.accept()
             return
@@ -634,6 +702,9 @@ class KatydidView(QtWidgets.QGraphicsView):
         if event.button() == Qt.MouseButton.RightButton and self._pan is not None:
             self._pan = None
             self.viewport().unsetCursor()
+            moved = (event.position() - self._right_press).manhattanLength()
+            if moved < 4:  # a click, not a pan: the grip or component menu
+                self.open_menu(event.position().toPoint())
             return
         if self._drag is not None:
             anchor, temp = self._drag
@@ -654,7 +725,45 @@ class KatydidView(QtWidgets.QGraphicsView):
         super().mouseDoubleClickEvent(event)
 
     def contextMenuEvent(self, event):
-        event.accept()  # right button pans
+        event.accept()  # right-drag pans; a right-click is handled on release
+
+    # menus ----------------------------------------------------------------------
+    def open_menu(self, view_pos) -> QtWidgets.QMenu | None:
+        """Grip menu (data mapping) or component menu, like Grasshopper's."""
+        scene = self.scene()
+        grip = self._grip_at(view_pos)
+        items = [i for i in self.items(view_pos) if isinstance(i, ComponentItem)]
+        menu = QtWidgets.QMenu(self)
+        if grip is not None:
+            p = grip.param
+            title = menu.addAction(f"{p.name} ({'input' if p.is_input else 'output'})")
+            title.setEnabled(False)
+            menu.addSeparator()
+            for label, mod in (("Flatten", "flatten"), ("Graft", "graft"), ("Simplify", "simplify")):
+                act = menu.addAction(label)
+                act.setCheckable(True)
+                act.setChecked(p.modifier == mod)
+                act.triggered.connect(
+                    lambda on, m=mod: scene.set_modifier(p, m if on else None))
+            act = menu.addAction("Reverse")
+            act.setCheckable(True)
+            act.setChecked(p.reverse)
+            act.triggered.connect(lambda on: scene.set_reverse(p, on))
+        elif items:
+            comp = items[0].comp
+            title = menu.addAction(comp.name)
+            title.setEnabled(False)
+            menu.addSeparator()
+            act = menu.addAction("Preview")
+            act.setCheckable(True)
+            act.setChecked(comp.preview)
+            act.triggered.connect(lambda on: scene.set_preview(comp, on))
+            menu.addAction("Delete", lambda: scene.remove_components([comp]))
+        else:
+            return None
+        menu.popup(self.viewport().mapToGlobal(view_pos))
+        self.menu = menu
+        return menu
 
     # keyboard -------------------------------------------------------------------
     OWN_KEYS = {Qt.Key.Key_Delete, Qt.Key.Key_Backspace, Qt.Key.Key_Q}
