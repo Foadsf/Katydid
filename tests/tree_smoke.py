@@ -73,6 +73,7 @@ def body(run):
     pump(300)
     run.grab(None, "01_tree_demo.png")
     run.grab(panel, "02_canvas.png")
+    FreeCADGui.ActiveDocument.ActiveView.saveImage(os.path.join(run.out, "06_view3d.png"), 1200, 700, "Current")
 
     # Right-click the Loft input grip: the real menu, Flatten checked.
     loft_in = d["loft"].inputs[0]

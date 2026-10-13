@@ -3,10 +3,11 @@
 
     python tests/run_gui_tests.py [--out DIR] [--visible] [--only smoke,tree,...]
 
-Each FreeCAD runs on a private Win32 desktop (surfacekit.HiddenDesktop, from
-C:/dev/scripts): no window, no taskbar button, no focus change on the desktop you
-are working on. Per run it records the two controls that prove it: whether focus
-moved, and whether the app had any window on the default desktop. Without
+With the optional `surfacekit` helper (a directory named by KATYDID_SURFACEKIT,
+or importable from sys.path), each FreeCAD runs on a private Win32 desktop: no
+window, no taskbar button, no focus change on the desktop you are working on.
+Per run it records the two controls that prove it: whether FreeCAD ever owned
+the foreground window, and whether it had any window on your desktop. Without
 surfacekit, or with --visible, FreeCAD is started minimised and unactivated
 instead (it may still flash). Results and screenshots go to ../_runs/.
 """
@@ -34,7 +35,9 @@ RUNS = [("smoke", "freecad.exe", "gui_smoke.py"),
 
 
 def surfacekit():
-    sys.path.insert(0, r"C:\dev\scripts")
+    extra = os.environ.get("KATYDID_SURFACEKIT")
+    if extra:
+        sys.path.insert(0, extra)
     try:
         import surfacekit as sk  # noqa: PLC0415
         return sk
@@ -89,8 +92,14 @@ def main(argv=None):
     ap.add_argument("--visible", action="store_true", help="do not use a hidden desktop")
     ap.add_argument("--only", help="comma list of: " + ",".join(r[0] for r in RUNS))
     args = ap.parse_args(argv)
-    os.makedirs(args.out, exist_ok=True)
     sk = surfacekit()
+    if sk is None and not args.visible:
+        # Never fall back to the user's desktop silently: that is the one thing
+        # this runner exists to avoid.
+        print("surfacekit not found: set KATYDID_SURFACEKIT to its directory, "
+              "or pass --visible to run FreeCAD on your desktop (minimised).", file=sys.stderr)
+        return 2
+    os.makedirs(args.out, exist_ok=True)
     only = set(args.only.split(",")) if args.only else None
     failed, summary = 0, {}
     for name, exe, script in RUNS:

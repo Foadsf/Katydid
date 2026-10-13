@@ -50,6 +50,7 @@ def body(run):
     pump(300)
     run.grab(None, "01_attractor.png")
     run.grab(panel, "02_canvas.png")
+    FreeCADGui.ActiveDocument.ActiveView.saveImage(os.path.join(run.out, "05_view3d.png"), 1200, 700, "Current")
 
     # Drag "Attractor X" with real mouse events: the small circles must follow.
     view = panel.view

@@ -1,33 +1,42 @@
 # Katydid
 
-A Grasshopper-style visual programming canvas for FreeCAD 1.1 (working name). This is the first spike: slider → components → live red preview in the 3D view → bake to the document.
+A Grasshopper-style visual programming canvas for [FreeCAD](https://www.freecad.org/), with data trees and tolerance analysis.
 
-## Install (this machine)
+![Attractor grid on the Katydid canvas](docs/attractor-canvas.png)
+![The attractor grid previewed in FreeCAD](docs/attractor-3d.png)
 
-The source folder is linked into FreeCAD's user Mod folder:
+Wire components on a node canvas, drag a slider, and the result updates live in FreeCAD's 3D view as a translucent preview. **Bake** turns it into ordinary FreeCAD objects. The canvas is saved inside the `.FCStd` file and comes back when you open it.
 
-```powershell
-New-Item -ItemType Junction -Path "$env:APPDATA\FreeCAD\v1-1\Mod\Katydid" -Target "<path to this folder>"
+Katydid is an independent project. It is not affiliated with Robert McNeel & Associates; Grasshopper and Rhino are their trademarks, used here only to describe the style of tool. All icons and code are original.
+
+**Status:** early but working (v0.1). 48 components, data trees, saving, and a tolerance-analysis tab. Tested on FreeCAD 1.1 on Windows; it should run wherever FreeCAD 1.0+ with PySide6 runs.
+
+## Install
+
+Clone into FreeCAD's user `Mod` folder (run `App.getUserAppDataDir()` in FreeCAD's Python console to find it; on Windows with FreeCAD 1.1 it is `%APPDATA%\FreeCAD\v1-1\Mod`):
+
+```
+git clone https://github.com/Foadsf/Katydid.git
 ```
 
-Restart FreeCAD, pick **Katydid** in the workbench list. The canvas opens as a floating window; press **Demo**.
+Restart FreeCAD and pick **Katydid** in the workbench list. The canvas opens as a floating window (it redraws about twice as fast floating as docked). Try **Demo**, **Tree Demo**, **Attractor** or **Stack-up**.
 
 ## Using the canvas
 
 | Action | How |
 |---|---|
-| Add a component | Double-click empty canvas and type, or click/drag an icon from the tabs |
+| Add a component | Double-click empty canvas and type, or click or drag an icon from the tabs |
 | Wire | Drag from an output grip to an input grip (Shift adds instead of replacing) |
-| Remove a wire | Drag it off its input grip and drop on empty canvas |
+| Remove a wire | Drag it off its input grip and drop it on empty canvas |
 | Pan / zoom | Right-drag / mouse wheel (zooms about the cursor) |
 | Change a slider | Drag along its rail |
+| Flatten / Graft / Simplify / Reverse | Right-click a grip; a yellow F/G/S/R badge marks it |
+| Component menu | Right-click a component: Preview, Delete |
 | Toggle preview | Select, Ctrl+Q (preview-off components turn darker grey) |
 | Delete components | Select, Delete (only canvas components; document objects are safe) |
-| Flatten / Graft / Simplify / Reverse | Right-click a grip (a right-drag still pans); a yellow F/G/S/R badge marks it |
-| Component menu | Right-click a component: Preview, Delete |
-| Bake | **Bake**: selected components, or everything previewed if none selected |
+| Bake | **Bake**: the selected components, or everything previewed if none is selected |
 
-Component colours: grey OK, orange warning (missing input), red error (hover for the message), green selected. Wires: solid = one item, double = list, dashed = a tree of several branches, thin dashed orange = empty.
+Component colours: grey OK, orange warning (missing input), red error (hover for the message), green selected. Wires: solid for one item, double for a list, dashed for a tree of several branches, thin dashed orange when empty.
 
 ## Components (48)
 
@@ -43,47 +52,65 @@ Component colours: grey OK, orange warning (missing input), red error (hover for
 | Intersect | Solid Union, Solid Difference, Solid Intersection |
 | Tolerance | Dimension, Stack-up, Monte Carlo Stack-up, Bonus Tolerance, Virtual & Resultant Condition, Position to ± |
 
-**Expression** formulas are parsed and checked, never passed to Python's `eval`: only numbers, `x`, `y`, `z`, `pi`, `e`, `tau`, arithmetic and math functions are allowed, so a shared file cannot run code.
-
-**Attractor** loads Grasshopper's classic attractor grid: two Series, Graft on Construct Point's Y input to make a 10 × 10 grid, Distance to an attractor point, Bounds (with Flatten) and Remap to turn distance into radius, then circles extruded by their radius. Drag *Attractor X/Y*. With 100 extruded tubes one update costs about 25 ms to solve and 125 ms to mesh the preview on this machine, so it redraws about 7 times a second; light definitions redraw over 30 times a second.
-
-## Tolerance analysis
-
-The **Tolerance** tab brings the precision-engineering material in: **Dimension** (nominal, upper/lower deviation, direction in the chain, distribution), **Stack-up** (worst case, RSS and adjusted RSS with limits and a per-line contribution report, following Fischer, *Mechanical Tolerance Stackup and Analysis*, 2nd ed.), **Monte Carlo Stack-up** (random builds: mean, standard deviation, % outside spec limits, text histogram; a normal tolerance is k = 3 standard deviations by default), and GD&T calculators after Cogorno, *GD&T for Mechanical Design*, 3rd ed.: **Bonus Tolerance** (MMC/LMC/RFS), **Virtual & Resultant Condition**, and **Position to ±**.
-
-The maths lives in `katydid/tolerance.py` and is tested against the books' printed numbers: Fischer Examples 4.1-4.4, Figures 8.9-8.14, the Figure 8.15 report (to four decimals) and Example 8.1, and Cogorno Table 3-2. Where the books round (Fischer rounds RSS before applying the 1.5 factor, and rounds up in one hand-worked example) the tests say so. The LMC bonus and the virtual/resultant values are checked against the books' formulas, not printed tables.
-
-**Stack-up** loads Fischer's Figure 8.9 chain live: drag *±tol 56.5* or *RSS factor* and the limits, the report and the Monte Carlo reject rate (spec 10 to 13) follow.
+**Expression** formulas are parsed and checked, never passed to Python's `eval`: only numbers, `x`, `y`, `z`, `pi`, `e`, `tau`, arithmetic and math functions are allowed, so opening a shared file cannot run code.
 
 ## Data trees
 
-Data flows as trees: branches of items addressed by paths like `{0;1}`. Each input is item, list or tree access. Components match inputs branch by branch (a tree with fewer branches repeats its last one; outputs take the paths of the first input with the most branches) and, within a branch, item by item (longest list). A list output gets a branch per iteration, so dividing three circles in `{0}` gives `{0;0}`, `{0;1}`, `{0;2}`. The Panel lists data under its branch paths. These rules are our reading of Grasshopper's, written down in `katydid/engine.py`; they have not been checked against Grasshopper itself.
+Data flows as trees: branches of items addressed by paths like `{0;1}`. Each input has item, list or tree access. Components match inputs branch by branch (a tree with fewer branches repeats its last one; outputs take the paths of the first input with the most branches) and, within a branch, item by item (longest list). A list output gets a branch per iteration, so dividing three circles in `{0}` gives `{0;0}`, `{0;1}`, `{0;2}`. The Panel lists data under its branch paths.
 
-**Tree Demo** shows it: stacked circles → Divide Curve (a branch of points per circle) → a closed Polyline per branch → Loft with **Flatten** on its input, so one surface runs through every ring. Turn Flatten off and Loft goes red, because each branch then holds only one curve.
+These rules are my reading of Grasshopper's, written down in `katydid/engine.py`; they have not been checked against Grasshopper itself. Reports of differences are welcome.
+
+**Tree Demo:** stacked circles → Divide Curve (a branch of points per circle) → a closed Polyline per branch → Loft with **Flatten** on its input, so one surface runs through every ring. Turn Flatten off and Loft goes red, because each branch then holds a single curve.
+
+![Lofted rings from the Tree Demo](docs/tree-loft-3d.png)
+
+**Attractor:** Grasshopper's classic attractor grid. Two Series and a Graft make a 10 × 10 grid; distance to an attractor point, Bounds (with Flatten) and Remap turn into circle radii; the circles are extruded by their radius. With 100 extruded tubes one update takes roughly 25 ms to solve and 125 ms to mesh the preview, so dragging redraws about 7 times a second; light definitions redraw well over 30 times a second.
+
+## Tolerance analysis
+
+The **Tolerance** tab covers linear stack-ups and GD&T size calculations:
+
+- **Dimension:** nominal, upper and lower deviation, direction in the chain (+1 from A toward B, -1 back), distribution (normal, uniform, triangular).
+- **Stack-up:** worst case, RSS and adjusted RSS (RSS × factor, 1.5 by default) with their limits, and a report with each dimension's share of the total. Method after B. R. Fischer, *Mechanical Tolerance Stackup and Analysis*, 2nd ed., CRC Press, 2011.
+- **Monte Carlo Stack-up:** random builds of the chain; mean, standard deviation, percentage outside spec limits, and a text histogram. A normal tolerance is k = 3 standard deviations by default.
+- **Bonus Tolerance** (MMC, LMC, RFS), **Virtual & Resultant Condition**, **Position to ±**, after G. R. Cogorno, *Geometric Dimensioning and Tolerancing for Mechanical Design*, 3rd ed., McGraw-Hill, 2020.
+
+The maths in `katydid/tolerance.py` is tested against the books' worked examples: Fischer's Examples 4.1–4.4, Figures 8.9–8.14, the Figure 8.15 report (to four decimals) and Example 8.1, and Cogorno's Table 3-2. Where a book rounds an intermediate value, the test says so.
+
+**Stack-up** loads Fischer's Figure 8.9 chain live: drag *±tol 56.5* or *RSS factor* and the limits, the report and the Monte Carlo reject rate (spec 10 to 13) follow.
+
+![Fischer's stack-up example on the canvas](docs/stackup-canvas.png)
 
 ## Saving
 
-The canvas follows the active FreeCAD document. Its definition is stored on a **Katydid** object in that document (a JSON string property), so it is written into the `.FCStd`'s `Document.xml` when you save and the canvas comes back when you open the file. Edits are written to the document about 0.4 s after they stop, and again at the start of every save, so Ctrl+S right after a slider move still saves it. Switching documents switches the canvas; closing one clears it. Double-click the Katydid object in the tree to open the canvas. A component type this version does not know is kept as a red placeholder and saved back unchanged.
+The canvas follows the active FreeCAD document. Its definition is stored as JSON on a **Katydid** object in that document, so it is written into the `.FCStd` file's `Document.xml` and comes back when the file is opened. Edits are written about 0.4 s after they stop and again at the start of every save, so Ctrl+S straight after a slider move still saves it. Double-click the Katydid object in the tree to open the canvas. A component type this version does not know is kept as a red placeholder and saved back unchanged.
 
 ## Layout
 
-- `katydid/engine.py`: parameters, components, expire-then-solve, longest-list matching. No FreeCAD or Qt imports.
-- `katydid/components.py`: the component library (10 components).
-- `katydid/canvas.py`: the Qt canvas, grips, wires, search, tabs.
-- `katydid/preview.py`, `bake.py`: Coin3D preview and bake.
-- `katydid/gui.py`, `InitGui.py`: panel, commands, workbench.
+- `katydid/engine.py`, `tree.py`: components, parameters, data trees and the expire-then-solve solver. No FreeCAD or Qt imports.
+- `katydid/components.py`: the component library; `expr.py`: the formula evaluator; `tolerance.py`: stack-up and GD&T maths.
+- `katydid/canvas.py`: the Qt canvas, grips, wires, menus, search and tabs.
+- `katydid/document.py`, `feature.py`: the saved format and the document object that carries it.
+- `katydid/preview.py`, `bake.py`, `gui.py`, `InitGui.py`: the FreeCAD side.
 
 ## Tests
 
-```powershell
-$py = "$env:LOCALAPPDATA\Programs\FreeCAD 1.1\bin\python.exe"
-& $py -I tests\mutate.py          # engine, tree and save-format tests, plus 5 deliberate breaks that must be caught
-& $py -I tests\test_components.py # maths/list components and the formula evaluator
-python tests\run_gui_tests.py     # everything in real FreeCAD, on a hidden desktop
+Headless, with any Python 3.10+ that has PySide6 (numpy optional), or FreeCAD's bundled Python:
+
+```
+python tests/mutate.py
 ```
 
-`run_gui_tests.py` starts each FreeCAD on a private Win32 desktop through `surfacekit` (from `C:\dev\scripts`), so nothing appears on your screen; every run reports whether FreeCAD ever owned your foreground window and whether it had a window on your desktop. It runs `gui_smoke.py` (canvas driven with real mouse and key events, bake), `tree_smoke.py` (the tree demo, the grip menu by real right-clicks, Flatten/Simplify, save, reopen, bake), `attractor_smoke.py` (the attractor grid, a slider dragged with real mouse events, search, save and reopen), `persist_smoke.py` in a save phase and then a reopen phase in a fresh FreeCAD, and, in console FreeCAD, `persist_headless.py` and `test_geometry.py` (every geometry component against known answers, and the demos built without a GUI). `test_components.py` covers the maths and list components and the formula evaluator, including inputs it must refuse. Drag speed is only judged with `--visible`: on the hidden desktop FreeCAD's 3D repaint is several times slower than on the real display. Screenshots and results go to `../_runs/`; nothing is saved to your settings. `paint_profile.py` and `preview_profile.py` measure where frame time goes.
+This runs the engine, tree, save-format, component and tolerance tests, then breaks ten rules on purpose in a copy of the code and checks that each break is caught.
 
-## Not yet
+In FreeCAD (Windows): `python tests/run_gui_tests.py` drives the canvas with real mouse and key events, saves and reopens files in fresh FreeCAD processes, and checks every geometry component against known answers in console FreeCAD. Give it the optional `surfacekit` helper (`KATYDID_SURFACEKIT=<directory>`) and every FreeCAD runs on a private Win32 desktop, so nothing appears on your screen; without it the runner stops unless you pass `--visible`.
 
-Undo on the canvas, radial menu, a Param Viewer, Path Mapper and other tree components, clusters, script component, `.ghx` import.
+## Roadmap
+
+Datum reference frames and datum shift in stack-ups, 2D and angular stacks, undo on the canvas, a radial menu, Param Viewer and Path Mapper, clusters, a script component, and importing Grasshopper `.ghx` files.
+
+## License
+
+LGPL-2.1-or-later, like FreeCAD. See [LICENSE](LICENSE).
+
+Copyright (C) 2026 Foad S. Farimani
