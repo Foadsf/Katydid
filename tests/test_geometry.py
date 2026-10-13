@@ -387,6 +387,23 @@ class Demos(unittest.TestCase):
             self.assertTrue(s.isValid() and s.Volume > 0)
             self.assertAlmostEqual(s.BoundBox.XLength, c["thick"].value, places=6)
 
+    def test_contour_through_mesh_vertex_rows_is_one_curve(self):
+        # The NX canopy: at whole-number offsets the plane ran through rows of mesh
+        # vertices and the section came out as 3-10 pieces with extra loops
+        # (115 mm of curve where the exact cut is 96 mm).
+        prof = [V(0, 0, 0), V(16, 0, 22), V(12, 0, 44), V(30, 0, 62), V(58, 0, 70)]
+        curve = lib.Interpolate().solve_instance([Part.Vertex(p) for p in prof], False)
+        mirror = lib.Mirror().solve_instance(curve, (14, 45, 0), (0, 1, 0))
+        mid = lib.EvaluateCurve().solve_instance(curve, 0.5)[0].Point
+        middle = lib.Interpolate().solve_instance([V(14, 45, 0), V(mid.x, 45, mid.z), V(44, 45, 84)], False)
+        surface = lib.Loft().solve_instance([curve, middle, mirror], False)
+        contour = lib.Contour()
+        for y in (25.0, 30.0, 45.0, 65.0):
+            curves = contour.solve_instance(surface, (0, 1, 0), y)
+            exact = surface.slice(V(0, 1, 0), y)
+            self.assertEqual(len(curves), len(exact), y)
+            self.assertAlmostEqual(curves[0].Length, exact[0].Length, delta=0.002 * exact[0].Length)
+
     def test_surface_from_points_passes_through_its_grid(self):
         pts = [V(x, y, (x * y) / 50.0) for y in range(0, 40, 10) for x in range(0, 50, 10)]
         srf = lib.SurfaceFromPoints().solve_instance(pts, 5)

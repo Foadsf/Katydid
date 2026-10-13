@@ -1125,11 +1125,15 @@ class Contour(Component):
         if n.Length == 0:
             raise ValueError("Normal must not be zero")
         n.normalize()
+        tol = max(shape.BoundBox.DiagonalLength * self.TOLERANCE, 1e-4)
         if self._mesh[0] is not shape:
-            tol = max(shape.BoundBox.DiagonalLength * self.TOLERANCE, 1e-4)
             self._mesh = (shape, MeshPart.meshFromShape(Shape=shape, LinearDeflection=tol,
                                                         AngularDeflection=0.2, Relative=False))
-        sections = self._mesh[1].crossSections([(tuple(n * offset), tuple(n))], 1e-6)[0]
+        # A plane exactly through mesh vertices (common: whole-number offsets on a
+        # symmetric surface) gave spurious extra loops, 115 mm of curve where the exact
+        # cut is 96 mm. Nudging it by a thousandth of the mesh tolerance avoids that.
+        at = offset + tol * 1e-3
+        sections = self._mesh[1].crossSections([(tuple(n * at), tuple(n))], 1e-6)[0]
         return [Part.makePolygon(poly) for poly in sections if len(poly) > 1]
 
 
