@@ -53,6 +53,41 @@ class DocumentTests(unittest.TestCase):
         self.assertEqual(ser.inputs[0].default, 5.0)
         self.assertFalse(add.preview)
 
+    def test_point_defaults_round_trip_as_tuples(self):
+        from katydid.components import CircleCNR
+        g = Graph()
+        c = g.add(CircleCNR())
+        c.inputs[0].default = (1.0, 2.0, 3.0)
+        g2 = Graph()
+        document.build(g2, document.dumps(g))
+        self.assertEqual(g2.components[0].inputs[0].default, (1.0, 2.0, 3.0))
+
+    def test_value_dialog_parsing(self):
+        from katydid.canvas import format_value, parse_value, value_kind
+        self.assertEqual(value_kind((0.0, 0.0, 1.0)), "point")
+        self.assertEqual(value_kind(True), "bool")
+        self.assertIsNone(value_kind(None))
+        self.assertEqual(parse_value("point", "1, 2;3"), (1.0, 2.0, 3.0))
+        self.assertEqual(format_value("point", (1.0, 2.5, 0.0)), "1, 2.5, 0")
+        self.assertIs(parse_value("bool", "false"), False)
+        for kind, text in (("point", "1, 2"), ("number", "abc"), ("bool", "maybe")):
+            with self.assertRaises(ValueError):
+                parse_value(kind, text)
+
+    def test_inputs_without_default_declare_a_kind_and_it_persists(self):
+        from katydid.canvas import param_kind
+        from katydid.components import BonusTolerance, Distance, MonteCarlo, Move
+        self.assertEqual(param_kind(BonusTolerance().inputs[1]), "number")   # MMC
+        self.assertEqual(param_kind(Distance().inputs[0]), "point")
+        self.assertEqual(param_kind(MonteCarlo().inputs[4]), "number")       # LSL
+        self.assertIsNone(param_kind(Move().inputs[0]))                      # geometry: wire it
+        g = Graph()
+        b = g.add(BonusTolerance())
+        b.inputs[1].default = 0.505
+        g2 = Graph()
+        document.build(g2, document.dumps(g))
+        self.assertEqual(g2.components[0].inputs[1].default, 0.505)
+
     def test_unknown_type_is_kept_with_its_wires(self):
         g, pos = sample()
         data = document.dump(g, pos)

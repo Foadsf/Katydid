@@ -39,12 +39,13 @@ class Param:
 
     def __init__(self, owner: "Component", name: str, nickname: str,
                  description: str = "", default: Any = None, optional: bool = False,
-                 is_input: bool = True, access: str = ITEM):
+                 is_input: bool = True, access: str = ITEM, kind: str | None = None):
         self.owner = owner
         self.name = name
         self.nickname = nickname
         self.description = description
         self.default = default
+        self.kind = kind  # "number" / "point" / "text" / "bool": what Set value… may type
         self.optional = optional
         self.is_input = is_input
         self.access = access
@@ -97,8 +98,8 @@ class Component:
         """Declare inputs and outputs."""
 
     def add_input(self, name, nickname, description="", default=None, optional=False,
-                  access=ITEM) -> Param:
-        p = Param(self, name, nickname, description, default, optional, True, access)
+                  access=ITEM, kind=None) -> Param:
+        p = Param(self, name, nickname, description, default, optional, True, access, kind)
         self.inputs.append(p)
         return p
 

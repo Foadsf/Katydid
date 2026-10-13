@@ -1,0 +1,79 @@
+= Contributing
+:page-id: contributing
+include::_attributes.adoc[]
+
+[.lead]
+Katydid is free software (LGPL-2.1-or-later). Bug reports, ideas, components, tests and documentation are all welcome on {repo}[GitHub].
+
+== How the code is organised
+
+[cols="2,5",options="header"]
+|===
+|File |Responsibility
+|`katydid/engine.py`, `tree.py` |Components, parameters, data trees, matching and the expire-then-solve solver. No FreeCAD or Qt imports, so it is tested without either.
+|`katydid/components.py` |The component library.
+|`katydid/expr.py` |The safe formula evaluator used by Expression.
+|`katydid/tolerance.py` |Stack-up and GD&T maths.
+|`katydid/canvas.py` |The Qt canvas: components, grips, wires, menus, dialogs, search, tabs.
+|`katydid/document.py`, `feature.py` |The saved JSON format and the document object that carries it.
+|`katydid/preview.py`, `bake.py` |The Coin3D preview and baking.
+|`katydid/gui.py`, `InitGui.py` |The panel, FreeCAD commands and the workbench.
+|`katydid/demo.py` |The example definitions behind the toolbar buttons and the tutorials.
+|===
+
+== Writing a component
+
+A component declares its grips in `setup()` and computes in `solve_instance()`, which receives one argument per input and returns one value per output (a tuple when there are several). Matching items and branches, defaults, errors and data trees are handled for you.
+
+[source,python]
+----
+class Average(Component):
+    name = "Average"
+    nickname = "Avg"
+    glyph = "x̄"                       # text drawn on the icon
+    category = "Maths"                # the tab it appears on
+    description = "Arithmetic mean of each list"
+
+    def setup(self):
+        self.add_input("Numbers", "N", "Numbers to average", access=LIST)
+        self.add_output("Mean", "M", "Their mean")
+
+    def solve_instance(self, numbers):
+        return sum(numbers) / len(numbers)
+----
+
+Add the class to `REGISTRY` in `components.py`, then:
+
+* raise an exception with a clear message for bad input: the component turns red and shows it;
+* use `access=LIST` for inputs that need a whole branch and `access=LIST` on outputs that return a list per run (see xref:data-trees.adoc[Data trees]);
+* give inputs sensible defaults, or `kind="number"` / `kind="point"` so users can type a value;
+* import FreeCAD's `Part` inside `solve_instance`, not at module level, so the library still loads without FreeCAD;
+* add a test, and run `python tools/gen_docs.py` to update the component reference.
+
+== Tests
+
+[source,shell]
+----
+python tests/mutate.py
+----
+
+runs the headless suite (engine, trees, save format, components, tolerance maths) and then breaks ten rules on purpose in a copy of the code to check that each break is caught. It needs Python 3.10+ with PySide6 (numpy optional) and runs on every push via GitHub Actions.
+
+[source,shell]
+----
+python tests/run_gui_tests.py
+----
+
+drives the real FreeCAD GUI with mouse and keyboard events, saves and reopens files in fresh FreeCAD processes, and checks every geometry component against known answers in console FreeCAD. It is written for Windows. With the optional `surfacekit` helper (point `KATYDID_SURFACEKIT` at its folder) each FreeCAD runs on a private desktop, so nothing appears on your screen; without it the runner stops unless you pass `--visible`.
+
+== Documentation
+
+This site is written in AsciiDoc in the `docs/` folder and built with Asciidoctor by GitHub Actions on every push to `main`; the HTML is published from the `gh-pages` branch.
+
+* `python tools/build_docs.py` builds the site locally into `site/` (needs Ruby with the `asciidoctor` and `rouge` gems).
+* `python tools/gen_docs.py` regenerates the component reference and icons from the code; `--check` fails if they are out of date.
+* `python tests/run_gui_tests.py --only docshots` regenerates every screenshot from the tutorial definitions in `katydid/demo.py`, so the pictures always match the code.
+
+== Pull requests
+
+Keep changes focused, add or update tests, run `python tests/mutate.py`, and describe what changed and how you checked it.

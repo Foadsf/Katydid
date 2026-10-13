@@ -1,0 +1,94 @@
+= Installation
+:page-id: installation
+include::_attributes.adoc[]
+
+[.lead]
+Katydid is a FreeCAD workbench written in Python. Installing it means putting its folder into FreeCAD's `Mod` folder; there is nothing to compile.
+
+== Requirements
+
+[cols="1,3"]
+|===
+|FreeCAD |1.0 or newer (developed and tested on 1.1)
+|Qt bindings |PySide6, which FreeCAD 1.1 bundles
+|Python packages |none beyond what FreeCAD ships; numpy, also bundled, makes Monte Carlo about 50 times faster
+|Operating system |Windows, Linux or macOS (day-to-day testing is on Windows)
+|===
+
+TIP: Not sure which FreeCAD you have? Open menu:Help[About FreeCAD]. Katydid needs version 1.0 or later.
+
+== Find your Mod folder
+
+Every FreeCAD user has a personal `Mod` folder for workbenches. The quickest way to find it is to ask FreeCAD:
+
+. Open menu:View[Panels > Python console].
+. Type the following and press kbd:[Enter]:
++
+[source,python]
+----
+App.getUserAppDataDir()
+----
+. Your `Mod` folder is the `Mod` sub-folder of the path it prints. Create it if it does not exist.
+
+Typical locations:
+
+[cols="1,3"]
+|===
+|Windows, FreeCAD 1.1 |`%APPDATA%\FreeCAD\v1-1\Mod`
+|Windows, FreeCAD 1.0 |`%APPDATA%\FreeCAD\Mod`
+|Linux |`~/.local/share/FreeCAD/Mod` (FreeCAD 1.1 may use a `v1-1` sub-folder, as on Windows)
+|macOS |`~/Library/Application Support/FreeCAD/Mod`
+|===
+
+== Option A: clone with Git (recommended)
+
+Cloning makes updates a single command.
+
+[source,shell]
+----
+cd "<your Mod folder>"
+git clone https://github.com/Foadsf/Katydid.git
+----
+
+To update later:
+
+[source,shell]
+----
+cd "<your Mod folder>/Katydid"
+git pull
+----
+
+== Option B: download a ZIP
+
+. On the {repo}[GitHub page], choose btn:[Code] then btn:[Download ZIP].
+. Unzip it into your `Mod` folder.
+. Rename the folder from `Katydid-main` to `Katydid`.
+
+== Option C: FreeCAD's Addon Manager
+
+The Addon Manager can install from any Git repository you add to its list:
+
+. Open menu:Edit[Preferences > Addon Manager].
+. Under *Custom repositories*, add `https://github.com/Foadsf/Katydid` with branch `main`.
+. Open menu:Tools[Addon manager], find *Katydid* and install it.
+
+The Addon Manager then also tells you when updates are available.
+
+== Check that it works
+
+. Restart FreeCAD.
+. Pick *Katydid* in the workbench drop-down (or menu:View[Workbench > Katydid]).
+. The Katydid canvas opens as a floating window, and a *Katydid* menu and toolbar appear.
+. Click btn:[Demo] on the canvas toolbar. Four red boxes should appear in the 3D view.
+
+If they do, you are ready for the xref:quick-start.adoc[quick start].
+
+image::ui-window.png[FreeCAD with the Katydid canvas floating over the 3D view]
+
+== Uninstall
+
+Close FreeCAD and delete the `Katydid` folder from your `Mod` folder. Files you saved keep their Katydid definitions; they simply are not used until Katydid is installed again.
+
+== If something goes wrong
+
+See xref:troubleshooting.adoc[Troubleshooting]. The most common cause is a folder nested one level too deep (`Mod/Katydid/Katydid/InitGui.py`): `InitGui.py` must sit directly in `Mod/Katydid`.

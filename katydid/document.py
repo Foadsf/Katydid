@@ -51,6 +51,15 @@ class Missing(Component):
         self.messages = [f"Component type '{self.record.get('type')}' is not available"]
 
 
+def _saved_default(value):
+    """Numbers, text, booleans and (x, y, z) points are saved; anything else is not."""
+    if isinstance(value, _SCALARS):
+        return value
+    if isinstance(value, (tuple, list)) and all(isinstance(v, (int, float)) for v in value):
+        return list(value)
+    return None
+
+
 def dump(graph: Graph, positions: dict | None = None) -> dict:
     positions = positions or {}
     ids = {c: i for i, c in enumerate(graph.components, 1)}
@@ -62,8 +71,7 @@ def dump(graph: Graph, positions: dict | None = None) -> dict:
             rec = {"type": type(c).__name__, "nickname": c.nickname, "preview": c.preview,
                    "inputs": [p.nickname for p in c.inputs],
                    "outputs": [p.nickname for p in c.outputs],
-                   "defaults": [p.default if isinstance(p.default, _SCALARS) else None
-                                for p in c.inputs]}
+                   "defaults": [_saved_default(p.default) for p in c.inputs]}
             state = c.write_state()
             if state:
                 rec["state"] = state
@@ -110,7 +118,9 @@ def build(graph: Graph, data) -> tuple[dict, list[str]]:
             comp.nickname = rec.get("nickname", comp.nickname)
             comp.preview = bool(rec.get("preview", True))
             for p, value in zip(comp.inputs, rec.get("defaults", [])):
-                if value is not None:
+                if isinstance(value, list):
+                    p.default = tuple(value)
+                elif value is not None:
                     p.default = value
             comp.read_state(rec.get("state", {}))
             for side, params in (("in", comp.inputs), ("out", comp.outputs)):

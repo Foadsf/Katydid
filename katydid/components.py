@@ -422,7 +422,7 @@ class Remap(Component):
     description = "Map a value from a source range to a target range"
 
     def setup(self):
-        self.add_input("Value", "V", "Value to remap")
+        self.add_input("Value", "V", "Value to remap", kind="number")
         self.add_input("Source start", "S0", "Source range start", default=0.0)
         self.add_input("Source end", "S1", "Source range end", default=1.0)
         self.add_input("Target start", "T0", "Target range start", default=0.0)
@@ -577,8 +577,8 @@ class Vector2Pt(Component):
     description = "Vector from point A to point B"
 
     def setup(self):
-        self.add_input("Point A", "A", "Start point")
-        self.add_input("Point B", "B", "End point")
+        self.add_input("Point A", "A", "Start point", kind="point")
+        self.add_input("Point B", "B", "End point", kind="point")
         self.add_output("Vector", "V", "B - A")
         self.add_output("Length", "L", "Distance from A to B")
 
@@ -595,7 +595,7 @@ class Deconstruct(Component):
     description = "X, Y and Z of a point or vector"
 
     def setup(self):
-        self.add_input("Point", "P", "Point or vector")
+        self.add_input("Point", "P", "Point or vector", kind="point")
         self.add_output("X", "X", "X coordinate")
         self.add_output("Y", "Y", "Y coordinate")
         self.add_output("Z", "Z", "Z coordinate")
@@ -613,8 +613,8 @@ class Distance(Component):
     description = "Distance between two points"
 
     def setup(self):
-        self.add_input("Point A", "A", "First point")
-        self.add_input("Point B", "B", "Second point")
+        self.add_input("Point A", "A", "First point", kind="point")
+        self.add_input("Point B", "B", "Second point", kind="point")
         self.add_output("Distance", "D", "Distance from A to B")
 
     def solve_instance(self, a, b):
@@ -675,9 +675,9 @@ class Arc3Pt(Component):
     description = "Arc through three points"
 
     def setup(self):
-        self.add_input("Start", "A", "Start point")
-        self.add_input("Through", "B", "Point on the arc")
-        self.add_input("End", "C", "End point")
+        self.add_input("Start", "A", "Start point", kind="point")
+        self.add_input("Through", "B", "Point on the arc", kind="point")
+        self.add_input("End", "C", "End point", kind="point")
         self.add_output("Arc", "A", "Resulting arc")
 
     def solve_instance(self, a, b, c):
@@ -1002,8 +1002,8 @@ class MonteCarlo(Component):
         self.add_input("Samples", "N", "Number of random builds", default=10000.0)
         self.add_input("Seed", "Sd", "Random seed (same seed, same result)", default=1.0)
         self.add_input("Sigmas", "k", "A normal tolerance is this many standard deviations", default=3.0)
-        self.add_input("Lower limit", "LSL", "Lower spec limit of A-B", optional=True)
-        self.add_input("Upper limit", "USL", "Upper spec limit of A-B", optional=True)
+        self.add_input("Lower limit", "LSL", "Lower spec limit of A-B", optional=True, kind="number")
+        self.add_input("Upper limit", "USL", "Upper spec limit of A-B", optional=True, kind="number")
         self.add_output("Mean", "M", "Mean of A-B")
         self.add_output("Std dev", "σ", "Standard deviation of A-B")
         self.add_output("Out of spec", "%", "Percentage of builds outside the limits")
@@ -1024,10 +1024,10 @@ class BonusTolerance(Component):
     description = "Bonus and total geometric tolerance at an actual size (Cogorno)"
 
     def setup(self):
-        self.add_input("Actual size", "A", "Actual mating envelope size")
-        self.add_input("MMC", "MMC", "Maximum material size")
-        self.add_input("LMC", "LMC", "Least material size")
-        self.add_input("Geometric tolerance", "T", "Tolerance in the feature control frame")
+        self.add_input("Actual size", "A", "Actual mating envelope size", kind="number")
+        self.add_input("MMC", "MMC", "Maximum material size", kind="number")
+        self.add_input("LMC", "LMC", "Least material size", kind="number")
+        self.add_input("Geometric tolerance", "T", "Tolerance in the feature control frame", kind="number")
         self.add_input("Modifier", "Mod", "MMC, LMC or RFS", default="MMC")
         self.add_output("Bonus", "B", "Bonus tolerance")
         self.add_output("Total", "Tot", "Geometric + bonus")
@@ -1045,9 +1045,9 @@ class SizeBoundaries(Component):
     description = "Virtual and resultant condition of a feature of size at MMC (Cogorno)"
 
     def setup(self):
-        self.add_input("MMC", "MMC", "Maximum material size")
-        self.add_input("LMC", "LMC", "Least material size")
-        self.add_input("Geometric tolerance", "T", "Tolerance at MMC")
+        self.add_input("MMC", "MMC", "Maximum material size", kind="number")
+        self.add_input("LMC", "LMC", "Least material size", kind="number")
+        self.add_input("Geometric tolerance", "T", "Tolerance at MMC", kind="number")
         self.add_input("Internal", "Int", "True for a hole, False for a pin", default=True)
         self.add_output("Virtual condition", "VC", "Constant functional boundary")
         self.add_output("Resultant condition", "RC", "Worst-case opposite boundary")
@@ -1068,7 +1068,7 @@ class PositionToPlusMinus(Component):
     description = "Diametral position tolerance and size bonus as ± values for a stack (Fischer)"
 
     def setup(self):
-        self.add_input("Position", "P", "Diametral position tolerance")
+        self.add_input("Position", "P", "Diametral position tolerance", kind="number")
         self.add_input("Size tolerance", "S", "Size tolerance available as bonus", default=0.0)
         self.add_output("± position", "±P", "Half the position tolerance")
         self.add_output("± bonus", "±B", "Half the size tolerance")

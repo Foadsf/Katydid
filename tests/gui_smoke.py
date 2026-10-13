@@ -169,6 +169,50 @@ def body(run):
     spheres = [c for c in panel.graph.components if isinstance(c, lib.Sphere)]
     check("search_adds_sphere", len(spheres) == 1)
 
+    # 3b. double-click a slider: the editor changes name, range and value
+    item = panel.scene.items_by_comp[width]
+    label = view.mapFromScene(item.mapToScene(QtCore.QPointF(item.label_w / 2, item.h / 2)))
+    mouse(view, "press", label)
+    mouse(view, "release", label)
+    mouse(view, "double", label)
+    mouse(view, "release", label)
+    pump(200)
+    dlg = view.dialog
+    check("slider_dialog_opens", dlg is not None and dlg.isVisible())
+    if dlg is not None:
+        dlg.name.setText("W")
+        dlg.maximum.setText("60")
+        dlg.value.setText("33")
+        dlg.accept()
+        pump(300)
+    check("slider_dialog_applies", (width.nickname, width.maximum, width.value) == ("W", 60.0, 33.0)
+          and abs(d["move"].outputs[0].data[0].BoundBox.XLength - 33.0) < 1e-6,
+          [width.nickname, width.maximum, width.value])
+
+    # 3c. right-click an unwired input > Set value…; bad text is refused
+    series_start = d["series"].inputs[0]
+    pos = grip_pos(panel, series_start)
+    mouse(view, "press", pos, button=Qt.MouseButton.RightButton)
+    mouse(view, "release", pos, button=Qt.MouseButton.RightButton)
+    pump(200)
+    act = next((a for a in view.menu.actions() if a.text() == "Set value…"), None) if view.menu else None
+    check("set_value_in_grip_menu", act is not None)
+    if act is not None:
+        act.trigger()
+        view.menu.close()
+        pump(100)
+        view.dialog.setTextValue("5")
+        view.dialog.accept()
+        pump(300)
+    check("set_value_applies", series_start.default == 5.0 and d["panel"].text_lines[0] == "5",
+          [series_start.default, d["panel"].text_lines[:1]])
+    view.edit_default(series_start)
+    view.dialog.setTextValue("abc")
+    view.dialog.accept()
+    pump(200)
+    check("set_value_refuses_bad_text", series_start.default == 5.0 and view.last_error is not None,
+          view.last_error)
+
     # 4. wire by dragging from an output grip to an input grip, then drag it off
     if spheres:
         sph = spheres[0]

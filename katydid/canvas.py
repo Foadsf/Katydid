@@ -79,6 +79,52 @@ def _gradient(height, top, bottom):
     return QtGui.QBrush(g)
 
 
+def value_kind(value) -> str | None:
+    """What kind of value an input default is, for "Set value…" (None: not editable)."""
+    if isinstance(value, bool):
+        return "bool"
+    if isinstance(value, (int, float)):
+        return "number"
+    if isinstance(value, str):
+        return "text"
+    if isinstance(value, (tuple, list)) and len(value) == 3 and all(
+            isinstance(v, (int, float)) and not isinstance(v, bool) for v in value):
+        return "point"
+    return None
+
+
+def param_kind(param) -> str | None:
+    """The kind of value Set value… offers for an input: its default's, else its declared kind."""
+    return value_kind(param.default) or getattr(param, "kind", None)
+
+
+def format_value(kind, value) -> str:
+    if value is None:
+        return ""
+    if kind == "point":
+        return ", ".join(f"{v:g}" for v in value)
+    if kind == "number":
+        return f"{value:g}"
+    return str(value)
+
+
+def parse_value(kind, text: str):
+    """Text from the dialog to a value of the same kind; ValueError if it is not one."""
+    text = text.strip()
+    if kind == "number":
+        return float(text)
+    if kind == "bool":
+        if text.lower() not in ("true", "false"):
+            raise ValueError("Expected True or False")
+        return text.lower() == "true"
+    if kind == "point":
+        parts = [float(t) for t in text.replace(";", ",").split(",") if t.strip()]
+        if len(parts) != 3:
+            raise ValueError("Expected three numbers: x, y, z")
+        return tuple(parts)
+    return text
+
+
 def _pen(colour, width, style=Qt.PenStyle.SolidLine) -> QtGui.QPen:
     pen = QtGui.QPen(colour, width, style)
     pen.setCapStyle(Qt.PenCapStyle.RoundCap)
@@ -389,6 +435,12 @@ class SliderItem(ComponentItem):
             return
         super().mouseReleaseEvent(event)
 
+    def mouseDoubleClickEvent(self, event):
+        views = self.kscene.views()
+        if views:
+            views[0].edit_slider(self.comp)
+        event.accept()
+
 
 class PanelItem(ComponentItem):
     W, H = 190, 150
@@ -532,6 +584,27 @@ class KatydidScene(QtWidgets.QGraphicsScene):
         self.items_by_comp[param.owner].update()
         self.request_solve()
 
+    def set_default(self, param, value):
+        """The value an input uses when nothing is wired into it."""
+        param.default = value
+        param.owner.expire()
+        self.items_by_comp[param.owner].update()
+        self.request_solve()
+
+    def edit_slider(self, comp, name, minimum, maximum, decimals, value):
+        if not maximum > minimum:
+            raise ValueError("Maximum must be greater than minimum")
+        comp.nickname = name.strip() or comp.nickname
+        comp.minimum, comp.maximum, comp.decimals = float(minimum), float(maximum), int(decimals)
+        comp._set = None
+        comp.set_value(value)
+        item = self.items_by_comp[comp]
+        item.prepareGeometryChange()
+        item.layout()
+        item.update()
+        self.update_wires(item)
+        self.request_solve()
+
     def set_preview(self, comp, on):
         comp.preview = bool(on)
         self.items_by_comp[comp].update()
@@ -600,6 +673,8 @@ class KatydidView(QtWidgets.QGraphicsView):
         self._drag = None   # (anchor grip, temp path item)
         self._search = None
         self.menu = None    # the last grip/component menu (kept for tests)
+        self.dialog = None  # the last slider or value dialog (kept for tests)
+        self.last_error = None
 
     # background ---------------------------------------------------------------
     def drawBackground(self, painter, rect):
@@ -751,6 +826,9 @@ class KatydidView(QtWidgets.QGraphicsView):
             act.setCheckable(True)
             act.setChecked(p.reverse)
             act.triggered.connect(lambda on: scene.set_reverse(p, on))
+            if p.is_input and param_kind(p) is not None:
+                menu.addSeparator()
+                menu.addAction("Set value…", lambda: self.edit_default(p))
         elif items:
             comp = items[0].comp
             title = menu.addAction(comp.name)
@@ -794,6 +872,41 @@ class KatydidView(QtWidgets.QGraphicsView):
             return
         super().keyPressEvent(event)
 
+    # dialogs --------------------------------------------------------------------
+    def edit_slider(self, comp) -> "SliderDialog":
+        """Double-click a slider: name, range, decimals and value."""
+        self.dialog = SliderDialog(self, comp)
+        self.dialog.open()
+        return self.dialog
+
+    def edit_default(self, param) -> QtWidgets.QInputDialog:
+        """Right-click an input > Set value…: the value used when nothing is wired."""
+        kind = param_kind(param)
+        dlg = QtWidgets.QInputDialog(self)
+        dlg.setWindowTitle(f"{param.owner.nickname}: {param.name}")
+        dlg.setLabelText({"number": "Number", "text": "Text", "bool": "Value",
+                          "point": "Point or vector (x, y, z)"}[kind])
+        if kind == "bool":
+            dlg.setComboBoxItems(["True", "False"])
+        dlg.setTextValue(format_value(kind, param.default))
+
+        def accept(text):
+            if not text.strip() and param.optional:
+                self.scene().set_default(param, None)  # an empty optional input: no value
+                return
+            try:
+                value = parse_value(kind, text)
+            except ValueError as exc:
+                QtWidgets.QToolTip.showText(QtGui.QCursor.pos(), f"Not changed: {exc}", self)
+                self.last_error = str(exc)
+                return
+            self.scene().set_default(param, value)
+
+        dlg.textValueSelected.connect(accept)
+        dlg.open()
+        self.dialog = dlg
+        return dlg
+
     # search ---------------------------------------------------------------------
     def open_search(self, view_pos):
         if self._search is not None:
@@ -818,6 +931,55 @@ class KatydidView(QtWidgets.QGraphicsView):
         pos = self.mapToScene(event.position().toPoint())
         self.scene().add_component(lib.by_name(name)(), pos, centre=True)
         event.acceptProposedAction()
+
+
+class SliderDialog(QtWidgets.QDialog):
+    """Edit a Number Slider: name, minimum, maximum, decimals and value."""
+
+    def __init__(self, view, comp):
+        super().__init__(view)
+        self.view, self.comp = view, comp
+        self.setWindowTitle("Number Slider")
+        form = QtWidgets.QFormLayout(self)
+        self.name = QtWidgets.QLineEdit(comp.nickname)
+
+        def number(v):
+            edit = QtWidgets.QLineEdit(f"{v:g}")
+            edit.setValidator(QtGui.QDoubleValidator(-1e12, 1e12, 9, edit))
+            return edit
+
+        self.minimum, self.maximum, self.value = number(comp.minimum), number(comp.maximum), number(comp.value)
+        self.decimals = QtWidgets.QSpinBox()
+        self.decimals.setRange(0, 6)
+        self.decimals.setValue(int(comp.decimals))
+        for label, widget in (("Name", self.name), ("Minimum", self.minimum), ("Maximum", self.maximum),
+                              ("Decimals", self.decimals), ("Value", self.value)):
+            form.addRow(label, widget)
+        self.buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.StandardButton.Ok
+                                                  | QtWidgets.QDialogButtonBox.StandardButton.Cancel)
+        self.buttons.accepted.connect(self.accept)
+        self.buttons.rejected.connect(self.reject)
+        form.addRow(self.buttons)
+        for edit in (self.minimum, self.maximum, self.value):
+            edit.textChanged.connect(self._validate)
+        self.accepted.connect(self._apply)
+
+    def _numbers(self):
+        try:
+            return float(self.minimum.text()), float(self.maximum.text()), float(self.value.text())
+        except ValueError:
+            return None
+
+    def _validate(self):
+        n = self._numbers()
+        ok = n is not None and n[1] > n[0]
+        self.buttons.button(QtWidgets.QDialogButtonBox.StandardButton.Ok).setEnabled(ok)
+
+    def _apply(self):
+        n = self._numbers()
+        if n is not None and n[1] > n[0]:
+            self.view.scene().edit_slider(self.comp, self.name.text(), n[0], n[1],
+                                          self.decimals.value(), n[2])
 
 
 class SearchPopup(QtWidgets.QFrame):

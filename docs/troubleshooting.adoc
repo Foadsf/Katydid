@@ -1,0 +1,56 @@
+= Troubleshooting and FAQ
+:page-id: troubleshooting
+include::_attributes.adoc[]
+
+== Installation
+
+*Katydid is not in the workbench list.*
+Check that `InitGui.py` sits directly in `<Mod folder>/Katydid/`, not one level deeper (`Katydid/Katydid-main/InitGui.py` is a common result of unzipping). Check the folder name too, then restart FreeCAD. menu:View[Panels > Report view] shows the error if Katydid failed to load.
+
+*"No module named PySide6", or Qt errors in the Report view.*
+Katydid needs FreeCAD 1.0 or later with PySide6. Older FreeCAD versions (0.21 and before) use PySide2 and are not supported.
+
+== The canvas
+
+*I closed the canvas window.*
+Use menu:Katydid[Canvas] or the toolbar button, or double-click the *Katydid* object in the model tree.
+
+*Nothing appears in the 3D view.*
+Check that btn:[Preview] on the canvas toolbar is on, that the components' own previews are on (a darker grey component has its preview switched off), and that the component is not orange or red. Then use FreeCAD's *Fit all* (kbd:[V], kbd:[F]) in the 3D view; the geometry may simply be off-screen.
+
+*A component is orange.*
+One of its inputs has no data. Hover over it to see which; wire something in, or use menu:Set value…[] on the input's right-click menu to give it a value.
+
+*A component is red.*
+It could not compute. Hover over it for the reason, for example "Radius must be positive" or "A loft needs at least two section curves" (see the xref:tutorial-trees.adoc[tree tutorial] for that one).
+
+*My wire went away when I connected a second one.*
+Connecting to an input that already has a wire replaces it. Hold kbd:[Shift] while you release to add the wire instead.
+
+*Pressing Delete did not delete my FreeCAD object.*
+That is deliberate: while the canvas has the keyboard focus, kbd:[Delete] removes canvas components only. Click in the model tree or the 3D view first to delete document objects.
+
+*Dragging feels slow.*
+Heavy previews (hundreds of curved surfaces) take longest to draw. Switch off the previews you do not need (kbd:[Ctrl+Q]) or the whole preview (btn:[Preview]). Keep the canvas floating: docked, it redraws noticeably slower.
+
+*The results differ from Grasshopper.*
+Katydid follows Grasshopper's data-matching rules as described in xref:data-trees.adoc[Data trees], but they have not been verified against Grasshopper itself. Please report differences on {repo}/issues[GitHub] with both results.
+
+[[limits]]
+== Known limits
+
+Version 0.1 does not yet have:
+
+* undo and redo on the canvas (FreeCAD's undo does cover baking);
+* copy and paste of components, groups, clusters, or a radial menu;
+* a Param Viewer, Path Mapper or other tree-editing components;
+* a script component for writing your own components on the canvas;
+* resizing panels with the mouse (their size is saved, but set in code);
+* two-dimensional and angular tolerance stacks, datum shift and datum reference frames;
+* importing Grasshopper `.gh` / `.ghx` files.
+
+These are on the roadmap. Suggestions and contributions are welcome: see xref:contributing.adoc[Contributing].
+
+== Reporting a problem
+
+Open an {repo}/issues[issue] with your FreeCAD version (menu:Help[About FreeCAD], then btn:[Copy to clipboard]), what you did, what you expected and what happened. A small `.FCStd` file that shows the problem helps most.

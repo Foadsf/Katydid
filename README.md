@@ -2,8 +2,10 @@
 
 A Grasshopper-style visual programming canvas for [FreeCAD](https://www.freecad.org/), with data trees and tolerance analysis.
 
-![Attractor grid on the Katydid canvas](docs/attractor-canvas.png)
-![The attractor grid previewed in FreeCAD](docs/attractor-3d.png)
+**Documentation: <https://foadsf.github.io/Katydid/>** (installation, quick start, tutorials, shortcuts and the full component reference).
+
+![Attractor grid on the Katydid canvas](docs/images/attractor-canvas.png)
+![The attractor grid previewed in FreeCAD](docs/images/attractor-3d.png)
 
 Wire components on a node canvas, drag a slider, and the result updates live in FreeCAD's 3D view as a translucent preview. **Bake** turns it into ordinary FreeCAD objects. The canvas is saved inside the `.FCStd` file and comes back when you open it.
 
@@ -62,7 +64,7 @@ These rules are my reading of Grasshopper's, written down in `katydid/engine.py`
 
 **Tree Demo:** stacked circles → Divide Curve (a branch of points per circle) → a closed Polyline per branch → Loft with **Flatten** on its input, so one surface runs through every ring. Turn Flatten off and Loft goes red, because each branch then holds a single curve.
 
-![Lofted rings from the Tree Demo](docs/tree-loft-3d.png)
+![Lofted rings from the Tree Demo](docs/images/tree-loft-3d.png)
 
 **Attractor:** Grasshopper's classic attractor grid. Two Series and a Graft make a 10 × 10 grid; distance to an attractor point, Bounds (with Flatten) and Remap turn into circle radii; the circles are extruded by their radius. With 100 extruded tubes one update takes roughly 25 ms to solve and 125 ms to mesh the preview, so dragging redraws about 7 times a second; light definitions redraw well over 30 times a second.
 
@@ -79,7 +81,7 @@ The maths in `katydid/tolerance.py` is tested against the books' worked examples
 
 **Stack-up** loads Fischer's Figure 8.9 chain live: drag *±tol 56.5* or *RSS factor* and the limits, the report and the Monte Carlo reject rate (spec 10 to 13) follow.
 
-![Fischer's stack-up example on the canvas](docs/stackup-canvas.png)
+![Fischer's stack-up example on the canvas](docs/images/stackup-canvas.png)
 
 ## Saving
 

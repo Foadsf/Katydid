@@ -1,0 +1,65 @@
+= Tutorials
+:page-id: tutorials
+include::_attributes.adoc[]
+:toc!:
+
+[.lead]
+Short, complete examples you can build by hand in a few minutes. Each one teaches one idea and ends with things to try. Four of them can also be loaded with one click from the canvas toolbar, so you can compare your build with the reference.
+
+Before starting, make sure you can place components, wire them and edit a slider: the xref:quick-start.adoc[quick start] covers all three.
+
+[.cards]
+--
+[.card]
+****
+image::lists-3d.png[A row of four boxes]
+
+*xref:tutorial-lists.adoc[1. Lists: a row of boxes]*
+
+Series, Move and longest-list matching. +
+Toolbar: btn:[Demo]
+****
+
+[.card]
+****
+image::tree-3d.png[A loft through four polygonal rings]
+
+*xref:tutorial-trees.adoc[2. Data trees: lofted rings]*
+
+A branch per ring, list access, and why Loft needs Flatten. +
+Toolbar: btn:[Tree Demo]
+****
+
+[.card]
+****
+image::attractor-3d.png[Tubes sized by distance to an attractor]
+
+*xref:tutorial-attractor.adoc[3. The attractor grid]*
+
+A grid from Graft, distances, Bounds and Remap. +
+Toolbar: btn:[Attractor]
+****
+
+[.card]
+****
+image::stackup-canvas.png[A tolerance stack-up with report and histogram]
+
+*xref:tutorial-stackup.adoc[4. A tolerance stack-up]*
+
+Worst case, RSS and Monte Carlo on a textbook example. +
+Toolbar: btn:[Stack-up]
+****
+
+[.card]
+****
+image::gdt-canvas.png[Bonus tolerance and virtual condition calculators]
+
+*xref:tutorial-gdt.adoc[5. GD&T: bonus and virtual condition]*
+
+Bonus tolerance at MMC, virtual and resultant condition.
+****
+--
+
+== Conventions
+
+In the steps, *Component (Tab)* names a component and the tab it lives on; you can always double-click the canvas and type its name instead. "Wire *A → B*" means drag from output A to input B. Slider settings are written as _Name: value (minimum – maximum)_ and set in the slider editor (double-click the slider's name). "Set value" means choosing menu:Set value…[] from the input grip's right-click menu.

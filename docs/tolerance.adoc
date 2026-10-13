@@ -1,0 +1,114 @@
+= Tolerance analysis
+:page-id: tolerance
+include::_attributes.adoc[]
+:stem: latexmath
+
+[.lead]
+The *Tolerance* tab answers two everyday precision-engineering questions: given a chain of toleranced dimensions, how much can the result vary? And given a feature of size toleranced at MMC, how much position tolerance does it really get, and what are its worst-case boundaries?
+
+== Linear stack-ups
+
+A *stack-up* follows a chain of dimensions from one side of a gap (A) to the other (B). Katydid follows the method of B. R. Fischer, _Mechanical Tolerance Stackup and Analysis_ (2nd ed., CRC Press, 2011), chapters 4, 7 and 8.
+
+=== Dimensions
+
+Each *Dimension* component holds one link of the chain:
+
+[cols="1,4"]
+|===
+|*N* Nominal |The drawing value.
+|*U* Upper, *L* Lower |The deviations, with their signs: `10 +0.2/−0.1` is U = `0.2`, L = `-0.1`.
+|*D* Direction |`1` if the dimension runs from A towards B, `-1` if it runs back.
+|*S* Distribution |`normal`, `uniform` or `triangular`; used only by Monte Carlo.
+|*Nm* Name |The label in reports.
+|===
+
+Every dimension is first converted to *equal-bilateral* form, a mean value with a symmetric tolerance (Fischer, ch. 4):
+
+[stem]
+++++
+\text{mean} = N + \frac{U + L}{2}, \qquad t = \frac{U - L}{2}
+++++
+
+So `8.50 +.25/−.10` becomes `8.575 ± .175`, and a limit dimension `9.55 – 10.00` becomes `9.775 ± .225`. The *Dimension* outputs *M* and *T* show these two numbers.
+
+=== Worst case, RSS and adjusted RSS
+
+The *Stack-up* component takes the whole chain (list access, so wire every Dimension into its *D*, adding wires with kbd:[Shift]) and computes, with *d* = ±1 the direction of each dimension:
+
+[stem]
+++++
+\text{nominal} = \sum d_i\,\text{mean}_i \qquad
+T_{\text{worst}} = \sum t_i \qquad
+T_{\text{RSS}} = \sqrt{\sum t_i^2} \qquad
+T_{\text{adj}} = F \cdot T_{\text{RSS}}
+++++
+
+[cols="1,3",options="header"]
+|===
+|Result |How to read it
+|Worst case |Every dimension at its limit in the unluckiest direction at once. The gap can never fall outside these limits.
+|RSS |Root-sum-square: the probable range when dimensions vary independently and their processes are centred, each tolerance being the same number of standard deviations.
+|Adjusted RSS |RSS multiplied by a factor *F* (1.5 by default, as in Fischer's examples) to allow for processes that are not perfectly centred or independent.
+|===
+
+The *Report* output lists every dimension with its *share* of the worst-case total, which shows at a glance which tolerance to tighten first, followed by the three results with their minimum and maximum.
+
+=== Monte Carlo
+
+*Monte Carlo Stack-up* builds the assembly many times with random dimensions (10,000 by default) and reports the mean, the standard deviation, the percentage of builds outside the optional spec limits *LSL* and *USL*, and a text histogram.
+
+[cols="1,3",options="header"]
+|===
+|Distribution |How a dimension with tolerance ±t is drawn
+|normal |Mean ± t is *k* standard deviations (*k* = 3 by default, input *k*)
+|uniform |Equally likely anywhere in mean ± t
+|triangular |Most likely at the mean, falling linearly to mean ± t
+|===
+
+The same *Seed* gives the same builds every time, so results are reproducible; change it to see how much the reject rate varies between samples. When numpy is available (FreeCAD bundles it) the simulation is about 50 times faster than the pure-Python fallback; the two use different random streams, so a seed reproduces results only on the same one.
+
+TIP: With every tolerance normal and *k* = 3, the Monte Carlo standard deviation comes out close to RSS / 3, and about 0.27 % of builds fall outside nominal ± RSS. That is a good sanity check of a model.
+
+=== Verified against the book
+
+`tests/test_tolerance.py` reproduces Fischer's Examples 4.1–4.4 (equal-bilateral conversion), the chain of Figures 8.9–8.14, the report of Figure 8.15 to four decimals (including each line's percentage contribution) and Example 8.1. Where the book rounds an intermediate value the test says so: in Figure 8.14 Fischer multiplies the rounded RSS 1.94 by 1.5 (±2.91, exact ±2.9047), and in Example 8.1 he rounds √0.54 = 0.7348 up to 0.74.
+
+[[gdt]]
+== GD&T calculators
+
+The three GD&T components follow G. R. Cogorno, _Geometric Dimensioning and Tolerancing for Mechanical Design_ (3rd ed., McGraw-Hill, 2020), chapter 3, for features of size.
+
+=== Bonus Tolerance
+
+With an MMC modifier (Ⓜ) in the feature control frame, a feature gains *bonus tolerance* as its actual size departs from MMC towards LMC:
+
+[stem]
+++++
+\text{bonus} = |\,\text{actual} - \text{MMC}\,| \qquad \text{total} = \text{geometric tolerance} + \text{bonus}
+++++
+
+With an LMC modifier the bonus is measured from LMC instead; with RFS (no modifier) there is no bonus. An actual size outside the MMC–LMC range is an error: that part is rejected, not given a bonus. The component's results match Cogorno's Table 3-2 row by row (see the xref:tutorial-gdt.adoc[GD&T tutorial]).
+
+=== Virtual & Resultant Condition
+
+For a feature toleranced at MMC, with size tolerance = |LMC − MMC|:
+
+[cols="1,2,2",options="header"]
+|===
+| |Internal feature (hole) |External feature (pin)
+|Virtual condition |MMC − tolerance |MMC + tolerance
+|Resultant condition |LMC + tolerance + size tolerance |LMC − tolerance − size tolerance
+|Inner boundary |virtual condition |resultant condition
+|Outer boundary |resultant condition |virtual condition
+|===
+
+The virtual condition is the constant boundary a mating part must clear (the size of a functional gauge pin or hole). The resultant condition is the opposite worst case, used for minimum wall thickness.
+
+=== Position to ±
+
+A stack-up needs ± values, while a drawing gives a diametral position tolerance. *Position to ±* converts them as Fischer does: ± position = position tolerance / 2, and the bonus available from a size tolerance becomes ± size tolerance / 2.
+
+== Limits
+
+Stacks are one-dimensional: every dimension acts along the same direction. Two-dimensional and angular stacks, datum feature shift and datum reference frames are on the roadmap. The Monte Carlo model assumes independent dimensions.

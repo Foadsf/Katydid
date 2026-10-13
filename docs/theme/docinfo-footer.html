@@ -1,0 +1,25 @@
+<footer class="kd-footer">
+  <div>
+    <a href="index.html">Katydid</a> · a Grasshopper-style canvas for FreeCAD ·
+    <a href="https://github.com/Foadsf/Katydid/blob/main/LICENSE">LGPL-2.1-or-later</a> ·
+    <a href="https://github.com/Foadsf/Katydid">Source</a> ·
+    <a href="https://github.com/Foadsf/Katydid/issues">Issues</a> ·
+    <a class="kd-edit" href="https://github.com/Foadsf/Katydid/tree/main/docs">Edit this page</a>
+  </div>
+  <div class="kd-small">Grasshopper and Rhino are trademarks of Robert McNeel &amp; Associates; Katydid is not affiliated with them.</div>
+</footer>
+<script>
+(function () {
+  var page = (location.pathname.split("/").pop() || "index.html").replace(/\.html$/, "") || "index";
+  document.querySelectorAll(".kd-links a").forEach(function (a) {
+    var target = a.getAttribute("href").replace(/\.html$/, "");
+    var also = a.getAttribute("data-also");
+    if (target === page || (also && page.indexOf(also) === 0)) a.classList.add("active");
+  });
+  var edit = document.querySelector(".kd-edit");
+  if (edit) edit.href = "https://github.com/Foadsf/Katydid/edit/main/docs/" + page + ".adoc";
+  document.querySelectorAll(".kd-links a").forEach(function (a) {
+    a.addEventListener("click", function () { document.getElementById("kd-menu-toggle").checked = false; });
+  });
+})();
+</script>

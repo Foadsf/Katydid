@@ -106,6 +106,48 @@ def build_attractor(scene) -> dict:
     return c
 
 
+def build_first(scene) -> dict:
+    """Quick-start: one slider drives all three sizes of a box."""
+    size = lib.NumberSlider(20, 5, 40, 1)
+    size.nickname = "Size"
+    c = {"size": size, "box": lib.Box()}
+    scene.add_component(size, QPointF(-300, 20))
+    scene.add_component(c["box"], QPointF(20, 0))
+    for i in range(3):
+        scene.graph.connect(size.outputs[0], c["box"].inputs[i])
+    scene.rebuild_wires()
+    scene.request_solve()
+    return c
+
+
+def build_gdt(scene) -> dict:
+    """GD&T calculators on Cogorno's Table 3-2 hole: drag the actual size."""
+    actual = lib.NumberSlider(0.508, 0.505, 0.510, 3)
+    actual.nickname = "Actual size"
+    c = {"actual": actual, "bonus": lib.BonusTolerance(), "bounds": lib.SizeBoundaries(),
+         "bonus_panel": lib.Panel(), "bounds_panel": lib.Panel()}
+    for comp in (c["bonus"], c["bounds"]):
+        offset = 1 if comp is c["bonus"] else 0
+        comp.inputs[offset].default = 0.505       # MMC
+        comp.inputs[offset + 1].default = 0.510   # LMC
+        comp.inputs[offset + 2].default = 0.005   # geometric tolerance at MMC
+    c["bonus_panel"].size = (190, 70)
+    c["bounds_panel"].size = (190, 110)
+    layout = {"actual": (-330, -60), "bonus": (20, -110), "bounds": (20, 60),
+              "bonus_panel": (260, -110), "bounds_panel": (260, 60)}
+    for key, (x, y) in layout.items():
+        scene.add_component(c[key], QPointF(x, y))
+    g = scene.graph
+    g.connect(actual.outputs[0], c["bonus"].inputs[0])
+    for i in range(2):
+        g.connect(c["bonus"].outputs[i], c["bonus_panel"].inputs[0])
+    for i in range(4):
+        g.connect(c["bounds"].outputs[i], c["bounds_panel"].inputs[0])
+    scene.rebuild_wires()
+    scene.request_solve()
+    return c
+
+
 FISCHER_8_9 = [  # (name, nominal, tol, direction): Fischer 2011, Figures 8.9-8.14
     ("A to B (overall)", 56.5, 1.5, 1), ("Part 1", 11.0, 1.0, -1),
     ("Part 2", 17.5, 0.5, -1), ("Part 3", 16.5, 0.5, -1)]

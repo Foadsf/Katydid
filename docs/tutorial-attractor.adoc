@@ -1,0 +1,57 @@
+= Tutorial 3: The attractor grid
+:page-id: tutorial-attractor
+include::_attributes.adoc[]
+
+[.lead]
+The classic first parametric exercise: a grid of circles whose size depends on the distance to an "attractor" point, extruded into tubes. You will build a grid with *Graft*, measure distances, and remap them into radii.
+
+image::attractor-3d.png[Tubes that are small near the attractor and large far from it]
+
+Reference: click btn:[Attractor] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== The grid
+
+. Place two sliders: _Count: 10 (2 – 20)_ with Decimals `0`, and _Spacing: 10 (2 – 30)_.
+. Place two *Series* (Sets). Wire *Spacing → N* and *Count → C* on both.
+. Place a *Construct Point* (Vector). Wire the first *Series → X* and the second *Series → Y*.
+
+You get only 10 points, on a diagonal: X and Y were paired item by item.
+
+[start=4]
+. Right-click Construct Point's *Y* grip and tick menu:Graft[]. Now every Y value sits in its own branch, the single X branch is reused for each, and you get the full 10 × 10 grid, one branch per row. (See xref:data-trees.adoc#_two_classic_patterns[two classic patterns].)
+
+=== Distance to the attractor
+
+[start=5]
+. Place two sliders, _Attractor X: 25 (-20 – 120)_ and _Attractor Y: 65 (-20 – 120)_, and a second *Construct Point*. Wire them into its *X* and *Y*.
+. Place a *Distance* (Vector). Wire the grid *Pt → A* and the attractor *Pt → B*. You now have 100 distances, in the same 10 branches as the grid.
+
+=== Distances to radii
+
+[start=7]
+. Place a *Bounds* (Maths) and wire *Distance D → N*. Right-click its *N* grip and tick menu:Flatten[]: you want the smallest and largest distance of the whole grid, not of each row.
+. Place two sliders, _Min radius: 0.5 (0.1 – 5)_ and _Max radius: 4.5 (0.5 – 10)_.
+. Place a *Remap Numbers* (Maths). Wire *Distance D → V*, *Bounds Min → S0*, *Bounds Max → S1*, *Min radius → T0* and *Max radius → T1*. The nearest point now gets 0.5, the farthest 4.5, everything else in between.
+
+=== Circles and tubes
+
+[start=10]
+. Place a *Circle CNR* (Curve). Wire the grid *Pt → C* and *Remap R → R*. Its normal *N* defaults to Z, so the circles lie flat.
+. Place a slider _Height: 3 (0 – 10)_, a *Multiplication* (Maths), a *Vector XYZ* (Vector) and an *Extrude* (Surface). Wire *Remap R → A*, *Height → B*, *Multiplication R → Vector Z*, *Circle C → Extrude B* and *Vector V → Extrude D*.
+. Turn menu:Preview[] off on the grid Construct Point and on Circle CNR so only the tubes are drawn.
+
+image::attractor-canvas.png[The finished attractor definition]
+
+== What is happening
+
+Every component after Construct Point works on 10 branches of 10 items, and every one of them keeps that structure, so each radius, circle and tube stays matched to its own grid point. Bounds is the exception: with Flatten it sees all 100 distances at once and returns one minimum and one maximum, which Remap then reuses for every branch (a one-branch input is repeated).
+
+== Things to try
+
+* Drag *Attractor X* and *Attractor Y*: the small tubes follow the attractor.
+* Swap *Min radius* and *Max radius* (set Min to 4.5 and Max to 0.5): the effect inverts.
+* Raise *Count* to 20 for 400 tubes. Each update then takes noticeably longer, mostly to mesh the preview: with 100 tubes expect roughly 25 ms to solve and 125 ms to draw.
+* Drag *Height* to 0. Extrude turns red ("Direction must not be zero"): a zero-length vector cannot make a surface.
+* Select Extrude and click btn:[Bake] to add the 100 tubes to your document.

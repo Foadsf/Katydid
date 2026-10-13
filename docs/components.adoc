@@ -1,0 +1,928 @@
+= Component reference
+:page-id: components
+include::_attributes.adoc[]
+
+[.lead]
+All 48 components, tab by tab. This page is generated from the code (`tools/gen_docs.py`), so it always matches the version you are reading.
+
+How to read the tables: *Access* says how an input takes its data (see xref:data-trees.adoc#access[access modes]). An input with a *Default* works without a wire, and menu:Set value…[] on the input's right-click menu changes that value. _Type a number or wire it_ means it needs a value before the component can run; _wire it_ means it needs data from another component (geometry, for example).
+
+== Params
+
+[[cmp-NumberSlider]]
+=== image:icons/NumberSlider.png[Number Slider,28,28,role=icon] Number Slider
+
+*Nickname* `Slider` · Numeric slider for single values.
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Number |`N` |item |Slider value
+|===
+
+[[cmp-Panel]]
+=== image:icons/Panel.png[Panel,28,28,role=icon] Panel
+
+*Nickname* `Panel` · Shows the data flowing into it, branch by branch.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Input |`·` |tree |optional |Data to display
+|===
+
+== Maths
+
+[[cmp-Addition]]
+=== image:icons/Addition.png[Addition,28,28,role=icon] Addition
+
+*Nickname* `A+B` · Add two numbers.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|A |`A` |item |`0` |First operand
+|B |`B` |item |`0` |Second operand
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Result |`R` |item |A + B
+|===
+
+[[cmp-Multiplication]]
+=== image:icons/Multiplication.png[Multiplication,28,28,role=icon] Multiplication
+
+*Nickname* `A×B` · Multiply two numbers.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|A |`A` |item |`1` |First operand
+|B |`B` |item |`1` |Second operand
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Result |`R` |item |A × B
+|===
+
+[[cmp-Range]]
+=== image:icons/Range.png[Range,28,28,role=icon] Range
+
+*Nickname* `Range` · Evenly spaced numbers from start to end.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Start |`S` |item |`0` |First number
+|End |`E` |item |`1` |Last number
+|Steps |`N` |item |`10` |Number of steps (values = steps + 1)
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Range |`R` |list |The numbers
+|===
+
+[[cmp-Expression]]
+=== image:icons/Expression.png[Expression,28,28,role=icon] Expression
+
+*Nickname* `Expr` · Evaluate a formula in x, y and z (safe: arithmetic and math functions only).
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Formula |`F` |item |`"x"` |For example: x*2 + sin(y)
+|x |`x` |item |`0` |Variable x
+|y |`y` |item |`0` |Variable y
+|z |`z` |item |`0` |Variable z
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Result |`R` |item |Value of the formula
+|===
+
+[[cmp-Remap]]
+=== image:icons/Remap.png[Remap Numbers,28,28,role=icon] Remap Numbers
+
+*Nickname* `ReMap` · Map a value from a source range to a target range.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Value |`V` |item |_type a number or wire it_ |Value to remap
+|Source start |`S0` |item |`0` |Source range start
+|Source end |`S1` |item |`1` |Source range end
+|Target start |`T0` |item |`0` |Target range start
+|Target end |`T1` |item |`1` |Target range end
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Mapped |`R` |item |Remapped value
+|===
+
+[[cmp-Bounds]]
+=== image:icons/Bounds.png[Bounds,28,28,role=icon] Bounds
+
+*Nickname* `Bnd` · Smallest and largest number in each list.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Numbers |`N` |list |_wire it_ |Numbers
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Minimum |`Min` |item |Smallest number
+|Maximum |`Max` |item |Largest number
+|===
+
+== Sets
+
+[[cmp-Series]]
+=== image:icons/Series.png[Series,28,28,role=icon] Series
+
+*Nickname* `Series` · Arithmetic sequence of numbers.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Start |`S` |item |`0` |First number
+|Step |`N` |item |`1` |Step size
+|Count |`C` |item |`10` |Number of values
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Series |`S` |list |The sequence
+|===
+
+[[cmp-ListItem]]
+=== image:icons/ListItem.png[List Item,28,28,role=icon] List Item
+
+*Nickname* `Item` · The item at an index (wraps around by default).
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|List |`L` |list |_wire it_ |List to pick from
+|Index |`i` |item |`0` |Item index
+|Wrap |`W` |item |`True` |Wrap indices outside the list
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Item |`i` |item |The item
+|===
+
+[[cmp-ListLength]]
+=== image:icons/ListLength.png[List Length,28,28,role=icon] List Length
+
+*Nickname* `Lng` · Number of items in each list.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|List |`L` |list |optional |List to measure
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Length |`L` |item |Number of items
+|===
+
+[[cmp-CullPattern]]
+=== image:icons/CullPattern.png[Cull Pattern,28,28,role=icon] Cull Pattern
+
+*Nickname* `Cull` · Keep the items where a repeating True/False pattern is True.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|List |`L` |list |_wire it_ |List to cull
+|Pattern |`P` |list |`True` |True keeps, False removes; repeats
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|List |`L` |list |Kept items
+|===
+
+[[cmp-ShiftList]]
+=== image:icons/ShiftList.png[Shift List,28,28,role=icon] Shift List
+
+*Nickname* `Shift` · Move items along the list.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|List |`L` |list |_wire it_ |List to shift
+|Shift |`S` |item |`1` |Positions to shift by
+|Wrap |`W` |item |`True` |Bring items round to the other end
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|List |`L` |list |Shifted list
+|===
+
+== Vector
+
+[[cmp-ConstructPoint]]
+=== image:icons/ConstructPoint.png[Construct Point,28,28,role=icon] Construct Point
+
+*Nickname* `Pt` · Point from X, Y and Z.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|X |`X` |item |`0` |X coordinate
+|Y |`Y` |item |`0` |Y coordinate
+|Z |`Z` |item |`0` |Z coordinate
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Point |`Pt` |item |The point
+|===
+
+[[cmp-VectorXYZ]]
+=== image:icons/VectorXYZ.png[Vector XYZ,28,28,role=icon] Vector XYZ
+
+*Nickname* `Vec` · Vector from X, Y and Z.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|X |`X` |item |`0` |X component
+|Y |`Y` |item |`0` |Y component
+|Z |`Z` |item |`0` |Z component
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Vector |`V` |item |The vector
+|Length |`L` |item |Its length
+|===
+
+[[cmp-Vector2Pt]]
+=== image:icons/Vector2Pt.png[Vector 2Pt,28,28,role=icon] Vector 2Pt
+
+*Nickname* `Vec2Pt` · Vector from point A to point B.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Point A |`A` |item |_type a point or wire it_ |Start point
+|Point B |`B` |item |_type a point or wire it_ |End point
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Vector |`V` |item |B - A
+|Length |`L` |item |Distance from A to B
+|===
+
+[[cmp-Deconstruct]]
+=== image:icons/Deconstruct.png[Deconstruct,28,28,role=icon] Deconstruct
+
+*Nickname* `pDecon` · X, Y and Z of a point or vector.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Point |`P` |item |_type a point or wire it_ |Point or vector
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|X |`X` |item |X coordinate
+|Y |`Y` |item |Y coordinate
+|Z |`Z` |item |Z coordinate
+|===
+
+[[cmp-Distance]]
+=== image:icons/Distance.png[Distance,28,28,role=icon] Distance
+
+*Nickname* `Dist` · Distance between two points.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Point A |`A` |item |_type a point or wire it_ |First point
+|Point B |`B` |item |_type a point or wire it_ |Second point
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Distance |`D` |item |Distance from A to B
+|===
+
+== Curve
+
+[[cmp-Circle]]
+=== image:icons/Circle.png[Circle,28,28,role=icon] Circle
+
+*Nickname* `Cir` · Circle in a horizontal plane.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Radius |`R` |item |`10` |Circle radius
+|Height |`Z` |item |`0` |Height of the circle's plane
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Circle |`C` |item |Resulting circle
+|===
+
+[[cmp-CircleCNR]]
+=== image:icons/CircleCNR.png[Circle CNR,28,28,role=icon] Circle CNR
+
+*Nickname* `Circle` · Circle from centre, normal and radius.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Center |`C` |item |`(0, 0, 0)` |Centre point
+|Normal |`N` |item |`(0, 0, 1)` |Normal of the circle's plane
+|Radius |`R` |item |`1` |Radius
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Circle |`C` |item |Resulting circle
+|===
+
+[[cmp-Line]]
+=== image:icons/Line.png[Line,28,28,role=icon] Line
+
+*Nickname* `Ln` · Straight line between two points.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Start |`A` |item |`(0, 0, 0)` |Start point
+|End |`B` |item |`(10, 0, 0)` |End point
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Line |`L` |item |Resulting line
+|===
+
+[[cmp-Arc3Pt]]
+=== image:icons/Arc3Pt.png[Arc 3Pt,28,28,role=icon] Arc 3Pt
+
+*Nickname* `Arc` · Arc through three points.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Start |`A` |item |_type a point or wire it_ |Start point
+|Through |`B` |item |_type a point or wire it_ |Point on the arc
+|End |`C` |item |_type a point or wire it_ |End point
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Arc |`A` |item |Resulting arc
+|===
+
+[[cmp-Polyline]]
+=== image:icons/Polyline.png[Polyline,28,28,role=icon] Polyline
+
+*Nickname* `PLine` · Polyline through a list of points.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Vertices |`V` |list |_wire it_ |Points, in order
+|Closed |`C` |item |`False` |Close the polyline
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Polyline |`Pl` |item |Resulting polyline
+|===
+
+[[cmp-Interpolate]]
+=== image:icons/Interpolate.png[Interpolate,28,28,role=icon] Interpolate
+
+*Nickname* `IntCrv` · Smooth curve through a list of points.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Vertices |`V` |list |_wire it_ |Points, in order
+|Periodic |`P` |item |`False` |Close the curve smoothly
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Curve |`C` |item |Resulting curve
+|===
+
+[[cmp-DivideCurve]]
+=== image:icons/DivideCurve.png[Divide Curve,28,28,role=icon] Divide Curve
+
+*Nickname* `Divide` · Points dividing a curve into equal-length segments.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Curve |`C` |item |_wire it_ |Curve to divide
+|Count |`N` |item |`10` |Number of segments
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Points |`P` |list |Division points
+|===
+
+[[cmp-EvaluateCurve]]
+=== image:icons/EvaluateCurve.png[Evaluate Curve,28,28,role=icon] Evaluate Curve
+
+*Nickname* `Eval` · Point and tangent at a normalised parameter (0 = start, 1 = end).
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Curve |`C` |item |_wire it_ |Curve to evaluate
+|Parameter |`t` |item |`0.5` |0 to 1 along the curve
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Point |`P` |item |Point on the curve
+|Tangent |`T` |item |Unit tangent there
+|===
+
+[[cmp-OffsetCurve]]
+=== image:icons/OffsetCurve.png[Offset Curve,28,28,role=icon] Offset Curve
+
+*Nickname* `Offset` · Offset a planar curve in its own plane.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Curve |`C` |item |_wire it_ |Planar curve
+|Distance |`D` |item |`1` |Offset distance (negative goes inward)
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Curve |`C` |item |Offset curve
+|===
+
+== Surface
+
+[[cmp-Box]]
+=== image:icons/Box.png[Center Box,28,28,role=icon] Center Box
+
+*Nickname* `Box` · Box centred on the XY origin.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|X size |`X` |item |`10` |Size in X
+|Y size |`Y` |item |`10` |Size in Y
+|Z size |`Z` |item |`10` |Size in Z
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Box |`B` |item |Resulting solid
+|===
+
+[[cmp-Sphere]]
+=== image:icons/Sphere.png[Sphere,28,28,role=icon] Sphere
+
+*Nickname* `Sph` · Sphere at the origin.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Radius |`R` |item |`5` |Sphere radius
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Sphere |`S` |item |Resulting solid
+|===
+
+[[cmp-Cylinder]]
+=== image:icons/Cylinder.png[Cylinder,28,28,role=icon] Cylinder
+
+*Nickname* `Cyl` · Cylinder standing on the origin.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Radius |`R` |item |`5` |Cylinder radius
+|Length |`L` |item |`10` |Cylinder height
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Cylinder |`C` |item |Resulting solid
+|===
+
+[[cmp-Loft]]
+=== image:icons/Loft.png[Loft,28,28,role=icon] Loft
+
+*Nickname* `Loft` · Surface through a list of section curves.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Curves |`C` |list |_wire it_ |Section curves, in order
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Loft |`L` |item |Resulting surface
+|===
+
+[[cmp-Extrude]]
+=== image:icons/Extrude.png[Extrude,28,28,role=icon] Extrude
+
+*Nickname* `Extr` · Extrude a curve or surface along a vector.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Base |`B` |item |_wire it_ |Curve or surface to extrude
+|Direction |`D` |item |`(0, 0, 10)` |Extrusion vector
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Extrusion |`E` |item |Resulting surface or solid
+|===
+
+[[cmp-Pipe]]
+=== image:icons/Pipe.png[Pipe,28,28,role=icon] Pipe
+
+*Nickname* `Pipe` · Round solid pipe along a curve.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Curve |`C` |item |_wire it_ |Rail curve
+|Radius |`R` |item |`1` |Pipe radius
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Pipe |`P` |item |Resulting solid
+|===
+
+[[cmp-CapHoles]]
+=== image:icons/CapHoles.png[Cap Holes,28,28,role=icon] Cap Holes
+
+*Nickname* `Cap` · Close planar openings to make a solid.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Shape |`B` |item |_wire it_ |Open surface
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Solid |`B` |item |Closed solid
+|===
+
+== Transform
+
+[[cmp-Move]]
+=== image:icons/Move.png[Move,28,28,role=icon] Move
+
+*Nickname* `Move` · Translate geometry.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Geometry |`G` |item |_wire it_ |Geometry to move
+|X |`X` |item |`0` |Offset in X
+|Y |`Y` |item |`0` |Offset in Y
+|Z |`Z` |item |`0` |Offset in Z
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Geometry |`G` |item |Moved geometry
+|===
+
+[[cmp-Rotate]]
+=== image:icons/Rotate.png[Rotate,28,28,role=icon] Rotate
+
+*Nickname* `Rot` · Rotate geometry about an axis.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Geometry |`G` |item |_wire it_ |Geometry to rotate
+|Angle |`A` |item |`90` |Angle in degrees
+|Center |`C` |item |`(0, 0, 0)` |Point on the axis
+|Axis |`X` |item |`(0, 0, 1)` |Axis direction
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Geometry |`G` |item |Rotated geometry
+|===
+
+[[cmp-Scale]]
+=== image:icons/Scale.png[Scale,28,28,role=icon] Scale
+
+*Nickname* `Scale` · Scale geometry uniformly about a point.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Geometry |`G` |item |_wire it_ |Geometry to scale
+|Factor |`F` |item |`2` |Scale factor
+|Center |`C` |item |`(0, 0, 0)` |Fixed point
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Geometry |`G` |item |Scaled geometry
+|===
+
+[[cmp-Mirror]]
+=== image:icons/Mirror.png[Mirror,28,28,role=icon] Mirror
+
+*Nickname* `Mirror` · Mirror geometry in a plane.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Geometry |`G` |item |_wire it_ |Geometry to mirror
+|Point |`P` |item |`(0, 0, 0)` |Point on the mirror plane
+|Normal |`N` |item |`(1, 0, 0)` |Normal of the mirror plane
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Geometry |`G` |item |Mirrored geometry
+|===
+
+[[cmp-LinearArray]]
+=== image:icons/LinearArray.png[Linear Array,28,28,role=icon] Linear Array
+
+*Nickname* `ArrLin` · Copies of geometry along a vector.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Geometry |`G` |item |_wire it_ |Geometry to copy
+|Direction |`D` |item |`(10, 0, 0)` |Step between copies
+|Count |`N` |item |`3` |Number of copies
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Geometry |`G` |list |The copies
+|===
+
+== Intersect
+
+[[cmp-Union]]
+=== image:icons/Union.png[Solid Union,28,28,role=icon] Solid Union
+
+*Nickname* `SUnion` · Boolean union of the solids in each branch.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Breps |`B` |list |_wire it_ |Solids to combine
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Result |`R` |item |Union
+|===
+
+[[cmp-Difference]]
+=== image:icons/Difference.png[Solid Difference,28,28,role=icon] Solid Difference
+
+*Nickname* `SDiff` · Subtract every solid in B from A.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Solid A |`A` |item |_wire it_ |Solid to cut from
+|Solids B |`B` |list |_wire it_ |Solids to subtract
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Result |`R` |item |A minus B
+|===
+
+[[cmp-Intersection]]
+=== image:icons/Intersection.png[Solid Intersection,28,28,role=icon] Solid Intersection
+
+*Nickname* `SInt` · The volume shared by A and B.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Solid A |`A` |item |_wire it_ |First solid
+|Solid B |`B` |item |_wire it_ |Second solid
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Result |`R` |item |A and B
+|===
+
+== Tolerance
+
+[[cmp-Dimension]]
+=== image:icons/Dimension.png[Dimension,28,28,role=icon] Dimension
+
+*Nickname* `Dim` · A toleranced dimension in a stack-up chain.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Nominal |`N` |item |`10` |Nominal value
+|Upper |`U` |item |`0.1` |Upper deviation (e.g. 0.1)
+|Lower |`L` |item |`-0.1` |Lower deviation (e.g. -0.1)
+|Direction |`D` |item |`1` |+1 if it runs from A toward B, -1 if back
+|Distribution |`S` |item |`"normal"` |normal, uniform or triangular
+|Name |`Nm` |item |`""` |Label for reports
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Dimension |`D` |item |The dimension
+|Mean |`M` |item |Equal-bilateral nominal
+|Tolerance |`T` |item |Equal-bilateral ± tolerance
+|===
+
+[[cmp-StackUp]]
+=== image:icons/StackUp.png[Stack-up,28,28,role=icon] Stack-up
+
+*Nickname* `Stack` · Worst-case, RSS and adjusted RSS stack-up of a chain of dimensions (Fischer).
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Dimensions |`D` |list |_wire it_ |The chain, from A to B
+|Factor |`F` |item |`1.5` |Adjustment factor for RSS
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Nominal |`N` |item |Nominal distance A-B
+|Worst case |`WC` |item |Worst-case ± tolerance
+|RSS |`RSS` |item |Root-sum-square ± tolerance
+|Adjusted RSS |`ARSS` |item |RSS × factor
+|Worst min |`Wmin` |item |Worst-case minimum
+|Worst max |`Wmax` |item |Worst-case maximum
+|Adjusted min |`Amin` |item |Adjusted RSS minimum
+|Adjusted max |`Amax` |item |Adjusted RSS maximum
+|Report |`R` |list |Report lines
+|===
+
+[[cmp-MonteCarlo]]
+=== image:icons/MonteCarlo.png[Monte Carlo Stack-up,28,28,role=icon] Monte Carlo Stack-up
+
+*Nickname* `MC` · Random builds of the chain: spread, out-of-spec share and histogram.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Dimensions |`D` |list |_wire it_ |The chain, from A to B
+|Samples |`N` |item |`10000` |Number of random builds
+|Seed |`Sd` |item |`1` |Random seed (same seed, same result)
+|Sigmas |`k` |item |`3` |A normal tolerance is this many standard deviations
+|Lower limit |`LSL` |item |optional |Lower spec limit of A-B
+|Upper limit |`USL` |item |optional |Upper spec limit of A-B
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Mean |`M` |item |Mean of A-B
+|Std dev |`σ` |item |Standard deviation of A-B
+|Out of spec |`%` |item |Percentage of builds outside the limits
+|Histogram |`H` |list |Text histogram
+|===
+
+[[cmp-BonusTolerance]]
+=== image:icons/BonusTolerance.png[Bonus Tolerance,28,28,role=icon] Bonus Tolerance
+
+*Nickname* `Bonus` · Bonus and total geometric tolerance at an actual size (Cogorno).
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Actual size |`A` |item |_type a number or wire it_ |Actual mating envelope size
+|MMC |`MMC` |item |_type a number or wire it_ |Maximum material size
+|LMC |`LMC` |item |_type a number or wire it_ |Least material size
+|Geometric tolerance |`T` |item |_type a number or wire it_ |Tolerance in the feature control frame
+|Modifier |`Mod` |item |`"MMC"` |MMC, LMC or RFS
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Bonus |`B` |item |Bonus tolerance
+|Total |`Tot` |item |Geometric + bonus
+|===
+
+[[cmp-SizeBoundaries]]
+=== image:icons/SizeBoundaries.png[Virtual & Resultant Condition,28,28,role=icon] Virtual & Resultant Condition
+
+*Nickname* `VC/RC` · Virtual and resultant condition of a feature of size at MMC (Cogorno).
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|MMC |`MMC` |item |_type a number or wire it_ |Maximum material size
+|LMC |`LMC` |item |_type a number or wire it_ |Least material size
+|Geometric tolerance |`T` |item |_type a number or wire it_ |Tolerance at MMC
+|Internal |`Int` |item |`True` |True for a hole, False for a pin
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Virtual condition |`VC` |item |Constant functional boundary
+|Resultant condition |`RC` |item |Worst-case opposite boundary
+|Inner boundary |`IB` |item |Worst-case inner boundary
+|Outer boundary |`OB` |item |Worst-case outer boundary
+|===
+
+[[cmp-PositionToPlusMinus]]
+=== image:icons/PositionToPlusMinus.png[Position to ±,28,28,role=icon] Position to ±
+
+*Nickname* `Pos±` · Diametral position tolerance and size bonus as ± values for a stack (Fischer).
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Position |`P` |item |_type a number or wire it_ |Diametral position tolerance
+|Size tolerance |`S` |item |`0` |Size tolerance available as bonus
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|± position |`±P` |item |Half the position tolerance
+|± bonus |`±B` |item |Half the size tolerance
+|===
+

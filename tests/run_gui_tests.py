@@ -31,7 +31,8 @@ RUNS = [("smoke", "freecad.exe", "gui_smoke.py"),
         ("save", "freecad.exe", "persist_smoke.py"),
         ("load", "freecad.exe", "persist_smoke.py"),
         ("headless", "freecadcmd.exe", "persist_headless.py"),
-        ("geometry", "freecadcmd.exe", "test_geometry.py")]
+        ("geometry", "freecadcmd.exe", "test_geometry.py"),
+        ("docshots", "freecad.exe", "doc_shots.py")]  # regenerates docs/images
 
 
 def surfacekit():
@@ -104,6 +105,8 @@ def main(argv=None):
     failed, summary = 0, {}
     for name, exe, script in RUNS:
         if only and name not in only:
+            continue
+        if not only and name == "docshots":  # rewrites docs/images: only on request
             continue
         env = dict(os.environ, KATYDID_OUT=args.out, KATYDID_PHASE=name)
         env.pop("KATYDID_EXPERIMENTS", None)

@@ -1,0 +1,15 @@
+:toc: left
+:toclevels: 2
+:toc-title: On this page
+:sectanchors:
+:sectlinks:
+:icons: font
+:experimental:
+:source-highlighter: rouge
+:rouge-style: github
+:imagesdir: images
+:docinfo: shared
+:docinfodir: theme
+:nofooter:
+:repo: https://github.com/Foadsf/Katydid
+:freecad: https://www.freecad.org

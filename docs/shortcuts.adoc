@@ -1,0 +1,67 @@
+= Mouse and keyboard
+:page-id: shortcuts
+include::_attributes.adoc[]
+
+[.lead]
+Every gesture and key the canvas understands. Keys act on the canvas when it has the keyboard focus (click on it first).
+
+== Mouse
+
+[cols="2,3",options="header"]
+|===
+|Gesture |What it does
+|Double-click empty canvas |Open the search box at the cursor
+|Double-click a slider's name |Open the slider editor (name, range, decimals, value)
+|Left-drag a component |Move it (selected components move together)
+|Left-click a component |Select it
+|Left-drag on empty canvas |Select with a rectangle
+|Left-drag from an output grip to an input grip |Connect them (replaces the input's wires)
+|kbd:[Shift] + release on an input grip |Connect and *keep* the input's other wires
+|Left-drag from a wired input grip |Pick its last wire up; drop it on another input to move it, or on empty canvas to delete it
+|Left-drag along a slider's rail |Change the value; a click on the rail jumps there
+|Right-drag |Pan the canvas
+|Right-click a grip |Data mapping menu: Flatten, Graft, Simplify, Reverse, and Set value… on unwired inputs
+|Right-click a component |Component menu: Preview, Delete
+|Mouse wheel |Zoom about the cursor (10 % to 500 %)
+|Hover a component or a grip |Tooltip with names, description, data summary and messages
+|Drag an icon from the tabs |Place that component where you drop it
+|Click an icon in the tabs |Place that component in the middle of the canvas
+|===
+
+== Keyboard
+
+[cols="2,3",options="header"]
+|===
+|Keys |What it does
+|kbd:[Delete] or kbd:[Backspace] |Remove the selected components from the canvas (never document objects)
+|kbd:[Ctrl+Q] |Turn the preview of the selected components on or off
+|===
+
+While the canvas has focus it keeps kbd:[Delete] and kbd:[Ctrl+Q] for itself, so they cannot reach FreeCAD by accident: in FreeCAD these keys would delete document objects and quit the program.
+
+== Search box
+
+[cols="2,3",options="header"]
+|===
+|Keys |What it does
+|Typing |Filter by name, nickname, tab or description
+|kbd:[↑] / kbd:[↓] |Move through the results
+|kbd:[Enter] |Place the highlighted component
+|kbd:[Esc] |Close without placing anything
+|Click a result |Place it
+|===
+
+== FreeCAD commands
+
+These live in the *Katydid* menu and toolbar of the workbench, so you can also give them your own shortcuts in menu:Tools[Customize > Keyboard].
+
+[cols="2,3",options="header"]
+|===
+|Command |What it does
+|menu:Katydid[Canvas] |Show the canvas (and create it the first time)
+|menu:Katydid[Bake] |Bake the selected canvas components into the document
+|kbd:[Ctrl+Z] in FreeCAD |Undo the last bake
+|Double-click the *Katydid* object in the model tree |Show the canvas for that document
+|===
+
+NOTE: Undo on the canvas itself, a radial menu on kbd:[Space] and copy and paste of components are not available yet; see xref:troubleshooting.adoc#limits[known limits].

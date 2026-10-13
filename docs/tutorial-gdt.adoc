@@ -1,0 +1,46 @@
+= Tutorial 5: GD&T, bonus tolerance and virtual condition
+:page-id: tutorial-gdt
+include::_attributes.adoc[]
+
+[.lead]
+A hole of diameter .505 to .510 is located with a position tolerance of ⌀.005 at MMC. How much extra (bonus) tolerance does a hole get as it is made larger, and what are its worst-case boundaries? The numbers come from G. R. Cogorno, _Geometric Dimensioning and Tolerancing for Mechanical Design_ (3rd ed.), Table 3-2.
+
+image::gdt-canvas.png[A slider for the actual size feeding the Bonus Tolerance calculator, and the boundary calculator]
+
+== Build it
+
+. Place a slider _Actual size: 0.508 (0.505 – 0.510)_ with Decimals `3`.
+. Place a *Bonus Tolerance* (Tolerance). Wire *Actual size → A*. With menu:Set value…[], set *MMC* to `0.505`, *LMC* to `0.510` and *T* to `0.005`. Leave *Mod* at `MMC`.
+. Place a *Virtual & Resultant Condition* (Tolerance). Set *MMC* `0.505`, *LMC* `0.510`, *T* `0.005`, and leave *Int* (internal) at `True`, because a hole is an internal feature.
+. Place two Panels: wire *Bonus B* and *Tot* into one, and *VC*, *RC*, *IB* and *OB* into the other.
+
+== Read the results
+
+At an actual size of .508 the hole has departed .003 from its MMC of .505, so it gains a *bonus* of .003 and its total position tolerance is .005 + .003 = .008. Drag the slider and compare with Cogorno's table:
+
+[cols="1,1,1",options="header"]
+|===
+|Actual size |Bonus |Total position tolerance
+|.505 (MMC) |.000 |.005
+|.506 |.001 |.006
+|.507 |.002 |.007
+|.508 |.003 |.008
+|.509 |.004 |.009
+|.510 (LMC) |.005 |.010
+|===
+
+The boundary calculator gives:
+
+* *Virtual condition* .500 = MMC − tolerance: the constant boundary a mating pin must clear (the gauge pin size).
+* *Resultant condition* .520 = LMC + tolerance + size tolerance: the worst-case outer boundary, which decides the minimum wall thickness around the hole.
+
+For a hole the inner boundary is the virtual condition and the outer boundary the resultant condition; for a pin it is the other way round.
+
+== Things to try
+
+* Set *Mod* to `RFS` (regardless of feature size): the bonus is always zero.
+* Set *Mod* to `LMC`: the tolerance now applies at the largest hole, and the bonus grows as the hole gets *smaller*.
+* Model the matching pin: on the boundary calculator set *MMC* `0.510`, *LMC* `0.505` and *Int* `False`. Its virtual condition is .515 and its resultant condition .495.
+* Drag the slider outside .505 – .510 by editing its range: Bonus Tolerance turns red, because an actual size outside the size limits is a rejected part, not a bonus.
+
+See xref:tolerance.adoc#gdt[GD&T calculators] for the formulas.

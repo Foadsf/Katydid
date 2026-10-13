@@ -1,0 +1,57 @@
+= Saving and files
+:page-id: saving
+include::_attributes.adoc[]
+
+[.lead]
+A Katydid definition lives inside your FreeCAD file. You never save it separately.
+
+== How it works
+
+The canvas always shows the definition of FreeCAD's *active document*. As soon as you place the first component, Katydid adds a small *Katydid* object to that document's model tree. The definition is stored on that object as text, so it is written into the `.FCStd` file whenever you save, like any other object.
+
+* Edits are copied to the document about 0.4 seconds after you stop changing things, and again at the very start of every save. Pressing kbd:[Ctrl+S] immediately after moving a slider still saves the new value.
+* Because the document changed, FreeCAD marks it as modified and asks whether to save it when you close it, as it should.
+* The Katydid object never needs recomputing, so it does not put the "recompute needed" mark on your document.
+
+== Opening, switching and closing
+
+* *Open* a file that has a definition and the canvas loads it, if the canvas is open. If it is not, double-click the *Katydid* object in the model tree, or activate the Katydid workbench.
+* *Switch* to another document's tab and the canvas switches with it; switch back and your definition is exactly as you left it.
+* *Close* a document and the canvas clears.
+
+The title of the canvas window shows which document you are editing.
+
+== Preview, bake and the document
+
+The preview is never stored in the file: it is recomputed when the definition loads. Only *baked* objects are real geometry in the document. They are ordinary `Part::Feature` objects named after the component that made them, and they do not change when the definition changes.
+
+== Sharing files
+
+A file with a Katydid definition opens normally on a computer without Katydid: the Katydid object is simply inert. Install Katydid and the definition comes back to life.
+
+Opening a definition never runs arbitrary code. Components are looked up by name among Katydid's own, and Expression formulas are checked against a list of allowed operations rather than run as Python.
+
+If a file uses a component your version of Katydid does not know (one from a newer version, for example), it appears as a red *Missing component* placeholder with the same grips and wires. It is saved back unchanged, so nothing is lost when you open a newer file with an older Katydid.
+
+== What is saved
+
+For each component: its type, nickname, position, preview setting, the values of its unwired inputs, its grips' Flatten/Graft/Simplify/Reverse settings, and component-specific settings (a slider's range, decimals and value; a panel's size). Plus every wire.
+
+== Under the hood
+
+The definition is JSON stored in the `Definition` property of an `App::FeaturePython` object, so it appears as one escaped string in the file's `Document.xml`:
+
+[source,json]
+----
+{"format": "katydid", "version": 1,
+ "components": [
+   {"id": 1, "type": "NumberSlider", "nickname": "Size", "x": -300, "y": 20,
+    "preview": true, "inputs": [], "outputs": ["N"], "defaults": [],
+    "state": {"value": 20, "minimum": 5, "maximum": 40, "decimals": 1}},
+   {"id": 2, "type": "Box", "nickname": "Box", "x": 20, "y": 0,
+    "preview": true, "inputs": ["X", "Y", "Z"], "outputs": ["B"],
+    "defaults": [10.0, 10.0, 10.0]}],
+ "wires": [[1, 0, 2, 0], [1, 0, 2, 1], [1, 0, 2, 2]]}
+----
+
+Each wire is `[source component, output index, target component, input index]`. Grip settings, when any are set, appear as `"mods": {"in": [[modifier, reverse], …], "out": […]}`. The format is described at the top of `katydid/document.py`.

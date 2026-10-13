@@ -1,0 +1,40 @@
+name: docs
+
+# Build the AsciiDoc documentation in docs/ into HTML and publish it on the
+# gh-pages branch, which GitHub Pages serves at https://foadsf.github.io/Katydid/
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: docs
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Component reference matches the code
+        run: python tools/gen_docs.py --check
+      - name: Asciidoctor and Rouge
+        run: sudo gem install --no-document asciidoctor rouge
+      - name: Build the site (fails on any broken link, include or image)
+        run: python tools/build_docs.py --strict --out site
+      - name: Publish to the gh-pages branch
+        run: |
+          cd site
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Documentation for ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
