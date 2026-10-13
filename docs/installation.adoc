@@ -79,7 +79,7 @@ The Addon Manager then also tells you when updates are available.
 . Restart FreeCAD.
 . Pick *Katydid* in the workbench drop-down (or menu:View[Workbench > Katydid]).
 . The Katydid canvas opens as a floating window, and a *Katydid* menu and toolbar appear.
-. Click btn:[Demo] on the canvas toolbar. Four red boxes should appear in the 3D view.
+. Choose menu:Examples[Row of boxes] on the canvas toolbar. Four red boxes should appear in the 3D view.
 
 If they do, you are ready for the xref:quick-start.adoc[quick start].
 

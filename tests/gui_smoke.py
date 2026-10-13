@@ -63,6 +63,20 @@ def profile_loop(panel, slider, n=30):
     return {k: round(statistics.median(v), 2) for k, v in parts.items()} | {"gl_widgets": len(gl)}
 
 
+def tab_contrast(bar):
+    """How far the text of the selected ribbon tab stands out from its fill
+    (0 = invisible, 1 = black on white), measured on the middle band where the
+    label sits, clear of the tab's border and rounded corners."""
+    from PySide6 import QtGui
+    r = bar.tabRect(bar.currentIndex())
+    rect = QtCore.QRect(r.x() + r.width() // 4, r.y() + r.height() // 3, r.width() // 2, r.height() // 3)
+    img = bar.grab(rect).toImage()
+    lum = sorted(QtGui.QColor(img.pixel(x, y)).lightnessF()
+                 for x in range(img.width()) for y in range(img.height()))
+    fill = lum[len(lum) // 2]
+    return round(max(abs(lum[0] - fill), abs(lum[-1] - fill)), 3)
+
+
 def body(run):
     from katydid import components as lib
     from katydid import gui
@@ -71,10 +85,26 @@ def body(run):
     mw = FreeCADGui.getMainWindow()
     mw.showMaximized()
     check("workbench_registered", "KatydidWorkbench" in FreeCADGui.listWorkbenches())
+    # registered by InitGui at start-up, so other workbenches can use them
+    check("commands_before_activation",
+          FreeCADGui.activeWorkbench().name() != "KatydidWorkbench"
+          and {"Katydid_Canvas", "Katydid_Bake"} <= set(FreeCADGui.listCommands()),
+          FreeCADGui.activeWorkbench().name())
     FreeCADGui.activateWorkbench("KatydidWorkbench")
     pump(400)
     panel = gui.show_canvas()
     check("canvas_dock_shown", panel.isVisible())
+    bar = panel.ribbon.tabBar()
+    contrast = tab_contrast(bar)
+    grab(bar, "ribbon-tabs.png")
+    own = bar.styleSheet()
+    bar.setStyleSheet("QTabBar::tab:selected { background: black; color: black; }")
+    pump(50)
+    blind = tab_contrast(bar)   # negative control: the measure must see an unreadable tab
+    grab(bar, "ribbon-tabs-blind.png")
+    bar.setStyleSheet(own)
+    pump(50)
+    check("selected_tab_readable", contrast > 0.35 and blind < 0.1, [contrast, blind])
     panel.load_demo()
     pump(500)
     d = panel.demo

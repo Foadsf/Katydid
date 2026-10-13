@@ -64,7 +64,7 @@ def make_icon(cls, size=32) -> QtGui.QIcon:
     glyph = getattr(cls, "glyph", cls.nickname[:3])
     font = QtGui.QFont()
     font.setBold(True)
-    font.setPixelSize(int(size * (0.56 if len(glyph) == 1 else 0.36)))
+    font.setPixelSize(int(size * (0.56 if len(glyph) == 1 else 0.36 if len(glyph) < 4 else 0.28)))
     p.setFont(font)
     p.setPen(QColor(255, 255, 255))
     p.drawText(QRectF(0, 0, size, size), Qt.AlignmentFlag.AlignCenter, glyph)
@@ -1088,7 +1088,13 @@ class PaletteButton(QtWidgets.QToolButton):
 class Ribbon(QtWidgets.QTabWidget):
     def __init__(self, view, parent=None):
         super().__init__(parent)
+        self.setObjectName("KatydidRibbon")
         self.setDocumentMode(True)
+        # The selected tab pairs Highlight with HighlightedText, so its label is
+        # always readable; the other tabs keep the theme's look. Left to the
+        # application stylesheet, one theme drew it as a black box with no text.
+        self.tabBar().setStyleSheet(
+            "QTabBar::tab:selected { background: palette(highlight); color: palette(highlighted-text); }")
         for cat in lib.CATEGORIES:
             page = QtWidgets.QWidget()
             row = QtWidgets.QHBoxLayout(page)

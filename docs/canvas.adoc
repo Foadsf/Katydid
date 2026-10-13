@@ -26,7 +26,7 @@ The window title shows which document the canvas belongs to (`Katydid — Unname
 |btn:[Preview] |Turn the whole 3D preview on or off. Turning it off makes heavy definitions faster to edit.
 |btn:[Bake] |Copy the previewed geometry into the FreeCAD document as ordinary objects. With components selected, only those are baked.
 |btn:[Zoom Extents] |Fit all components into the canvas.
-|btn:[Demo], btn:[Tree Demo], btn:[Attractor], btn:[Stack-up] |Load an example definition. They replace what is on the canvas. Each one is a xref:tutorials.adoc[tutorial].
+|btn:[Examples] |Load an example definition: the tutorial definitions, the xref:gallery.adoc[gallery] designs and the tolerance examples. An example replaces what is on the canvas.
 |btn:[Clear] |Remove every component from the canvas.
 |Status line |How many components the last update recomputed, the solve time and the preview time.
 |===

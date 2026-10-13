@@ -36,7 +36,7 @@ MUTATIONS = [
      "b = abs(actual - lmc)", "b = abs(actual - mmc)"),
 ]
 TESTS = ["tests/test_tree.py", "tests/test_engine.py", "tests/test_document.py",
-         "tests/test_components.py", "tests/test_tolerance.py"]
+         "tests/test_components.py", "tests/test_tolerance.py", "tests/test_geom2d.py"]
 
 
 def run_suite(root):

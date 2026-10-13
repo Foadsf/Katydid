@@ -33,14 +33,65 @@ def canvas(panel, name, run):
     save(panel.grab(), name, run)
 
 
+LOW_VIEW = {"tower-render.png", "tower-preview.png"}
+
+
+ZOOM = {"voronoi": 0.88,"waffle": 0.72, "wave": 0.7}   # fitAll fits a bounding sphere: close in
+
+
 def view3d(name, run, w=1200, h=640):
     v = FreeCADGui.ActiveDocument.ActiveView
-    v.viewIsometric()
+    if name in LOW_VIEW:
+        v.viewDimetric()   # a lower eye: tall towers and stacked ribs read better
+    else:
+        v.viewIsometric()
     v.fitAll()
+    zoom = ZOOM.get(name.split("-")[0]) if name.endswith("-render.png") else None
+    cam = v.getCameraNode()
+    if zoom and hasattr(cam, "height"):   # orthographic camera
+        cam.height.setValue(cam.height.getValue() * zoom)
     pump(200)
     path = os.path.join(IMAGES, name)
     v.saveImage(path, w, h, "Current")
     run.check(f"saved {name}", os.path.getsize(path) > 5000)
+
+
+RENDERS = {  # showcase key -> [(component, colour, transparency %, lift in mm)]
+    "voronoi": [("stand", (0.74, 0.46, 0.24), 0, 0.0)],
+    "tower": [("facade", (0.56, 0.74, 0.88), 55, 0.0), ("slabs", (0.93, 0.93, 0.91), 0, 0.0)],
+    "waffle": [("x_ribs", (0.87, 0.72, 0.53), 0, 0.0), ("y_ribs", (0.80, 0.64, 0.45), 0, 0.0)],
+    "wave": [("surface", (0.91, 0.92, 0.94), 0, 0.0), ("contours", (0.13, 0.36, 0.62), 0, 0.15)],
+}
+
+
+def render(panel, d, parts, name, run):
+    """Bake the chosen components with material colours, picture them without
+    the red preview, then remove them again."""
+    from katydid.bake import bake
+    doc = FreeCAD.ActiveDocument
+    objs = []
+    for key, colour, transparency, lift in parts:
+        for o in bake([d[key]]):
+            vo = o.ViewObject
+            if o.Shape.Faces:
+                vo.ShapeColor = colour
+                vo.LineColor = tuple(c * 0.45 for c in colour)
+            else:
+                vo.LineColor = colour
+                vo.LineWidth = 2.5
+            if transparency:
+                vo.Transparency = transparency
+            if lift:  # curves lying on a surface: lift them clear of it
+                o.Placement.Base.z += lift
+            objs.append(o)
+    panel.preview.enabled = False
+    panel.refresh_preview()
+    view3d(name, run, 1400, 800)
+    for o in objs:
+        doc.removeObject(o.Name)
+    panel.preview.enabled = True
+    panel.refresh_preview()
+    pump(100)
 
 
 def load(panel, builder):
@@ -199,6 +250,30 @@ def body(run):
     d, bad = load(panel, demo.build_gdt)
     run.check("gdt ok", not bad, bad)
     canvas(panel, "gdt-canvas.png", run)
+
+    # The Examples menu, painted next to its button
+    menu = panel.examples.menu()
+    anchor = panel.examples.mapTo(panel, QtCore.QPoint(0, panel.examples.height()))
+    menu.popup(panel.examples.mapToGlobal(QtCore.QPoint(0, panel.examples.height())))
+    pump(200)
+    pm = panel.grab()
+    painter = QtGui.QPainter(pm)
+    painter.drawPixmap(anchor - QtCore.QPoint(menu.sizeHint().width() // 2, 0), menu.grab())
+    painter.end()
+    save(pm, "ui-examples-menu.png", run)
+    menu.close()
+    pump(100)
+
+    # Showcase: canvas, red preview and a material render of each
+    from katydid import showcase
+    for key, builder in showcase.SHOWCASE.items():
+        d, bad = load(panel, builder)
+        while panel.scene._pending:
+            pump(50)
+        run.check(f"{key} ok", not bad, bad)
+        canvas(panel, f"{key}-canvas.png", run)
+        view3d(f"{key}-preview.png", run)
+        render(panel, d, RENDERS[key], f"{key}-render.png", run)
     FreeCAD.closeDocument(FreeCAD.ActiveDocument.Name)
 
 

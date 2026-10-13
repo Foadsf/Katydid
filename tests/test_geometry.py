@@ -157,6 +157,75 @@ class Demos(unittest.TestCase):
         self.assertEqual(len(tubes), 100)
         self.assertAlmostEqual(max(t.BoundBox.ZLength for t in tubes), c["rmax"].value * c["height"].value)
 
+    def test_voronoi_screen_volume_is_plate_minus_holes(self):
+        from katydid import showcase
+        c = self.build(showcase.build_voronoi)
+        cells = list(c["voronoi"].outputs[0].data)
+        self.assertEqual(len(cells), int(c["cells"].value))
+        holes = list(c["surface"].outputs[0].data)
+        t = c["thick"].value
+        plate = (120 + 6) * (70 + 6) * t
+        screen = list(c["stand"].outputs[0].data)[0]
+        self.assertTrue(screen.isValid())
+        self.assertAlmostEqual(screen.Volume, plate - t * sum(h.Area for h in holes), delta=1e-6 * plate)
+        # the attractor makes holes near it smaller: the smallest hole is the nearest cell
+        a = c["attractor"].outputs[0].data[0].Point
+        cents = [x.Point for x in c["area"].outputs[1].data]
+        shares = [h.Area / cell_area for h, cell_area in zip(holes, c["area"].outputs[0].data)]
+        nearest = min(range(len(cents)), key=lambda i: (cents[i] - a).Length)
+        self.assertAlmostEqual(shares[nearest], c["small"].value ** 2, places=6)
+
+    def test_twisted_tower(self):
+        from katydid import showcase
+        c = self.build(showcase.build_tower)
+        floors = int(c["floors"].value)
+        self.assertEqual(len(list(c["slabs"].outputs[0].data)), floors)
+        polys = list(c["poly"].outputs[0].data)
+        first, last = polys[0].Vertexes[0].Point, polys[-1].Vertexes[0].Point
+        turned = math.degrees(math.atan2(last.y, last.x) - math.atan2(first.y, first.x)) % 360
+        self.assertAlmostEqual(turned, (floors - 1) * c["twist"].value, places=6)
+        self.assertTrue(list(c["facade"].outputs[0].data)[0].isValid())
+
+    def test_waffle_ribs(self):
+        from katydid import showcase
+        c = self.build(showcase.build_waffle)
+        ribs = int(c["ribs"].value)
+        x_ribs, y_ribs = list(c["x_ribs"].outputs[0].data), list(c["y_ribs"].outputs[0].data)
+        self.assertEqual((len(x_ribs), len(y_ribs)), (ribs, ribs))
+        self.assertTrue(all(r.isValid() and r.Volume > 0 for r in x_ribs + y_ribs))
+        for r in x_ribs:
+            self.assertAlmostEqual(r.BoundBox.XLength, c["thick"].value, places=6)
+        self.assertTrue(list(c["dome"].outputs[0].data)[0].isValid())
+
+    def test_wave_surface_and_contours(self):
+        from katydid import showcase
+        c = self.build(showcase.build_wave)
+        surface = list(c["surface"].outputs[0].data)[0]
+        self.assertTrue(surface.isValid())
+        levels = c["contours"].outputs[0].data
+        self.assertEqual(levels.branch_count, int(c["levels"].value) + 1)
+        self.assertGreater(len(levels), int(c["levels"].value) // 2)
+        z = [w.BoundBox.ZMin for w in levels]
+        self.assertTrue(all(abs(w.BoundBox.ZMax - w.BoundBox.ZMin) < 1e-6 for w in levels))  # flat
+        self.assertGreater(max(z) - min(z), 0)
+        # mesh-traced contours lie on the exact surface within the stated tolerance
+        tol = surface.BoundBox.DiagonalLength * lib.Contour.TOLERANCE
+        pts = [v.Point for w in levels for v in w.Vertexes][::7]
+        worst = max(surface.distToShape(Part.Vertex(p))[0] for p in pts)
+        self.assertLess(worst, 2 * tol)
+        # and match the exact cut: same number of curves on a middle level
+        mid = levels.branches()[len(levels.branches()) // 2]
+        level_z = mid[1][0].BoundBox.ZMin
+        self.assertEqual(len(mid[1]), len(surface.slice(V(0, 0, 1), level_z)))
+
+    def test_surface_from_points_passes_through_its_grid(self):
+        pts = [V(x, y, (x * y) / 50.0) for y in range(0, 40, 10) for x in range(0, 50, 10)]
+        srf = lib.SurfaceFromPoints().solve_instance(pts, 5)
+        self.assertTrue(srf.isValid())
+        self.assertLess(max(srf.distToShape(Part.Vertex(p))[0] for p in pts), 1e-6)
+        with self.assertRaises(ValueError):
+            lib.SurfaceFromPoints().solve_instance(pts, 3)
+
     def test_tree_and_box_demos_still_solve(self):
         t = self.build(demo.build_tree)
         lofts = list(t["loft"].outputs[0].data)

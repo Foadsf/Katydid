@@ -11,12 +11,19 @@ from __future__ import annotations
 
 import time
 
-from . import demo, resource
+from . import demo
+from .commands import COMMANDS, register as register_commands  # noqa: F401  (kept for callers)
 from .canvas import ComponentItem, KatydidScene, KatydidView, QtCore, QtWidgets, Ribbon
 from .engine import Graph
 
 Qt = QtCore.Qt
 WRITE_DELAY_MS = 400
+EXAMPLES = [  # (menu label, key); None draws a separator
+    ("Quick start: one slider, one box", "first"), ("Row of boxes", "boxes"),
+    ("Lofted rings (data trees)", "tree"), ("Attractor grid", "attractor"), (None, None),
+    ("Voronoi screen", "voronoi"), ("Twisted tower", "tower"), ("Waffle dome", "waffle"),
+    ("Wave surface with contours", "wave"), (None, None),
+    ("Tolerance stack-up", "stackup"), ("GD&T calculators", "gdt")]
 
 
 class KatydidPanel(QtWidgets.QWidget):
@@ -43,10 +50,17 @@ class KatydidPanel(QtWidgets.QWidget):
         bar.addAction("Bake", self.bake).setToolTip("Bake the selected components (all if none)")
         bar.addAction("Zoom Extents", self.view.fit_all)
         bar.addSeparator()
-        bar.addAction("Demo", self.load_demo)
-        bar.addAction("Tree Demo", self.load_tree_demo)
-        bar.addAction("Attractor", self.load_attractor_demo)
-        bar.addAction("Stack-up", self.load_stackup_demo)
+        self.examples = QtWidgets.QToolButton()
+        self.examples.setText("Examples")
+        self.examples.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
+        menu = QtWidgets.QMenu(self.examples)
+        for label, key in EXAMPLES:
+            if label is None:
+                menu.addSeparator()
+            else:
+                menu.addAction(label, lambda k=key: self.load_example(k))
+        self.examples.setMenu(menu)
+        bar.addWidget(self.examples)
         bar.addAction("Clear", self.scene.clear_all)
         bar.addSeparator()
         self.status = QtWidgets.QLabel("Double-click the canvas to search")
@@ -183,6 +197,16 @@ class KatydidPanel(QtWidgets.QWidget):
         self.status.setText(f"Baked {len(baked)} object(s) into the document")
         return baked
 
+    def load_example(self, key):
+        """Replace the canvas with one of the example definitions."""
+        from . import showcase
+        builders = {"first": demo.build_first, "boxes": demo.build, "tree": demo.build_tree,
+                    "attractor": demo.build_attractor, "stackup": demo.build_stackup,
+                    "gdt": demo.build_gdt, **showcase.SHOWCASE}
+        self.scene.clear_all()
+        self.demo = builders[key](self.scene)
+        QtCore.QTimer.singleShot(0, self.view.fit_all)
+
     def load_demo(self):
         self.scene.clear_all()
         self.demo = demo.build(self.scene)
@@ -272,36 +296,3 @@ def show_canvas() -> KatydidPanel:
     _dock.show()
     _dock.raise_()
     return panel
-
-
-class _CanvasCommand:
-    def GetResources(self):
-        return {"Pixmap": resource("katydid.svg"), "MenuText": "Canvas",
-                "ToolTip": "Show the Katydid visual programming canvas"}
-
-    def Activated(self):
-        show_canvas()
-
-    def IsActive(self):
-        return True
-
-
-class _BakeCommand:
-    def GetResources(self):
-        return {"Pixmap": resource("bake.svg"), "MenuText": "Bake",
-                "ToolTip": "Bake the selected canvas components into the document"}
-
-    def Activated(self):
-        show_canvas().bake()
-
-    def IsActive(self):
-        return True
-
-
-COMMANDS = ["Katydid_Canvas", "Katydid_Bake"]
-
-
-def register_commands():
-    import FreeCADGui
-    FreeCADGui.addCommand("Katydid_Canvas", _CanvasCommand())
-    FreeCADGui.addCommand("Katydid_Bake", _BakeCommand())

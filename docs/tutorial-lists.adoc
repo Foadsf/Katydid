@@ -7,7 +7,7 @@ Make one box, then a row of copies whose number and spacing come from sliders. Y
 
 image::lists-3d.png[Four boxes in a row]
 
-Reference: click btn:[Demo] on the canvas toolbar to load the finished definition.
+Reference: choose menu:Examples[Row of boxes] on the canvas toolbar to load the finished definition.
 
 == Build it
 

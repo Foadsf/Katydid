@@ -1,0 +1,56 @@
+= Tutorial 7: A twisted tower
+:page-id: tutorial-tower
+include::_attributes.adoc[]
+
+[.lead]
+The parametric skyscraper: one polygon per floor, each turned a little more than the one below and swelling towards the middle, lofted into a glass facade with a slab on every floor. Six sliders control the whole building.
+
+image::tower-render.png[A glass tower that twists and swells as it rises, with white floor slabs]
+
+Reference: choose menu:Examples[Twisted tower] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== One number per floor
+
+. Place six sliders: _Floors: 36 (6 – 60)_ and _Sides: 4 (3 – 12)_ with Decimals `0`, _Floor height: 4 (2 – 8)_, _Radius: 14 (6 – 30)_, _Twist per floor: 3.5 (0 – 10)_, and _Bulge: 0.25 (0 – 0.8)_ with Decimals `2`.
+. Place a *Series* (Sets), _Heights_. Wire *Floor height → N* and *Floors → C*: 36 heights, 0, 4, 8 … 140.
+. Place a second *Series*, _Floor no._, and wire *Floors → C*. With the default step of 1 it counts the floors 0 … 35.
+. Place a *Multiplication* (Maths). Wire *Floor no. → A* and *Twist per floor → B*: floor _n_ is turned _n_ × 3.5°.
+
+=== The swelling
+
+[start=5]
+. Place an *Expression* (Maths) and set value its *F* to `1 + z*sin(pi*x/y)`. Wire *Floor no. → x*, *Floors → y* and *Bulge → z*. The result is 1 at the ground, 1.25 halfway up and close to 1 again at the top.
+. Place a *Multiplication* and wire *Expression R → A* and *Radius → B*: a radius for every floor.
+
+=== Floors, facade and slabs
+
+[start=7]
+. Place a *Regular Polygon* (Curve). Wire the radius *Multiplication R → R*, *Sides → S*, the angle *Multiplication R → A* and *Heights → Z*. You get 36 squares stacked into a twisting column.
+. Place a *Loft* (Surface), wire *Polygon P → C* and tick menu:Flatten[] on its *C* grip, as in the xref:tutorial-trees.adoc[lofted rings], so every floor goes into one loft whatever branches they arrive in. This is the facade.
+. Place a *Planar Surface* (Surface) and wire *Polygon P → C*: one flat face per floor.
+. Place a *Vector XYZ* (Vector) with *Z* set to `0.5`, and an *Extrude* (Surface). Wire *Planar Surface S → B* and *Vector V → D*: 36 slabs, half a millimetre thick.
+. Turn menu:Preview[] off on Regular Polygon and Planar Surface.
+
+.The finished definition
+image::tower-canvas.png[The twisted tower definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::tower-preview.png[The red preview of the twisted tower]
+
+== What is happening
+
+Everything after the two Series is a list of 36 values, one per floor, and every component pairs its lists item by item. So floor 10 gets the 10th height, the 10th angle and the 10th radius. That is the whole trick behind most parametric towers: describe one floor as a function of its number, and let the lists do the rest.
+
+The Expression is evaluated once per floor. `sin(pi*x/y)` rises from 0 at the ground to 1 halfway up and back towards 0 at the top, so _Bulge_ sets how much wider the middle floors are.
+
+The facade is a smooth loft through polygons whose corners turn floor by floor, so each corner traces a helix up the building. Updates are fast: with 36 floors one slider step takes about 50 ms to solve and about 0.15 s to draw.
+
+== Things to try
+
+* Drag *Twist per floor* to 0 for a straight tower, then up to 10 for a corkscrew.
+* Set *Sides* to 3 for a triangular tower, or to 12 for an almost round one.
+* Set *Bulge* to 0, then to 0.8.
+* Change the formula to `1 - z*x/y` for a tower that tapers towards the top.
+* Bake the Loft and the Extrude, then give the facade a light blue colour and 50 % transparency in its View properties, as in the picture above.

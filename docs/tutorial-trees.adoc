@@ -7,7 +7,7 @@ Stack a few circles, divide each into points, join each set of points into a pol
 
 image::tree-3d.png[A tapered loft through four hexagonal rings]
 
-Reference: click btn:[Tree Demo] on the canvas toolbar to load the finished definition.
+Reference: choose menu:Examples[Lofted rings (data trees)] on the canvas toolbar to load the finished definition.
 
 == Build it
 

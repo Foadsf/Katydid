@@ -7,7 +7,7 @@ The classic first parametric exercise: a grid of circles whose size depends on t
 
 image::attractor-3d.png[Tubes that are small near the attractor and large far from it]
 
-Reference: click btn:[Attractor] on the canvas toolbar to load the finished definition.
+Reference: choose menu:Examples[Attractor grid] on the canvas toolbar to load the finished definition.
 
 == Build it
 

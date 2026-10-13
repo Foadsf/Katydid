@@ -6,10 +6,20 @@ include::_attributes.adoc[]
 [.hero]
 --
 [.lead]
-A Grasshopper-style visual programming canvas for {freecad}[FreeCAD]: wire components together, drag a slider, and watch the geometry update live. With data trees, 48 components and tolerance analysis built in.
+A Grasshopper-style visual programming canvas for {freecad}[FreeCAD]: wire components together, drag a slider, and watch the geometry update live. With data trees, 56 components and tolerance analysis built in.
 
 image::attractor-canvas.png[The attractor grid on the Katydid canvas]
 --
+
+[.hero-strip]
+--
+image::voronoi-render.png[Voronoi screen,link=gallery.html]
+image::tower-render.png[Twisted tower,link=gallery.html]
+image::waffle-render.png[Waffle dome,link=gallery.html]
+image::wave-render.png[Wave surface with contours,link=gallery.html]
+--
+
+Made with Katydid: a Voronoi screen, a twisted tower, a waffle dome and a wave surface. Each loads from the btn:[Examples] menu and has a step-by-step tutorial; see the xref:gallery.adoc[gallery].
 
 [.cards]
 --
@@ -50,9 +60,16 @@ Lists, data trees, the attractor grid, tolerance stack-ups and GD&T, step by ste
 
 [.card]
 ****
+*xref:gallery.adoc[Gallery]*
+
+Voronoi screens, twisted towers, waffle structures and contoured surfaces, with tutorials.
+****
+
+[.card]
+****
 *xref:components.adoc[Component reference]*
 
-All 48 components with their inputs, outputs and defaults.
+All 56 components with their inputs, outputs and defaults.
 ****
 --
 

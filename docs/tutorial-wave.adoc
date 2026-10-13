@@ -1,0 +1,61 @@
+= Tutorial 9: A wave surface with contours
+:page-id: tutorial-wave
+include::_attributes.adoc[]
+
+[.lead]
+A surface written as a formula, z = f(x, y), sampled on a grid, smoothed into a real surface and cut by evenly spaced planes into contour lines, like a topographic map. You will build a 2D grid with Graft, evaluate a formula of two variables, and slice the result at a list of heights.
+
+image::wave-render.png[A white wave surface with blue contour lines]
+
+Reference: choose menu:Examples[Wave surface with contours] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== The grid
+
+. Place two sliders: _Size: 90 (40 – 150)_ and _Grid: 24 (8 – 40)_ with Decimals `0`.
+. Place two *Multiplication* (Maths) components. Wire *Size → A* on both and set value *B* to `-0.5` on one and `0.5` on the other: the edges of the square, -45 and 45.
+. Place two *Range* (Maths) components, _X values_ and _Y values_. On both, wire the low edge *→ S*, the high edge *→ E* and *Grid → N*. A Range of 24 steps gives 25 values, from -45 to 45.
+
+=== The formula
+
+[start=4]
+. Place a slider _Frequency: 0.09 (0.02 – 0.3)_ with Decimals `3`, and an *Expression* (Maths), _Wave_. Set value its *F* to `sin(z*x)*cos(z*y) + 0.4*sin(1.7*z*(x + y))`.
+. Wire *X values → x*, *Y values → y* and *Frequency → z*, then tick menu:Graft[] on the Expression's *y* grip. Every y value now sits in its own branch and the single x list is reused for each, so you get 25 rows of 25 heights: the same move as the xref:tutorial-attractor.adoc[attractor grid].
+. Place a slider _Amplitude: 7 (0 – 15)_ and a *Multiplication*. Wire *Wave R → A* and *Amplitude → B*.
+
+=== The surface
+
+[start=7]
+. Place a *Construct Point* (Vector). Wire *X values → X*, *Y values → Y* with menu:Graft[] on *Y*, and the amplitude *Multiplication R → Z*: 25 rows of 25 points.
+. Place an *Addition* (Maths) with *B* set to `1`, and wire *Grid → A*: the number of points in a row.
+. Place a *Surface From Points* (Surface). Wire *Construct Point Pt → P*, tick menu:Flatten[] on *P* so all rows arrive as one list in order, and wire *Addition R → U*. A smooth surface now passes through every point.
+. Turn menu:Preview[] off on Construct Point.
+
+=== Contour lines
+
+[start=11]
+. Place a slider _Contours: 12 (2 – 30)_ with Decimals `0`.
+. Place two *Multiplication* components with *B* set to `-1.4` and `1.4`, and wire *Amplitude → A* on both. The formula never goes beyond ±1.4 (1 from the first term, 0.4 from the second), so these bound the surface.
+. Place a *Range*, _Levels_. Wire the low bound *→ S*, the high bound *→ E* and *Contours → N*: 13 evenly spaced heights.
+. Place a *Contour* (Curve). Wire *Surface S → S* and *Levels R → D*. Its normal *N* defaults to Z, so the planes are horizontal.
+
+.The finished definition
+image::wave-canvas.png[The wave surface definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::wave-preview.png[The red preview of the wave surface and its contours]
+
+== What is happening
+
+Graft turns one list of 25 y values into 25 branches of one value each. Matched against the single branch of x values, which is repeated for every branch, that gives a full grid. Flatten on Surface From Points undoes it again: the surface wants all 625 points as one list, row after row, and the U count tells it where each row ends.
+
+*Contour* returns one branch per level, so you can treat each height separately, for example to move it, colour it or count its curves. It traces the curves on a fine mesh of the surface rather than cutting the exact surface: on this example an exact cut took about 7 seconds per level, the mesh about a fifth of a second for all of them, and the lines stay within 0.05 % of the surface's size (about 0.06 mm here). Each slider step takes about a second.
+
+== Things to try
+
+* Drag *Frequency* for longer or tighter waves, and *Amplitude* for taller ones.
+* Raise *Contours* to 30 for a dense topographic map.
+* Change the formula to `cos(z*sqrt(x**2 + y**2))` for ripples on a pond.
+* Raise *Grid* to 40 for a smoother surface; each update gets slower.
+* Bake the Contour and export it as DXF: stacked, offset and cut from card, it makes a classic layered landscape model.

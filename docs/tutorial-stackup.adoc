@@ -7,7 +7,7 @@ Reproduce a worked example from B. R. Fischer's _Mechanical Tolerance Stackup an
 
 image::stackup-canvas.png[The stack-up definition with its report and Monte Carlo histogram]
 
-Reference: click btn:[Stack-up] on the canvas toolbar to load the finished definition.
+Reference: choose menu:Examples[Tolerance stack-up] on the canvas toolbar to load the finished definition.
 
 == The problem
 

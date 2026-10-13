@@ -11,10 +11,10 @@ class KatydidWorkbench(FreeCADGui.Workbench):
         self.__class__.Icon = katydid.resource("katydid.svg")
 
     def Initialize(self):
-        from katydid import gui
-        gui.register_commands()
-        self.appendToolbar("Katydid", gui.COMMANDS)
-        self.appendMenu("Katydid", gui.COMMANDS)
+        from katydid import commands
+        commands.register()
+        self.appendToolbar("Katydid", commands.COMMANDS)
+        self.appendMenu("Katydid", commands.COMMANDS)
 
     def Activated(self):
         from katydid import gui
@@ -28,3 +28,9 @@ class KatydidWorkbench(FreeCADGui.Workbench):
 
 
 FreeCADGui.addWorkbench(KatydidWorkbench())
+
+# Register Katydid_Canvas and Katydid_Bake now, not on first activation, so
+# other workbenches can put them on their toolbars. This imports no Qt code.
+from katydid import commands as _commands  # noqa: E402
+
+_commands.register()

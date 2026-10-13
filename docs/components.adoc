@@ -3,7 +3,7 @@
 include::_attributes.adoc[]
 
 [.lead]
-All 48 components, tab by tab. This page is generated from the code (`tools/gen_docs.py`), so it always matches the version you are reading.
+All 56 components, tab by tab. This page is generated from the code (`tools/gen_docs.py`), so it always matches the version you are reading.
 
 How to read the tables: *Access* says how an input takes its data (see xref:data-trees.adoc#access[access modes]). An input with a *Default* works without a wire, and menu:Set value…[] on the input's right-click menu changes that value. _Type a number or wire it_ means it needs a value before the component can run; _wire it_ means it needs data from another component (geometry, for example).
 
@@ -338,6 +338,27 @@ How to read the tables: *Access* says how an input takes its data (see xref:data
 |Distance |`D` |item |Distance from A to B
 |===
 
+[[cmp-Populate2D]]
+=== image:icons/Populate2D.png[Populate 2D,28,28,role=icon] Populate 2D
+
+*Nickname* `Pop2D` · Random points in a rectangle centred on the origin, optionally relaxed to an even spread.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Width |`W` |item |`100` |Rectangle width (X)
+|Height |`H` |item |`60` |Rectangle height (Y)
+|Count |`N` |item |`50` |Number of points
+|Seed |`S` |item |`1` |Random seed (same seed, same points)
+|Relax |`R` |item |`2` |Lloyd relaxation steps: more steps, more even spacing
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Points |`P` |list |The points
+|===
+
 == Curve
 
 [[cmp-Circle]]
@@ -505,6 +526,64 @@ How to read the tables: *Access* says how an input takes its data (see xref:data
 |Curve |`C` |item |Offset curve
 |===
 
+[[cmp-RegularPolygon]]
+=== image:icons/RegularPolygon.png[Regular Polygon,28,28,role=icon] Regular Polygon
+
+*Nickname* `Poly` · Closed regular polygon in a horizontal plane.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Radius |`R` |item |`10` |Distance from centre to corner
+|Sides |`S` |item |`6` |Number of sides
+|Rotation |`A` |item |`0` |Rotation about Z in degrees
+|Height |`Z` |item |`0` |Height of the polygon's plane
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Polygon |`P` |item |Resulting polygon
+|===
+
+[[cmp-Voronoi]]
+=== image:icons/Voronoi.png[Voronoi,28,28,role=icon] Voronoi
+
+*Nickname* `Voronoi` · Voronoi cells of points in a rectangle centred on the origin.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Points |`P` |list |_wire it_ |Cell sites (their X and Y are used)
+|Width |`W` |item |`100` |Boundary width (X)
+|Height |`H` |item |`60` |Boundary height (Y)
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Cells |`C` |list |One closed polygon per point
+|===
+
+[[cmp-Contour]]
+=== image:icons/Contour.png[Contour,28,28,role=icon] Contour
+
+*Nickname* `Contour` · Curves where a plane cuts a surface or solid, traced on a fine mesh (within 0.05 % of the shape's size).
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Shape |`S` |item |_wire it_ |Surface or solid to cut
+|Normal |`N` |item |`(0, 0, 1)` |Normal of the cutting planes
+|Offset |`D` |item |`0` |Distance of the plane from the origin along N
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Curves |`C` |list |Section curves
+|===
+
 == Surface
 
 [[cmp-Box]]
@@ -629,6 +708,78 @@ How to read the tables: *Access* says how an input takes its data (see xref:data
 |===
 |Output |Nick |Access |Description
 |Solid |`B` |item |Closed solid
+|===
+
+[[cmp-PlanarSurface]]
+=== image:icons/PlanarSurface.png[Planar Surface,28,28,role=icon] Planar Surface
+
+*Nickname* `PlnSrf` · Flat surface bounded by a closed planar curve.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Curve |`C` |item |_wire it_ |Closed planar curve
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Surface |`S` |item |Resulting surface
+|===
+
+[[cmp-SurfaceFromPoints]]
+=== image:icons/SurfaceFromPoints.png[Surface From Points,28,28,role=icon] Surface From Points
+
+*Nickname* `SrfGrid` · Smooth surface through a grid of points given row by row.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Points |`P` |list |_wire it_ |Grid points, row after row
+|U count |`U` |item |`10` |Number of points in each row
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Surface |`S` |item |Resulting surface
+|===
+
+[[cmp-Section]]
+=== image:icons/Section.png[Section,28,28,role=icon] Section
+
+*Nickname* `Sect` · Flat region where a plane cuts a solid (for ribs, slabs and waffles).
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Solid |`S` |item |_wire it_ |Closed solid to cut
+|Normal |`N` |item |`(0, 0, 1)` |Normal of the cutting plane
+|Offset |`D` |item |`0` |Distance of the plane from the origin along N
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Region |`R` |item |The cut region
+|===
+
+[[cmp-Area]]
+=== image:icons/Area.png[Area,28,28,role=icon] Area
+
+*Nickname* `Area` · Area and centroid of a closed planar curve or a surface.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Shape |`S` |item |_wire it_ |Closed planar curve, surface or solid
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Area |`A` |item |Area
+|Centroid |`C` |item |Area centroid
 |===
 
 == Transform

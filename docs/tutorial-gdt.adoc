@@ -7,6 +7,8 @@ A hole of diameter .505 to .510 is located with a position tolerance of ⌀.005 
 
 image::gdt-canvas.png[A slider for the actual size feeding the Bonus Tolerance calculator, and the boundary calculator]
 
+Reference: choose menu:Examples[GD&T calculators] on the canvas toolbar to load the finished definition.
+
 == Build it
 
 . Place a slider _Actual size: 0.508 (0.505 – 0.510)_ with Decimals `3`.

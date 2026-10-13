@@ -11,7 +11,16 @@ Wire components on a node canvas, drag a slider, and the result updates live in 
 
 Katydid is an independent project. It is not affiliated with Robert McNeel & Associates; Grasshopper and Rhino are their trademarks, used here only to describe the style of tool. All icons and code are original.
 
-**Status:** early but working (v0.1). 48 components, data trees, saving, and a tolerance-analysis tab. Tested on FreeCAD 1.1 on Windows; it should run wherever FreeCAD 1.0+ with PySide6 runs.
+**Status:** early but working (v0.1). 56 components, data trees, saving, and a tolerance-analysis tab.
+
+## Gallery
+
+Each of these loads from the canvas's **Examples** menu and has a step-by-step tutorial in the [gallery](https://foadsf.github.io/Katydid/gallery.html).
+
+| | |
+|---|---|
+| ![Voronoi screen](docs/images/voronoi-render.png) **Voronoi screen:** relaxed Voronoi cells shrunk by distance to an attractor, cut through a plate | ![Twisted tower](docs/images/tower-render.png) **Twisted tower:** one polygon per floor, twisted and swelling, lofted into a facade with slabs |
+| ![Waffle dome](docs/images/waffle-render.png) **Waffle dome:** a capped loft sliced into two families of interlocking ribs | ![Wave surface](docs/images/wave-render.png) **Wave surface:** z = f(x, y) on a grafted grid, with contour lines | Tested on FreeCAD 1.1 on Windows; it should run wherever FreeCAD 1.0+ with PySide6 runs.
 
 ## Install
 
@@ -21,7 +30,7 @@ Clone into FreeCAD's user `Mod` folder (run `App.getUserAppDataDir()` in FreeCAD
 git clone https://github.com/Foadsf/Katydid.git
 ```
 
-Restart FreeCAD and pick **Katydid** in the workbench list. The canvas opens as a floating window (it redraws about twice as fast floating as docked). Try **Demo**, **Tree Demo**, **Attractor** or **Stack-up**.
+Restart FreeCAD and pick **Katydid** in the workbench list. The canvas opens as a floating window (it redraws about twice as fast floating as docked). Pick a definition from the canvas's **Examples** menu to start.
 
 ## Using the canvas
 
@@ -40,16 +49,16 @@ Restart FreeCAD and pick **Katydid** in the workbench list. The canvas opens as 
 
 Component colours: grey OK, orange warning (missing input), red error (hover for the message), green selected. Wires: solid for one item, double for a list, dashed for a tree of several branches, thin dashed orange when empty.
 
-## Components (48)
+## Components (56)
 
 | Tab | Components |
 |---|---|
 | Params | Number Slider, Panel |
 | Maths | Addition, Multiplication, Range, Expression, Remap Numbers, Bounds |
 | Sets | Series, List Item, List Length, Cull Pattern, Shift List |
-| Vector | Construct Point, Vector XYZ, Vector 2Pt, Deconstruct, Distance |
-| Curve | Circle, Circle CNR, Line, Arc 3Pt, Polyline, Interpolate, Divide Curve, Evaluate Curve, Offset Curve |
-| Surface | Center Box, Sphere, Cylinder, Loft, Extrude, Pipe, Cap Holes |
+| Vector | Construct Point, Vector XYZ, Vector 2Pt, Deconstruct, Distance, Populate 2D |
+| Curve | Circle, Circle CNR, Line, Arc 3Pt, Polyline, Interpolate, Divide Curve, Evaluate Curve, Offset Curve, Regular Polygon, Voronoi, Contour |
+| Surface | Center Box, Sphere, Cylinder, Loft, Extrude, Pipe, Cap Holes, Planar Surface, Surface From Points, Section, Area |
 | Transform | Move, Rotate, Scale, Mirror, Linear Array |
 | Intersect | Solid Union, Solid Difference, Solid Intersection |
 | Tolerance | Dimension, Stack-up, Monte Carlo Stack-up, Bonus Tolerance, Virtual & Resultant Condition, Position to ± |

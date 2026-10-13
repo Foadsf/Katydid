@@ -165,6 +165,13 @@ table.tableblock p { color: var(--kd-text); }
 .cards .card strong a { color: var(--kd-text) !important; }
 .cards .card .imageblock { margin: 0 0 .8rem; }
 .cards .card .imageblock img { aspect-ratio: 16 / 9; object-fit: cover; width: 100%; }
+/* gallery: two large renders per row on wide screens, one on phones */
+.cards.gallery > .content { grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); }
+.cards.gallery .card .imageblock img { aspect-ratio: 7 / 4; }
+.hero-strip > .content { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; margin: 1.2rem 0 .4rem; }
+.hero-strip .imageblock { margin: 0; }
+.hero-strip .imageblock img { aspect-ratio: 7 / 4; object-fit: cover; width: 100%; }
+@media (max-width: 640px) { .hero-strip > .content { grid-template-columns: repeat(2, 1fr); } }
 
 /* ---- footer ------------------------------------------------------------ */
 .kd-footer { max-width: 60rem; margin: 2rem auto 0; padding: 1.5rem 1.25rem 2.5rem; border-top: 1px solid var(--kd-border);

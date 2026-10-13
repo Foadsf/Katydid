@@ -1,0 +1,71 @@
+= Gallery
+:page-id: gallery
+include::_attributes.adoc[]
+:toc!:
+
+[.lead]
+Four classic parametric designs, each built only from the components that ship with Katydid. Load any of them with btn:[Examples] on the canvas toolbar, drag the sliders, and bake the result into your document. Each one has a step-by-step tutorial.
+
+[.cards.gallery]
+--
+[.card]
+****
+image::voronoi-render.png[A copper screen perforated with Voronoi cells that shrink towards an attractor]
+
+*xref:tutorial-voronoi.adoc[Voronoi screen]*
+
+Relaxed Voronoi cells, shrunk about their centroids by distance to an attractor and cut through a plate. +
+menu:Examples[Voronoi screen]
+****
+
+[.card]
+****
+image::tower-render.png[A glass tower that twists and swells as it rises, with white floor slabs]
+
+*xref:tutorial-tower.adoc[Twisted tower]*
+
+One polygon per floor, turned a little more each floor and swelling in the middle, lofted into a facade. +
+menu:Examples[Twisted tower]
+****
+
+[.card]
+****
+image::waffle-render.png[A plywood dome made of two families of interlocking ribs]
+
+*xref:tutorial-waffle.adoc[Waffle dome]*
+
+A lofted dome sliced by two families of planes into interlocking ribs, ready for a laser cutter. +
+menu:Examples[Waffle dome]
+****
+
+[.card]
+****
+image::wave-render.png[A white wave surface with blue contour lines]
+
+*xref:tutorial-wave.adoc[Wave surface]*
+
+A surface from a formula over a grafted grid, with contour lines like a topographic map. +
+menu:Examples[Wave surface with contours]
+****
+--
+
+== The Examples menu
+
+image::ui-examples-menu.png[The Examples menu on the canvas toolbar]
+
+btn:[Examples] lists every ready-made definition: the four above, the tutorial definitions and the tolerance examples. Choosing one replaces what is on the canvas, so save first if you want to keep your own work. Each loads in a second or two; the preview then updates as you drag.
+
+These pictures come from the same definitions. The red preview is what you see while you work; the colours come from baking the final components and setting their colour in FreeCAD, which is how you would prepare a render of your own.
+
+== What they teach
+
+[cols="1,3",options="header"]
+|===
+|Example |New ideas
+|xref:tutorial-voronoi.adoc[Voronoi screen] |*Populate 2D*, *Voronoi*, *Area* centroids, scaling about a per-item centre, cutting many holes with one *Solid Difference*
+|xref:tutorial-tower.adoc[Twisted tower] |One item per floor from *Series*, a shaping formula in *Expression*, *Regular Polygon*, *Loft* with Flatten, *Planar Surface* slabs
+|xref:tutorial-waffle.adoc[Waffle dome] |A profile curve from a formula, *Cap Holes* to close a loft, *Section* with a list of offsets, centring a series, thickening flat regions
+|xref:tutorial-wave.adoc[Wave surface] |A 2D grid with Graft, a formula of two variables, *Surface From Points*, *Contour* at a list of heights
+|===
+
+If you are new to Katydid, do the xref:quick-start.adoc[quick start] and the xref:tutorial-attractor.adoc[attractor grid] first: these examples use the same moves at a larger scale.

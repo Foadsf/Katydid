@@ -936,6 +936,201 @@ class Intersection(Component):
 
 
 # --------------------------------------------------------------------------
+# Patterns and analysis (planar maths in geom2d.py)
+# --------------------------------------------------------------------------
+class Populate2D(Component):
+    name = "Populate 2D"
+    nickname = "Pop2D"
+    glyph = "⁘"
+    category = "Vector"
+    description = "Random points in a rectangle centred on the origin, optionally relaxed to an even spread"
+
+    def setup(self):
+        self.add_input("Width", "W", "Rectangle width (X)", default=100.0)
+        self.add_input("Height", "H", "Rectangle height (Y)", default=60.0)
+        self.add_input("Count", "N", "Number of points", default=50.0)
+        self.add_input("Seed", "S", "Random seed (same seed, same points)", default=1.0)
+        self.add_input("Relax", "R", "Lloyd relaxation steps: more steps, more even spacing", default=2.0)
+        self.add_output("Points", "P", "The points", access=LIST)
+
+    def solve_instance(self, w, h, count, seed, relax):
+        from .geom2d import populate
+        FreeCAD, Part = _part()
+        pts = populate(int(count), -w / 2, -h / 2, w / 2, h / 2, int(seed), int(relax))
+        return [Part.Vertex(FreeCAD.Vector(x, y, 0)) for x, y in pts]
+
+
+class Voronoi(Component):
+    name = "Voronoi"
+    nickname = "Voronoi"
+    glyph = "⬡"
+    category = "Curve"
+    description = "Voronoi cells of points in a rectangle centred on the origin"
+
+    def setup(self):
+        self.add_input("Points", "P", "Cell sites (their X and Y are used)", access=LIST)
+        self.add_input("Width", "W", "Boundary width (X)", default=100.0)
+        self.add_input("Height", "H", "Boundary height (Y)", default=60.0)
+        self.add_output("Cells", "C", "One closed polygon per point", access=LIST)
+
+    def solve_instance(self, points, w, h):
+        from .geom2d import voronoi_cells
+        FreeCAD, Part = _part()
+        sites = [(_point(p).x, _point(p).y) for p in points]
+        cells = voronoi_cells(sites, -w / 2, -h / 2, w / 2, h / 2)
+        return [Part.makePolygon([FreeCAD.Vector(x, y, 0) for x, y in c + c[:1]])
+                for c in cells if len(c) >= 3]
+
+
+class RegularPolygon(Component):
+    name = "Regular Polygon"
+    nickname = "Poly"
+    glyph = "⬠"
+    category = "Curve"
+    description = "Closed regular polygon in a horizontal plane"
+
+    def setup(self):
+        self.add_input("Radius", "R", "Distance from centre to corner", default=10.0)
+        self.add_input("Sides", "S", "Number of sides", default=6.0)
+        self.add_input("Rotation", "A", "Rotation about Z in degrees", default=0.0)
+        self.add_input("Height", "Z", "Height of the polygon's plane", default=0.0)
+        self.add_output("Polygon", "P", "Resulting polygon")
+
+    def solve_instance(self, r, sides, rotation, z):
+        from .geom2d import regular_polygon
+        FreeCAD, Part = _part()
+        pts = regular_polygon(r, int(sides), rotation)
+        return Part.makePolygon([FreeCAD.Vector(x, y, z) for x, y in pts + pts[:1]])
+
+
+class PlanarSurface(Component):
+    name = "Planar Surface"
+    nickname = "PlnSrf"
+    glyph = "▱"
+    category = "Surface"
+    description = "Flat surface bounded by a closed planar curve"
+
+    def setup(self):
+        self.add_input("Curve", "C", "Closed planar curve")
+        self.add_output("Surface", "S", "Resulting surface")
+
+    def solve_instance(self, curve):
+        _, Part = _part()
+        wire = curve if curve.ShapeType == "Wire" else Part.Wire(curve.Edges)
+        if not wire.isClosed():
+            raise ValueError("The curve is not closed")
+        return Part.Face(wire)
+
+
+class Area(Component):
+    name = "Area"
+    nickname = "Area"
+    glyph = "A"
+    category = "Surface"
+    description = "Area and centroid of a closed planar curve or a surface"
+
+    def setup(self):
+        self.add_input("Shape", "S", "Closed planar curve, surface or solid")
+        self.add_output("Area", "A", "Area")
+        self.add_output("Centroid", "C", "Area centroid")
+
+    def solve_instance(self, shape):
+        _, Part = _part()
+        if not shape.Faces:
+            wire = shape if shape.ShapeType == "Wire" else Part.Wire(shape.Edges)
+            if not wire.isClosed():
+                raise ValueError("The curve is not closed")
+            shape = Part.Face(wire)
+        faces = shape.Faces
+        total = sum(f.Area for f in faces)
+        centre = sum((f.CenterOfMass * f.Area for f in faces), _part()[0].Vector()) * (1 / total)
+        return total, Part.Vertex(centre)
+
+
+class Contour(Component):
+    name = "Contour"
+    nickname = "Contour"
+    glyph = "≋"
+    category = "Curve"
+    description = ("Curves where a plane cuts a surface or solid, traced on a fine mesh "
+                   "(within 0.05 % of the shape's size)")
+    TOLERANCE = 0.0005  # mesh deflection as a fraction of the shape's diagonal
+
+    def setup(self):
+        self.add_input("Shape", "S", "Surface or solid to cut")
+        self.add_input("Normal", "N", "Normal of the cutting planes", default=(0.0, 0.0, 1.0))
+        self.add_input("Offset", "D", "Distance of the plane from the origin along N", default=0.0)
+        self.add_output("Curves", "C", "Section curves", access=LIST)
+        self._mesh = (None, None)
+
+    def solve_instance(self, shape, normal, offset):
+        # An exact plane cut of a free-form surface took ~7 s per level (measured on
+        # the wave example); a mesh cross-section gives the same curves in
+        # milliseconds, within the mesh tolerance. Each shape is meshed once.
+        import MeshPart
+        _, Part = _part()
+        n = _point(normal)
+        if n.Length == 0:
+            raise ValueError("Normal must not be zero")
+        n.normalize()
+        if self._mesh[0] is not shape:
+            tol = max(shape.BoundBox.DiagonalLength * self.TOLERANCE, 1e-4)
+            self._mesh = (shape, MeshPart.meshFromShape(Shape=shape, LinearDeflection=tol,
+                                                        AngularDeflection=0.2, Relative=False))
+        sections = self._mesh[1].crossSections([(tuple(n * offset), tuple(n))], 1e-6)[0]
+        return [Part.makePolygon(poly) for poly in sections if len(poly) > 1]
+
+
+class SurfaceFromPoints(Component):
+    name = "Surface From Points"
+    nickname = "SrfGrid"
+    glyph = "▦"
+    category = "Surface"
+    description = "Smooth surface through a grid of points given row by row"
+
+    def setup(self):
+        self.add_input("Points", "P", "Grid points, row after row", access=LIST)
+        self.add_input("U count", "U", "Number of points in each row", default=10.0)
+        self.add_output("Surface", "S", "Resulting surface")
+
+    def solve_instance(self, points, u):
+        _, Part = _part()
+        u = int(u)
+        if u < 2 or len(points) % u or len(points) // u < 2:
+            raise ValueError(f"{len(points)} points do not make rows of {u} (at least 2 x 2)")
+        pts = [_point(p) for p in points]
+        grid = [pts[i:i + u] for i in range(0, len(pts), u)]
+        surface = Part.BSplineSurface()
+        surface.interpolate(grid)
+        return surface.toShape()
+
+
+class Section(Component):
+    name = "Section"
+    nickname = "Sect"
+    glyph = "⊟"
+    category = "Surface"
+    description = "Flat region where a plane cuts a solid (for ribs, slabs and waffles)"
+
+    def setup(self):
+        self.add_input("Solid", "S", "Closed solid to cut")
+        self.add_input("Normal", "N", "Normal of the cutting plane", default=(0.0, 0.0, 1.0))
+        self.add_input("Offset", "D", "Distance of the plane from the origin along N", default=0.0)
+        self.add_output("Region", "R", "The cut region")
+
+    def solve_instance(self, solid, normal, offset):
+        _, Part = _part()
+        n = _point(normal)
+        if n.Length == 0:
+            raise ValueError("Normal must not be zero")
+        n.normalize()
+        wires = [w for w in solid.slice(n, offset) if w.isClosed()]
+        if not wires:
+            raise ValueError("The plane misses the solid")
+        return Part.makeFace(wires, "Part::FaceMakerBullseye")
+
+
+# --------------------------------------------------------------------------
 # Tolerance (stack-ups and GD&T; the maths lives in tolerance.py)
 # --------------------------------------------------------------------------
 class Dimension(Component):
@@ -1081,10 +1276,11 @@ class PositionToPlusMinus(Component):
 REGISTRY = [NumberSlider, Panel,
             Addition, Multiplication, Range, Expression, Remap, Bounds,
             Series, ListItem, ListLength, CullPattern, ShiftList,
-            ConstructPoint, VectorXYZ, Vector2Pt, Deconstruct, Distance,
+            ConstructPoint, VectorXYZ, Vector2Pt, Deconstruct, Distance, Populate2D,
             Circle, CircleCNR, Line, Arc3Pt, Polyline, Interpolate, DivideCurve, EvaluateCurve,
-            OffsetCurve,
-            Box, Sphere, Cylinder, Loft, Extrude, Pipe, CapHoles,
+            OffsetCurve, RegularPolygon, Voronoi, Contour,
+            Box, Sphere, Cylinder, Loft, Extrude, Pipe, CapHoles, PlanarSurface, SurfaceFromPoints,
+            Section, Area,
             Move, Rotate, Scale, Mirror, LinearArray,
             Union, Difference, Intersection,
             Dimension, StackUp, MonteCarlo, BonusTolerance, SizeBoundaries, PositionToPlusMinus]
