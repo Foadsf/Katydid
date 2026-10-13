@@ -153,6 +153,13 @@ class Component:
                 self.messages.append(f"Input parameter {p.nickname} failed to collect data")
         return self.state == WARNING
 
+    def warn(self, message: str) -> None:
+        """Keep the result but mark the component orange with a message."""
+        if self.state != ERROR:
+            self.state = WARNING
+        if message not in self.messages:
+            self.messages.append(message)
+
     def error(self, exc: Exception) -> None:
         self.state = ERROR
         message = str(exc) or type(exc).__name__

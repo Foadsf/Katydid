@@ -31,6 +31,18 @@ def _vertex(v):
     return Part.Vertex(v)
 
 
+def _checked_boolean(comp, result):
+    """A Boolean that fails in OpenCascade can still return a shape: invalid, or with a
+    negative volume. Seen: a tube wall cut by 72 small cylinders, 16 of them on the
+    tube's seam edges, gave -10 mm^3. Pass it on, but turn the component orange."""
+    if result.isNull():
+        raise ValueError("The Boolean operation failed (no result)")
+    if not result.isValid() or (result.Solids and result.Volume <= 0):
+        comp.warn("The Boolean result is not a valid solid. This often happens when a solid "
+                  "touches the other's seam edges or faces exactly; moving it slightly usually helps.")
+    return result
+
+
 def _edge(curve):
     """A single curve: an Edge, or a Wire made of exactly one edge."""
     if getattr(curve, "ShapeType", None) == "Edge":
@@ -387,7 +399,7 @@ class Union(Component):
 
     def solve_instance(self, shapes):
         result = shapes[0].fuse(shapes[1:]) if len(shapes) > 1 else shapes[0]
-        return result.removeSplitter()
+        return _checked_boolean(self, result.removeSplitter())
 
 
 # --------------------------------------------------------------------------
@@ -953,7 +965,7 @@ class Difference(Component):
         self.add_output("Result", "R", "A minus B")
 
     def solve_instance(self, a, b):
-        return a.cut(b).removeSplitter()
+        return _checked_boolean(self, a.cut(b).removeSplitter())
 
 
 class Intersection(Component):
@@ -972,7 +984,7 @@ class Intersection(Component):
         result = a.common(b).removeSplitter()
         if result.isNull() or not result.Solids:
             raise ValueError("The solids do not overlap")
-        return result
+        return _checked_boolean(self, result)
 
 
 # --------------------------------------------------------------------------

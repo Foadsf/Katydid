@@ -323,6 +323,24 @@ class Demos(unittest.TestCase):
         self.assertTrue(tube.isValid())
         self.assertAlmostEqual(tube.Volume, math.pi * 4 * rail.Length, delta=0.005 * tube.Volume)
 
+    def test_boolean_never_passes_on_a_broken_solid_silently(self):
+        # The NX session's tube wall: two Pipes on a circle, cut by 72 short cylinders
+        # standing on the outer surface, 3 mm deep, several on the tube's seams.
+        # OpenCascade returned -10 mm^3 and an invalid solid with no error.
+        rail = lib.Circle().solve_instance(40.0, 0.0)
+        tube, inner = lib.Pipe().solve_instance(rail, 9.0), lib.Pipe().solve_instance(rail, 7.5)
+        wall = lib.Difference().solve_instance(tube, [inner])
+        # The NX cutters themselves (tests/data): a regular grid of similar cylinders
+        # gave a valid cut, so the fixture is what reproduces the failure.
+        here = os.path.dirname(os.path.abspath(__file__))
+        cutters = Part.read(os.path.join(here, "data", "tube_cutters.brep")).Solids
+        expected = wall.Volume - sum(wall.common(t).Volume for t in cutters)
+        diff = lib.Difference()
+        result = diff.solve_instance(wall, cutters)
+        good = result.isValid() and abs(result.Volume - expected) < 1e-3 * expected
+        self.assertTrue(good or diff.state == "warning", (round(result.Volume, 1), round(expected, 1),
+                                                          result.isValid(), diff.state))
+
     def test_twisted_lobed_ring(self):
         from katydid import showcase
         c = self.build(showcase.build_ring)

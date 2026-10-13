@@ -19,7 +19,10 @@ Use menu:Katydid[Canvas] or the toolbar button, or double-click the *Katydid* ob
 Check that btn:[Preview] on the canvas toolbar is on, that the components' own previews are on (a darker grey component has its preview switched off), and that the component is not orange or red. Then use FreeCAD's *Fit all* (kbd:[V], kbd:[F]) in the 3D view; the geometry may simply be off-screen.
 
 *A component is orange.*
-One of its inputs has no data. Hover over it to see which; wire something in, or use menu:Set value…[] on the input's right-click menu to give it a value.
+Usually one of its inputs has no data. Hover over it to see which; wire something in, or use menu:Set value…[] on the input's right-click menu to give it a value.
+
+*A Solid Difference, Union or Intersection is orange: "The Boolean result is not a valid solid".*
+OpenCascade, FreeCAD's geometry kernel, sometimes returns a broken solid instead of an error. It happens most when a cutting solid touches the other solid's seam edges or meets its surface exactly tangentially, for example short cylinders standing exactly on a pipe's surface at 0°. Katydid passes the result on but marks it. Move or lengthen the cutters slightly so they cross the surface instead of touching it. A Boolean that is flagged valid can still occasionally miss a cutter, so check the volume (*Area* gives it for faces; FreeCAD's measuring tools for solids) when it matters.
 
 *A component is red.*
 It could not compute. Hover over it for the reason, for example "Radius must be positive" or "A loft needs at least two section curves" (see the xref:tutorial-trees.adoc[tree tutorial] for that one).
