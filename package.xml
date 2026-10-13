@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<package format="1" xmlns="https://wiki.freecad.org/Package_Metadata">
+  <name>Katydid</name>
+  <description>Grasshopper-style visual programming canvas for FreeCAD: wire components on a node canvas, preview live in the 3D view, bake to the document.</description>
+  <version>0.1.0</version>
+  <date>2026-10-13</date>
+  <maintainer email="f.s.farimani@gmail.com">Foad S. Farimani</maintainer>
+  <license file="LICENSE">LGPL-2.1-or-later</license>
+  <icon>katydid/resources/katydid.svg</icon>
+  <content>
+    <workbench>
+      <classname>KatydidWorkbench</classname>
+      <subdirectory>./</subdirectory>
+      <icon>katydid/resources/katydid.svg</icon>
+      <freecadmin>1.0.0</freecadmin>
+      <tag>visual programming</tag>
+      <tag>node editor</tag>
+      <tag>parametric</tag>
+      <tag>grasshopper</tag>
+    </workbench>
+  </content>
+</package>
