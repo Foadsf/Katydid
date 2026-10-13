@@ -14,7 +14,7 @@ import FreeCADGui
 import katydid
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(katydid.__file__))), "tests"))
-from guitest import Qt, QtCore, Run, app, mouse, pump  # noqa: E402
+from guitest import Qt, QtCore, Run, app, empty_spot, mouse, pump  # noqa: E402
 
 
 def smallest_circle_center(comp):
@@ -74,7 +74,7 @@ def body(run):
     run.grab(None, "03_after_drag.png")
 
     # Search finds the new components.
-    empty = QtCore.QPoint(int(view.viewport().width() * 0.15), int(view.viewport().height() * 0.85))
+    empty = empty_spot(view)
     mouse(view, "press", empty)
     mouse(view, "release", empty)
     mouse(view, "double", empty)

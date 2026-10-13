@@ -106,6 +106,62 @@ def build_attractor(scene) -> dict:
     return c
 
 
+FISCHER_8_9 = [  # (name, nominal, tol, direction): Fischer 2011, Figures 8.9-8.14
+    ("A to B (overall)", 56.5, 1.5, 1), ("Part 1", 11.0, 1.0, -1),
+    ("Part 2", 17.5, 0.5, -1), ("Part 3", 16.5, 0.5, -1)]
+
+
+def build_stackup(scene) -> dict:
+    """Fischer's statistical stack-up example as a live definition: drag the
+    tolerance of the 56.5 dimension or the RSS factor and watch the limits and
+    the Monte Carlo out-of-spec share move."""
+    def slider(label, value, lo, hi, decimals=2):
+        s = lib.NumberSlider(value, lo, hi, decimals)
+        s.nickname = label
+        return s
+
+    c = {"tol": slider("±tol 56.5", 1.5, 0, 3), "factor": slider("RSS factor", 1.5, 1, 2),
+         "neg": lib.Multiplication(), "stack": lib.StackUp(), "mc": lib.MonteCarlo(),
+         "report": lib.Panel(), "hist": lib.Panel(), "stats": lib.Panel()}
+    c["neg"].inputs[1].default = -1.0
+    c["mc"].inputs[4].default = 10.0    # spec limits for the gap: about 2 % fall outside
+    c["mc"].inputs[5].default = 13.0
+    c["report"].size = (470, 150)
+    c["hist"].size = (330, 290)
+    c["stats"].size = (190, 80)
+    dims = []
+    for i, (name, nominal, tol, direction) in enumerate(FISCHER_8_9):
+        d = lib.Dimension()
+        d.nickname = f"Dim {i + 1}"
+        for p, v in zip(d.inputs, (nominal, tol, -tol, float(direction), "normal", name)):
+            p.default = v
+        c[f"dim{i + 1}"] = d
+        dims.append(d)
+    # Four 126-px Dimension components only just fit a 460-px canvas at zoom 0.7.
+    layout = {"tol": (-620, -60), "factor": (-620, 280), "neg": (-330, 0),
+              "dim1": (-160, -150), "dim2": (-160, -18), "dim3": (-160, 114), "dim4": (-160, 246),
+              "stack": (60, -40), "mc": (60, 230), "report": (260, -150), "hist": (260, 60),
+              "stats": (620, 260)}
+    for key, (x, y) in layout.items():
+        scene.add_component(c[key], QPointF(x, y))
+
+    g = scene.graph
+    g.connect(c["tol"].outputs[0], c["dim1"].inputs[1])
+    g.connect(c["tol"].outputs[0], c["neg"].inputs[0])
+    g.connect(c["neg"].outputs[0], c["dim1"].inputs[2])
+    for d in dims:  # several wires into one input merge into one list, in wire order
+        g.connect(d.outputs[0], c["stack"].inputs[0])
+        g.connect(d.outputs[0], c["mc"].inputs[0])
+    g.connect(c["factor"].outputs[0], c["stack"].inputs[1])
+    g.connect(c["stack"].outputs[8], c["report"].inputs[0])
+    g.connect(c["mc"].outputs[3], c["hist"].inputs[0])
+    for i in range(3):
+        g.connect(c["mc"].outputs[i], c["stats"].inputs[0])
+    scene.rebuild_wires()
+    scene.request_solve()
+    return c
+
+
 def build_tree(scene) -> dict:
     """Data trees: rings -> a branch of points per ring -> a polyline per branch
     -> one loft, which needs Flatten on its input to see all the polylines."""

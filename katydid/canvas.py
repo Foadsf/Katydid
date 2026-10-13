@@ -46,6 +46,7 @@ PANEL_FILL = QColor(252, 248, 196)
 CATEGORY_COLOURS = {
     "Params": QColor(90, 90, 90), "Maths": QColor(40, 110, 170),
     "Sets": QColor(120, 80, 160), "Vector": QColor(150, 110, 40), "Curve": QColor(30, 130, 150),
+    "Tolerance": QColor(60, 90, 120),
     "Surface": QColor(40, 140, 90),
     "Transform": QColor(190, 110, 30), "Intersect": QColor(170, 50, 60),
 }
@@ -393,7 +394,7 @@ class PanelItem(ComponentItem):
     W, H = 190, 150
 
     def layout(self):
-        self.w, self.h = self.W, self.H
+        self.w, self.h = getattr(self.comp, "size", (self.W, self.H))
         self._place_grips()
 
     def paint(self, painter, option, widget=None):
@@ -633,7 +634,7 @@ class KatydidView(QtWidgets.QGraphicsView):
         if rect.isNull():
             return
         self.fitInView(rect.adjusted(-40, -40, 40, 40), Qt.AspectRatioMode.KeepAspectRatio)
-        zoom = min(max(self.transform().m11(), 0.8), 1.4)  # stay legible; pan for the rest
+        zoom = min(max(self.transform().m11(), 0.7), 1.4)  # stay legible; pan for the rest
         self.resetTransform()
         self.scale(zoom, zoom)
         self.centerOn(rect.center())

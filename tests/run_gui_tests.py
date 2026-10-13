@@ -26,6 +26,7 @@ BIN = os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs", "FreeCAD 1.1"
 RUNS = [("smoke", "freecad.exe", "gui_smoke.py"),
         ("tree", "freecad.exe", "tree_smoke.py"),
         ("attractor", "freecad.exe", "attractor_smoke.py"),
+        ("tolerance", "freecad.exe", "tolerance_smoke.py"),
         ("save", "freecad.exe", "persist_smoke.py"),
         ("load", "freecad.exe", "persist_smoke.py"),
         ("headless", "freecadcmd.exe", "persist_headless.py"),

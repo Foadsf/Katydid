@@ -23,9 +23,20 @@ MUTATIONS = [
      "branches[i][min(b, len(branches[i]) - 1)][1]", "(branches[i][b][1] if b < len(branches[i]) else [])"),
     ("input modifiers are ignored", "katydid/engine.py",
      "return tree.mapped(param.modifier, param.reverse)", "return tree"),
+    ("worst case takes the largest tolerance", "katydid/tolerance.py",
+     "wc = sum(d.tol for d in dims)", "wc = max(d.tol for d in dims)"),
+    ("RSS forgets the square root", "katydid/tolerance.py",
+     "rss = math.sqrt(sum(d.tol ** 2 for d in dims))", "rss = sum(d.tol ** 2 for d in dims)"),
+    ("equal-bilateral mean ignores asymmetry", "katydid/tolerance.py",
+     "return self.nominal + (self.upper + self.lower) / 2", "return self.nominal"),
+    ("hole virtual condition adds the tolerance", "katydid/tolerance.py",
+     "vc, rc = mmc - geometric, lmc + geometric + size_tol",
+     "vc, rc = mmc + geometric, lmc + geometric + size_tol"),
+    ("LMC modifier measures from MMC", "katydid/tolerance.py",
+     "b = abs(actual - lmc)", "b = abs(actual - mmc)"),
 ]
 TESTS = ["tests/test_tree.py", "tests/test_engine.py", "tests/test_document.py",
-         "tests/test_components.py"]
+         "tests/test_components.py", "tests/test_tolerance.py"]
 
 
 def run_suite(root):

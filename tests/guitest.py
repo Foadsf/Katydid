@@ -47,6 +47,21 @@ def drag(view, a, b, steps=12, mods=Qt.KeyboardModifier.NoModifier):
     pump(80)
 
 
+def empty_spot(view):
+    """A viewport point with no component or grip under it (for a canvas double-click)."""
+    from katydid.canvas import ComponentItem, GripItem
+    vp = view.viewport()
+    for fy in (0.85, 0.15, 0.5, 0.95, 0.05):
+        for fx in (0.85, 0.15, 0.5, 0.95, 0.05, 0.3, 0.7):
+            p = QtCore.QPoint(int(vp.width() * fx), int(vp.height() * fy))
+            hit = [i for i in view.items(p) if isinstance(i, (ComponentItem, GripItem))]
+            near = [i for i in view.items(QtCore.QRect(p.x() - 30, p.y() - 30, 60, 60))
+                    if isinstance(i, ComponentItem)]
+            if not hit and not near:
+                return p
+    raise RuntimeError("No empty spot on the canvas")
+
+
 def grip_pos(panel, param):
     return panel.view.mapFromScene(panel.scene.grip(param).scenePos())
 

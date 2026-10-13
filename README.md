@@ -29,7 +29,7 @@ Restart FreeCAD, pick **Katydid** in the workbench list. The canvas opens as a f
 
 Component colours: grey OK, orange warning (missing input), red error (hover for the message), green selected. Wires: solid = one item, double = list, dashed = a tree of several branches, thin dashed orange = empty.
 
-## Components (42)
+## Components (48)
 
 | Tab | Components |
 |---|---|
@@ -41,10 +41,19 @@ Component colours: grey OK, orange warning (missing input), red error (hover for
 | Surface | Center Box, Sphere, Cylinder, Loft, Extrude, Pipe, Cap Holes |
 | Transform | Move, Rotate, Scale, Mirror, Linear Array |
 | Intersect | Solid Union, Solid Difference, Solid Intersection |
+| Tolerance | Dimension, Stack-up, Monte Carlo Stack-up, Bonus Tolerance, Virtual & Resultant Condition, Position to ± |
 
 **Expression** formulas are parsed and checked, never passed to Python's `eval`: only numbers, `x`, `y`, `z`, `pi`, `e`, `tau`, arithmetic and math functions are allowed, so a shared file cannot run code.
 
 **Attractor** loads Grasshopper's classic attractor grid: two Series, Graft on Construct Point's Y input to make a 10 × 10 grid, Distance to an attractor point, Bounds (with Flatten) and Remap to turn distance into radius, then circles extruded by their radius. Drag *Attractor X/Y*. With 100 extruded tubes one update costs about 25 ms to solve and 125 ms to mesh the preview on this machine, so it redraws about 7 times a second; light definitions redraw over 30 times a second.
+
+## Tolerance analysis
+
+The **Tolerance** tab brings the precision-engineering material in: **Dimension** (nominal, upper/lower deviation, direction in the chain, distribution), **Stack-up** (worst case, RSS and adjusted RSS with limits and a per-line contribution report, following Fischer, *Mechanical Tolerance Stackup and Analysis*, 2nd ed.), **Monte Carlo Stack-up** (random builds: mean, standard deviation, % outside spec limits, text histogram; a normal tolerance is k = 3 standard deviations by default), and GD&T calculators after Cogorno, *GD&T for Mechanical Design*, 3rd ed.: **Bonus Tolerance** (MMC/LMC/RFS), **Virtual & Resultant Condition**, and **Position to ±**.
+
+The maths lives in `katydid/tolerance.py` and is tested against the books' printed numbers: Fischer Examples 4.1-4.4, Figures 8.9-8.14, the Figure 8.15 report (to four decimals) and Example 8.1, and Cogorno Table 3-2. Where the books round (Fischer rounds RSS before applying the 1.5 factor, and rounds up in one hand-worked example) the tests say so. The LMC bonus and the virtual/resultant values are checked against the books' formulas, not printed tables.
+
+**Stack-up** loads Fischer's Figure 8.9 chain live: drag *±tol 56.5* or *RSS factor* and the limits, the report and the Monte Carlo reject rate (spec 10 to 13) follow.
 
 ## Data trees
 

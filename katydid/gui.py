@@ -46,6 +46,7 @@ class KatydidPanel(QtWidgets.QWidget):
         bar.addAction("Demo", self.load_demo)
         bar.addAction("Tree Demo", self.load_tree_demo)
         bar.addAction("Attractor", self.load_attractor_demo)
+        bar.addAction("Stack-up", self.load_stackup_demo)
         bar.addAction("Clear", self.scene.clear_all)
         bar.addSeparator()
         self.status = QtWidgets.QLabel("Double-click the canvas to search")
@@ -190,6 +191,11 @@ class KatydidPanel(QtWidgets.QWidget):
     def load_tree_demo(self):
         self.scene.clear_all()
         self.demo = demo.build_tree(self.scene)
+        QtCore.QTimer.singleShot(0, self.view.fit_all)
+
+    def load_stackup_demo(self):
+        self.scene.clear_all()
+        self.demo = demo.build_stackup(self.scene)
         QtCore.QTimer.singleShot(0, self.view.fit_all)
 
     def load_attractor_demo(self):

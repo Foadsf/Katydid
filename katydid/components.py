@@ -95,6 +95,14 @@ class Panel(Component):
         self.add_input("Input", "", "Data to display", optional=True, access=TREE)
         self.rows: list[tuple] = []
         self.text_lines: list[str] = []
+        self.size = (190, 150)
+
+    def write_state(self):
+        return {"size": list(self.size)} if tuple(self.size) != (190, 150) else {}
+
+    def read_state(self, state):
+        if "size" in state:
+            self.size = tuple(state["size"])
 
     def compute(self):
         tree = self.collect(self.inputs[0])
@@ -927,6 +935,149 @@ class Intersection(Component):
         return result
 
 
+# --------------------------------------------------------------------------
+# Tolerance (stack-ups and GD&T; the maths lives in tolerance.py)
+# --------------------------------------------------------------------------
+class Dimension(Component):
+    name = "Dimension"
+    nickname = "Dim"
+    glyph = "±"
+    category = "Tolerance"
+    description = "A toleranced dimension in a stack-up chain"
+
+    def setup(self):
+        self.add_input("Nominal", "N", "Nominal value", default=10.0)
+        self.add_input("Upper", "U", "Upper deviation (e.g. 0.1)", default=0.1)
+        self.add_input("Lower", "L", "Lower deviation (e.g. -0.1)", default=-0.1)
+        self.add_input("Direction", "D", "+1 if it runs from A toward B, -1 if back", default=1.0)
+        self.add_input("Distribution", "S", "normal, uniform or triangular", default="normal")
+        self.add_input("Name", "Nm", "Label for reports", default="")
+        self.add_output("Dimension", "D", "The dimension")
+        self.add_output("Mean", "M", "Equal-bilateral nominal")
+        self.add_output("Tolerance", "T", "Equal-bilateral ± tolerance")
+
+    def solve_instance(self, nominal, upper, lower, direction, distribution, name):
+        from .tolerance import Dim
+        d = Dim(nominal, upper, lower, 1 if direction >= 0 else -1, str(distribution).lower(), str(name))
+        return d, d.mean, d.tol
+
+
+class StackUp(Component):
+    name = "Stack-up"
+    nickname = "Stack"
+    glyph = "Σ±"
+    category = "Tolerance"
+    description = "Worst-case, RSS and adjusted RSS stack-up of a chain of dimensions (Fischer)"
+
+    def setup(self):
+        self.add_input("Dimensions", "D", "The chain, from A to B", access=LIST)
+        self.add_input("Factor", "F", "Adjustment factor for RSS", default=1.5)
+        self.add_output("Nominal", "N", "Nominal distance A-B")
+        self.add_output("Worst case", "WC", "Worst-case ± tolerance")
+        self.add_output("RSS", "RSS", "Root-sum-square ± tolerance")
+        self.add_output("Adjusted RSS", "ARSS", "RSS × factor")
+        self.add_output("Worst min", "Wmin", "Worst-case minimum")
+        self.add_output("Worst max", "Wmax", "Worst-case maximum")
+        self.add_output("Adjusted min", "Amin", "Adjusted RSS minimum")
+        self.add_output("Adjusted max", "Amax", "Adjusted RSS maximum")
+        self.add_output("Report", "R", "Report lines", access=LIST)
+
+    def solve_instance(self, dims, factor):
+        from .tolerance import report, stack
+        r = stack(dims, factor)
+        wlo, whi = r.limits("worst")
+        alo, ahi = r.limits("adjusted")
+        return r.nominal, r.worst_case, r.rss, r.adjusted, wlo, whi, alo, ahi, report(dims, r)
+
+
+class MonteCarlo(Component):
+    name = "Monte Carlo Stack-up"
+    nickname = "MC"
+    glyph = "⚄"
+    category = "Tolerance"
+    description = "Random builds of the chain: spread, out-of-spec share and histogram"
+
+    def setup(self):
+        self.add_input("Dimensions", "D", "The chain, from A to B", access=LIST)
+        self.add_input("Samples", "N", "Number of random builds", default=10000.0)
+        self.add_input("Seed", "Sd", "Random seed (same seed, same result)", default=1.0)
+        self.add_input("Sigmas", "k", "A normal tolerance is this many standard deviations", default=3.0)
+        self.add_input("Lower limit", "LSL", "Lower spec limit of A-B", optional=True)
+        self.add_input("Upper limit", "USL", "Upper spec limit of A-B", optional=True)
+        self.add_output("Mean", "M", "Mean of A-B")
+        self.add_output("Std dev", "σ", "Standard deviation of A-B")
+        self.add_output("Out of spec", "%", "Percentage of builds outside the limits")
+        self.add_output("Histogram", "H", "Text histogram", access=LIST)
+
+    def solve_instance(self, dims, samples, seed, sigmas, low, high):
+        from .tolerance import histogram, mean_std, monte_carlo, outside
+        values = monte_carlo(dims, int(samples), int(seed), sigmas)
+        m, s = mean_std(values)
+        return m, s, 100.0 * outside(values, low, high), histogram(values)
+
+
+class BonusTolerance(Component):
+    name = "Bonus Tolerance"
+    nickname = "Bonus"
+    glyph = "Ⓜ"
+    category = "Tolerance"
+    description = "Bonus and total geometric tolerance at an actual size (Cogorno)"
+
+    def setup(self):
+        self.add_input("Actual size", "A", "Actual mating envelope size")
+        self.add_input("MMC", "MMC", "Maximum material size")
+        self.add_input("LMC", "LMC", "Least material size")
+        self.add_input("Geometric tolerance", "T", "Tolerance in the feature control frame")
+        self.add_input("Modifier", "Mod", "MMC, LMC or RFS", default="MMC")
+        self.add_output("Bonus", "B", "Bonus tolerance")
+        self.add_output("Total", "Tot", "Geometric + bonus")
+
+    def solve_instance(self, actual, mmc, lmc, geometric, modifier):
+        from .tolerance import bonus
+        return bonus(actual, mmc, lmc, geometric, str(modifier))
+
+
+class SizeBoundaries(Component):
+    name = "Virtual & Resultant Condition"
+    nickname = "VC/RC"
+    glyph = "◌"
+    category = "Tolerance"
+    description = "Virtual and resultant condition of a feature of size at MMC (Cogorno)"
+
+    def setup(self):
+        self.add_input("MMC", "MMC", "Maximum material size")
+        self.add_input("LMC", "LMC", "Least material size")
+        self.add_input("Geometric tolerance", "T", "Tolerance at MMC")
+        self.add_input("Internal", "Int", "True for a hole, False for a pin", default=True)
+        self.add_output("Virtual condition", "VC", "Constant functional boundary")
+        self.add_output("Resultant condition", "RC", "Worst-case opposite boundary")
+        self.add_output("Inner boundary", "IB", "Worst-case inner boundary")
+        self.add_output("Outer boundary", "OB", "Worst-case outer boundary")
+
+    def solve_instance(self, mmc, lmc, geometric, internal):
+        from .tolerance import boundaries
+        b = boundaries(mmc, lmc, geometric, bool(internal))
+        return b["virtual"], b["resultant"], b["inner"], b["outer"]
+
+
+class PositionToPlusMinus(Component):
+    name = "Position to ±"
+    nickname = "Pos±"
+    glyph = "⌖"
+    category = "Tolerance"
+    description = "Diametral position tolerance and size bonus as ± values for a stack (Fischer)"
+
+    def setup(self):
+        self.add_input("Position", "P", "Diametral position tolerance")
+        self.add_input("Size tolerance", "S", "Size tolerance available as bonus", default=0.0)
+        self.add_output("± position", "±P", "Half the position tolerance")
+        self.add_output("± bonus", "±B", "Half the size tolerance")
+
+    def solve_instance(self, position, size):
+        from .tolerance import position_to_plus_minus
+        return position_to_plus_minus(position, size)
+
+
 REGISTRY = [NumberSlider, Panel,
             Addition, Multiplication, Range, Expression, Remap, Bounds,
             Series, ListItem, ListLength, CullPattern, ShiftList,
@@ -935,8 +1086,10 @@ REGISTRY = [NumberSlider, Panel,
             OffsetCurve,
             Box, Sphere, Cylinder, Loft, Extrude, Pipe, CapHoles,
             Move, Rotate, Scale, Mirror, LinearArray,
-            Union, Difference, Intersection]
-CATEGORIES = ["Params", "Maths", "Sets", "Vector", "Curve", "Surface", "Transform", "Intersect"]
+            Union, Difference, Intersection,
+            Dimension, StackUp, MonteCarlo, BonusTolerance, SizeBoundaries, PositionToPlusMinus]
+CATEGORIES = ["Params", "Maths", "Sets", "Vector", "Curve", "Surface", "Transform", "Intersect",
+              "Tolerance"]
 
 
 def by_name(name: str):

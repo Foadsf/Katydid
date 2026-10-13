@@ -17,7 +17,7 @@ import FreeCADGui
 import katydid
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(katydid.__file__))), "tests"))
-from guitest import Qt, QtCore, Run, app, drag, grip_pos, mouse, pump  # noqa: E402
+from guitest import Qt, QtCore, Run, app, drag, empty_spot, grip_pos, mouse, pump  # noqa: E402
 
 
 def drag_bench(panel, slider, steps=40):
@@ -152,7 +152,7 @@ def body(run):
     check("recovers_after_fix", d["box"].state == "ok" and d["move"].state == "ok")
 
     # 3. double-click search places a component
-    empty = QtCore.QPoint(int(view.viewport().width() * 0.80), int(view.viewport().height() * 0.80))
+    empty = empty_spot(view)
     mouse(view, "press", empty)
     mouse(view, "release", empty)
     mouse(view, "double", empty)
