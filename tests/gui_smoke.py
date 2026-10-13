@@ -205,7 +205,7 @@ def body(run):
     mouse(view, "press", label)
     mouse(view, "release", label)
     mouse(view, "double", label)
-    mouse(view, "release", label)
+    # no release here: the editor is modal, so on a real screen the button-up goes to it
     pump(200)
     dlg = view.dialog
     check("slider_dialog_opens", dlg is not None and dlg.isVisible())
@@ -218,6 +218,13 @@ def body(run):
     check("slider_dialog_applies", (width.nickname, width.maximum, width.value) == ("W", 60.0, 33.0)
           and abs(d["move"].outputs[0].data[0].BoundBox.XLength - 33.0) < 1e-6,
           [width.nickname, width.maximum, width.value])
+    # the slider must not keep the mouse once its editor closes: a plain move must not drag it
+    grabber = panel.scene.mouseGrabberItem()
+    where = item.pos()
+    mouse(view, "move", label + QtCore.QPoint(120, 140))
+    pump(100)
+    check("slider_releases_mouse_after_editor", grabber is None and item.pos() == where,
+          [type(grabber).__name__, (where.x(), where.y()), (item.pos().x(), item.pos().y())])
 
     # 3c. right-click an unwired input > Set value…; bad text is refused
     series_start = d["series"].inputs[0]

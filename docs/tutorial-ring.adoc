@@ -1,0 +1,62 @@
+= Tutorial 16: A twisted lobed ring
+:page-id: tutorial-ring
+include::_attributes.adoc[]
+
+[.lead]
+Sweep a three-lobed profile round a circle and turn the lobes a little at every step, and the ring twists like a rope. This is the most data-tree-heavy example: one branch per section, one point per profile position, a closed curve per branch and a closed loft through all of them.
+
+image::ring-render.png[A smooth white ring whose three-lobed cross-section twists as it goes round]
+
+Reference: choose menu:Examples[Twisted lobed ring] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== Sections and profile positions
+
+. Place six sliders: _Sections: 24 (12 – 72)_, _Lobes: 3 (2 – 6)_ and _Twist: 1 (0 – 4)_ with Decimals `0`; _Ring radius: 40 (20 – 60)_, _Profile size: 14 (5 – 25)_, and _Lobe depth: 0.45 (0 – 0.7)_ with Decimals `2`.
+. Place a *Series* (Sets), _Section no._, and wire *Sections → C*. Place a second *Series*, _Profile no._, and set value its *C* to `32`: 32 points round each profile.
+. Place an *Expression* (Maths), _θ_, with *F* set to `2*pi*x/y` and *y* set to `32`. Wire *Profile no. → x*: the angle round the profile.
+. Place an *Expression*, _φ_, with *F* set to `2*pi*x/y`. Wire *Section no. → x* and *Sections → y*: the angle round the ring.
+. Place an *Expression*, _Lobe turn_, with *F* set to `2*pi*x*y/z`. Wire *Section no. → x*, *Twist → y* and *Sections → z*.
+
+=== The lobed profile
+
+[start=6]
+. Place a *Multiplication* (Maths) and wire *θ → A* and *Lobes → B*.
+. Place an *Addition* (Maths). Wire *Multiplication R → A* and *Lobe turn → B*, and tick menu:Graft[] on *B*. You now have 24 branches, one per section, of 32 values each.
+. Place an *Expression*, _Profile_, with *F* set to `y*(1 + z*cos(x))`. Wire *Addition R → x*, *Profile size → y* and *Lobe depth → z*: the profile's radius swings between 14 × 0.55 and 14 × 1.45, three times round.
+
+=== Points on the ring
+
+[start=9]
+. Place an *Expression*, _Reach_, with *F* set to `z + x*cos(y)`. Wire *Profile → x*, *θ → y* and *Ring radius → z*: each point's distance from the ring's axis.
+. Place three *Expression* components, _X_, _Y_ and _Z_, with *F* set to `x*cos(y)`, `x*sin(y)` and `x*sin(y)`. Wire *Reach → x* and *φ → y* on X and Y, with menu:Graft[] on their *y*; *Profile → x* and *θ → y* on Z.
+. Place a *Construct Point* (Vector) and wire *X*, *Y* and *Z* into it: 24 branches of 32 points.
+
+=== Ring
+
+[start=12]
+. Place an *Interpolate* (Curve) with *P* set to `True` and wire *Construct Point Pt → V*: one closed lobed curve per section.
+. Place a *Loft* (Surface). Wire *Interpolate C → C*, tick menu:Flatten[] on *C*, and set value its *Cl* (Closed) to `True`, so the loft runs from the last section back to the first.
+. Turn menu:Preview[] off on Construct Point and Interpolate.
+
+.The finished definition
+image::ring-canvas.png[The twisted ring definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::ring-preview.png[The red preview of the twisted ring]
+
+== What is happening
+
+The profile is a circle whose radius wobbles: `1 + d·cos(L·θ)` gives _L_ lobes. Adding _Lobe turn_ to the angle rotates the lobes, a little more for each section. After a full trip round the ring the lobes have turned by _Twist_ × 360° / _Lobes_, a whole number of lobe spacings, so the last section matches the first and the closed loft joins up.
+
+Grafting is what keeps sections apart: θ is one list shared by every section, φ and the lobe turn are one value per section. Grafting the per-section values makes 24 branches, and the shared θ list is reused in each.
+
+A closed loft can wrinkle slightly where the last section meets the first; in the picture that join is turned to the back. The ring takes about two seconds to update, most of it in the loft.
+
+== Things to try
+
+* Set *Lobes* to 4, or to 2 for a flattened ribbon.
+* Set *Twist* to 0 for a straight lobed ring, or to 2 for a tighter rope.
+* Set *Lobe depth* to 0 and you get a plain torus.
+* Raise *Sections* to 48 for a smoother loft; it gets slower in proportion.

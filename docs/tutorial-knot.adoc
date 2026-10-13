@@ -1,0 +1,54 @@
+= Tutorial 15: A torus knot
+:page-id: tutorial-knot
+include::_attributes.adoc[]
+
+[.lead]
+A torus knot is a closed curve drawn on an invisible doughnut: it winds _p_ times round the axis while looping _q_ times through the hole. Three formulas give the curve, *Interpolate* closes it smoothly, and *Pipe* turns it into a solid tube. Change two whole numbers and you get a different knot.
+
+image::knot-render.png[A smooth blue tube tied in a trefoil knot]
+
+Reference: choose menu:Examples[Torus knot] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== Parameters
+
+. Place six sliders: _Windings: 2 (1 – 9)_, _Loops: 3 (1 – 9)_ and _Points: 240 (60 – 600)_ with Decimals `0`; _Ring radius: 30 (10 – 60)_, _Tube offset: 12 (3 – 30)_, and _Thickness: 3.2 (0.5 – 8)_ with Decimals `2`.
+. Place a *Series* (Sets), _Point no._, and wire *Points → C*.
+. Place an *Expression* (Maths), _Angle_, with *F* set to `2*pi*x/y`. Wire *Point no. → x* and *Points → y*: 240 angles from 0 to just under a full turn.
+. Place two *Multiplication* (Maths) components. Wire *Angle → A* on both, *Windings → B* on the first and *Loops → B* on the second. Call them _p·t_ and _q·t_.
+
+=== The curve
+
+[start=5]
+. Place an *Expression*, _Radius_, with *F* set to `y + z*cos(x)`. Wire *q·t → x*, *Ring radius → y* and *Tube offset → z*. The curve's distance from the axis swings in and out as it loops through the hole.
+. Place three *Expression* components, _X_, _Y_ and _Z_, with *F* set to `x*cos(y)`, `x*sin(y)` and `y*sin(x)`. Wire *Radius → x* and *p·t → y* on X and Y; *q·t → x* and *Tube offset → y* on Z.
+. Place a *Construct Point* (Vector) and wire *X*, *Y* and *Z* into it.
+. Place an *Interpolate* (Curve), set value its *P* (periodic) to `True`, and wire *Construct Point Pt → V*. The curve closes on itself with no corner where it starts.
+
+=== The tube
+
+[start=9]
+. Place a *Pipe* (Surface). Wire *Interpolate C → C* and *Thickness → R*.
+. Turn menu:Preview[] off on Construct Point and Interpolate.
+
+.The finished definition
+image::knot-canvas.png[The torus knot definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::knot-preview.png[The red preview of the torus knot]
+
+== What is happening
+
+The point at angle _t_ is a point on a torus: _p·t_ is how far round the axis it has gone, _q·t_ how far round the tube. When _t_ completes one turn, the curve has gone _p_ times round the axis and _q_ times round the tube, and closes. With _p_ = 2 and _q_ = 3 it is the trefoil, the simplest true knot.
+
+Piping a closed curve that does not lie in a plane is harder than it looks. The tube's cross-section is carried along the curve without twisting, and on a knot it comes back turned, so a single sweep does not quite close. Katydid's *Pipe* sweeps such curves in two halves, each a valid solid, and returns them together; the geometry tests check that the tube's volume is π r² times the curve's length to within 0.5 %.
+
+Each update takes a little over a second: about 0.75 s to build the tube and 0.5 s to draw it.
+
+== Things to try
+
+* Set *Windings* to 3 and *Loops* to 2: the same trefoil, drawn the other way round the torus.
+* Try 2 and 5 (the cinquefoil), or 3 and 4. _p_ and _q_ must have no common factor; 2 and 4, for example, would trace the same loop twice.
+* Raise *Tube offset* to 25 for a tall, open knot, or lower it until the strands nearly touch.
+* Set *Thickness* to 6 for a chunky sculpture; if the strands start to overlap, raise *Tube offset* to make room.

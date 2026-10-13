@@ -24,7 +24,9 @@ EXAMPLES = [  # (menu label, key); None draws a separator
     ("Voronoi screen", "voronoi"), ("Twisted tower", "tower"), ("Waffle dome", "waffle"),
     ("Wave surface with contours", "wave"), ("Sunflower (phyllotaxis)", "phyllotaxis"),
     ("Shukhov tower (hyperboloid)", "hyperboloid"), ("Spiral staircase", "staircase"),
-    ("Voronoi city", "city"), ("Woven mat", "weave"), (None, None),
+    ("Voronoi city", "city"), ("Woven mat", "weave"), ("Torus knot", "knot"),
+    ("Twisted lobed ring", "ring"), ("Frame tunnel", "frames"), ("Hypar umbrella", "hypar"),
+    ("Slatted wave ceiling", "slats"), (None, None),
     ("Tolerance stack-up", "stackup"), ("GD&T calculators", "gdt")]
 
 

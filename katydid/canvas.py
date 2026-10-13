@@ -436,10 +436,24 @@ class SliderItem(ComponentItem):
         super().mouseReleaseEvent(event)
 
     def mouseDoubleClickEvent(self, event):
-        views = self.kscene.views()
-        if views:
-            views[0].edit_slider(self.comp)
+        # Accepting the double-click makes this item the mouse grabber until the
+        # button comes up, but the editor is modal and takes that button-up, so
+        # the grab used to outlive it and the next move dragged the slider.
+        # Open the editor after this event, and let go of the mouse first.
         event.accept()
+        self._sliding = False
+        views = self.kscene.views()
+        if not views:
+            return
+        view = views[0]
+
+        def open_editor():
+            scene = self.scene()
+            if scene is not None and scene.mouseGrabberItem() is self:
+                self.ungrabMouse()
+            view.edit_slider(self.comp)
+
+        QtCore.QTimer.singleShot(0, view, open_editor)
 
 
 class PanelItem(ComponentItem):

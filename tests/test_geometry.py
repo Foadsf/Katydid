@@ -300,6 +300,75 @@ class Demos(unittest.TestCase):
         signs = [p.Point.z > 0 for p in pts]
         self.assertTrue(all(a != b for a, b in zip(signs, signs[1:])))
 
+    def test_torus_knot(self):
+        from katydid import showcase
+        c = self.build(showcase.build_knot)
+        curve = list(c["curve"].outputs[0].data)[0]
+        tube = list(c["tube"].outputs[0].data)[0]
+        self.assertTrue(curve.isClosed() and tube.isValid())
+        r = c["thick"].value
+        self.assertAlmostEqual(tube.Volume, math.pi * r * r * curve.Length, delta=0.005 * tube.Volume)
+        # it loops q times through the hole: z = r sin(q t) has q peaks
+        # (not zero crossings: with 240 points z lands exactly on 0)
+        z = [v.Point.z for v in c["pts"].outputs[0].data]
+        peaks = sum(1 for i in range(len(z)) if z[i - 1] < z[i] >= z[(i + 1) % len(z)])
+        self.assertEqual(peaks, int(c["q"].value))
+
+    def test_pipe_along_a_closed_3d_curve_is_valid(self):
+        # A closed rail that is not flat: one sweep did not close on itself (invalid).
+        pts = [V((30 + 12 * math.cos(3 * t)) * math.cos(2 * t), (30 + 12 * math.cos(3 * t)) * math.sin(2 * t),
+                 12 * math.sin(3 * t)) for t in [2 * math.pi * k / 120 for k in range(120)]]
+        rail = lib.Interpolate().solve_instance(pts, True)
+        tube = lib.Pipe().solve_instance(rail, 2.0)
+        self.assertTrue(tube.isValid())
+        self.assertAlmostEqual(tube.Volume, math.pi * 4 * rail.Length, delta=0.005 * tube.Volume)
+
+    def test_twisted_lobed_ring(self):
+        from katydid import showcase
+        c = self.build(showcase.build_ring)
+        ring = list(c["ring"].outputs[0].data)[0]
+        self.assertTrue(ring.isValid())
+        self.assertTrue(ring.isClosed())   # a closed loft of closed sections: no free edges
+        # each section's distance from the ring's core circle swings between a(1 - d) and a(1 + d)
+        a, d, R = c["a"].value, c["depth"].value, c["R"].value
+        for _, pts in list(c["pts"].outputs[0].data.branches())[:3]:
+            dist = [math.hypot(math.hypot(p.Point.x, p.Point.y) - R, p.Point.z) for p in pts]
+            self.assertAlmostEqual(max(dist), a * (1 + d), delta=0.02 * a)
+            self.assertAlmostEqual(min(dist), a * (1 - d), delta=0.02 * a)
+
+    def test_frame_tunnel(self):
+        from katydid import showcase
+        c = self.build(showcase.build_frames)
+        n = int(c["frames"].value)
+        frames = list(c["tunnel"].outputs[0].data)
+        self.assertEqual(len(frames), n)
+        base = list(c["frame"].outputs[0].data)[0].Volume
+        mid = n // 2
+        size = 1 + c["swell"].value * math.sin(math.pi * mid / n)
+        self.assertAlmostEqual(frames[mid].Volume, base * size ** 3, delta=1e-6 * base)
+        self.assertAlmostEqual(frames[mid].BoundBox.Center.y, mid * c["spacing"].value, places=6)
+
+    def test_hypar_members_lie_on_the_membrane(self):
+        from katydid import showcase
+        c = self.build(showcase.build_hypar)
+        m = int(c["members"].value)
+        self.assertEqual(len(list(c["rot1"].outputs[0].data)), 4 * (m + 1))
+        membrane = list(c["membrane"].outputs[0].data)[0]
+        # a hyperbolic paraboloid is doubly ruled: the second family, built between the
+        # other pair of edges, lies on the ruled surface of the first
+        for line in list(c["fam2"].outputs[0].data)[::4]:
+            mid = line.valueAt((line.FirstParameter + line.LastParameter) / 2)
+            self.assertLess(membrane.distToShape(Part.Vertex(mid))[0], 1e-6)
+
+    def test_slatted_ceiling(self):
+        from katydid import showcase
+        c = self.build(showcase.build_slats)
+        slats = list(c["slat"].outputs[0].data)
+        self.assertEqual(len(slats), int(c["slats"].value))
+        for s in slats:
+            self.assertTrue(s.isValid() and s.Volume > 0)
+            self.assertAlmostEqual(s.BoundBox.XLength, c["thick"].value, places=6)
+
     def test_surface_from_points_passes_through_its_grid(self):
         pts = [V(x, y, (x * y) / 50.0) for y in range(0, 40, 10) for x in range(0, 50, 10)]
         srf = lib.SurfaceFromPoints().solve_instance(pts, 5)

@@ -6,7 +6,7 @@ include::_attributes.adoc[]
 [.hero]
 --
 [.lead]
-A Grasshopper-style visual programming canvas for {freecad}[FreeCAD]: wire components together, drag a slider, and watch the geometry update live. With data trees, 56 components and tolerance analysis built in.
+A Grasshopper-style visual programming canvas for {freecad}[FreeCAD]: wire components together, drag a slider, and watch the geometry update live. With data trees, 57 components and tolerance analysis built in.
 
 image::attractor-canvas.png[The attractor grid on the Katydid canvas]
 --
@@ -21,9 +21,13 @@ image::phyllotaxis-render.png[Sunflower,link=gallery.html]
 image::hyperboloid-render.png[Shukhov tower,link=gallery.html]
 image::city-render.png[Voronoi city,link=gallery.html]
 image::weave-render.png[Woven mat,link=gallery.html]
+image::knot-render.png[Torus knot,link=gallery.html]
+image::frames-render.png[Frame tunnel,link=gallery.html]
+image::hypar-render.png[Hypar umbrella,link=gallery.html]
+image::slats-render.png[Slatted wave ceiling,link=gallery.html]
 --
 
-Made with Katydid: Voronoi screens and cities, twisted and lattice towers, a waffle dome, a contoured wave, a sunflower, a woven mat and a spiral staircase. Each loads from the btn:[Examples] menu and has a step-by-step tutorial; see the xref:gallery.adoc[gallery].
+Made with Katydid: Voronoi screens and cities, twisted and lattice towers, a waffle dome, a contoured wave, a sunflower, a woven mat, a torus knot, a frame tunnel, a hypar umbrella, a slatted ceiling and more. Each loads from the btn:[Examples] menu and has a step-by-step tutorial; see the xref:gallery.adoc[gallery].
 
 [.cards]
 --
@@ -73,7 +77,7 @@ Voronoi screens, twisted towers, waffle structures and contoured surfaces, with 
 ****
 *xref:components.adoc[Component reference]*
 
-All 56 components with their inputs, outputs and defaults.
+All 57 components with their inputs, outputs and defaults.
 ****
 --
 

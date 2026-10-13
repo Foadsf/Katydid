@@ -1,0 +1,60 @@
+= Tutorial 18: A hypar umbrella
+:page-id: tutorial-hypar
+include::_attributes.adoc[]
+
+[.lead]
+A hyperbolic paraboloid ("hypar") is a curved saddle made entirely of straight lines, which is why Félix Candela could build his thin concrete shells on straight timber formwork. Join points on two opposite edges of a skew quadrilateral and the lines draw the saddle; join the other two edges and a second family fits the same surface. Four rotated copies make an umbrella on a central column.
+
+image::hypar-render.png[Four saddle-shaped gridshells with translucent membranes, meeting at a central column]
+
+Reference: choose menu:Examples[Hypar umbrella] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== Four corners and four edges
+
+. Place five sliders: _Size: 40 (10 – 80)_, _Centre height: 22 (5 – 40)_, _Edge height: 32 (10 – 60)_, _Members: 18 (4 – 40)_ with Decimals `0`, and _Member radius: 0.4 (0.1 – 1.5)_ with Decimals `2`.
+. Place four *Construct Point* (Vector) components:
+** _Centre_: *Centre height → Z*.
+** _High 1_: *Size → X*, *Edge height → Z*.
+** _Foot_: *Size → X* and *Size → Y* (its Z stays 0, on the ground).
+** _High 2_: *Size → Y*, *Edge height → Z*.
+. Place four *Line* (Curve) components for the edges: *Centre → High 1*, *High 2 → Foot*, *Centre → High 2* and *High 1 → Foot* (first point into *A*, second into *B*).
+
+=== Two families of members
+
+[start=4]
+. Place four *Divide Curve* (Curve) components, one per edge, and wire *Members → N* on all four.
+. Place a *Line* and wire the divided *Centre → High 1* points *→ A* and the divided *High 2 → Foot* points *→ B*: the first family, 19 straight members.
+. Place a second *Line* between the divided *Centre → High 2* and *High 1 → Foot* points: the second family.
+. Place two *Pipe* (Surface) components, one per family, with *Member radius → R*.
+
+=== Membrane and umbrella
+
+[start=8]
+. Place a *Ruled Surface* (Surface) and wire the edge lines *Centre → High 1 → A* and *High 2 → Foot → B*. This is the hypar itself.
+. Place a *Series* (Sets), _Quadrants_, with *N* set to `90` and *C* to `4`: 0°, 90°, 180°, 270°.
+. Place three *Rotate* (Transform) components, for the two Pipes and the Ruled Surface. Wire *Quadrants → A* on each and tick menu:Graft[] on *A*. Every member is turned by every angle: four quadrants.
+. Place a *Cylinder* (Surface) with *R* set to `1.6` and wire *Centre height → L*: the column.
+. Turn menu:Preview[] off on the points, edge lines, Divide Curves, member Lines, the unrotated Pipes and the Ruled Surface.
+
+.The finished definition
+image::hypar-canvas.png[The hypar umbrella definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::hypar-preview.png[The red preview of the hypar umbrella]
+
+== What is happening
+
+The two families are built between different pairs of edges, yet both lie on the same surface: a hypar is _doubly ruled_. The geometry tests check this directly: the midpoint of every second-family member lies on the first family's ruled surface to within a millionth of a millimetre.
+
+Graft on Rotate's angle input is what makes copies. Without it, Rotate would pair member 1 with 0°, member 2 with 90° and so on. With it, each angle is its own branch, and in each branch every member is turned by that angle. The four quadrants share their edges, so the umbrella is continuous: low at the column and the four feet, high at the middle of each side.
+
+Each update takes about a tenth of a second to solve and a quarter of a second to draw the 150 pipes.
+
+== Things to try
+
+* Raise *Edge height* to 60 for a dramatic, steep saddle, or lower *Centre height* to 10 for a deep funnel.
+* Set *Centre height* above *Edge height* (40 and 10) and the umbrella turns inside out into a peaked tent.
+* Set *Members* to 30 for a fine grid, or to 6 for a bold one.
+* Bake the membrane and the members and colour them as in the picture: the membrane 55 % transparent.

@@ -324,14 +324,32 @@ class Loft(Component):
 
     def setup(self):
         self.add_input("Curves", "C", "Section curves, in order", access=LIST)
+        self.add_input("Closed", "Cl", "Loft from the last section back to the first (a ring)", default=False)
         self.add_output("Loft", "L", "Resulting surface")
 
-    def solve_instance(self, curves):
-        if len(curves) < 2:
-            raise ValueError("A loft needs at least two section curves")
+    def solve_instance(self, curves, closed):
+        if len(curves) < (3 if closed else 2):
+            raise ValueError("A loft needs at least two section curves (three when closed)")
         _, Part = _part()
         wires = [c if c.ShapeType == "Wire" else Part.Wire(c.Edges) for c in curves]
-        return Part.makeLoft(wires, False, False)
+        return Part.makeLoft(wires, False, False, bool(closed))
+
+
+class RuledSurface(Component):
+    name = "Ruled Surface"
+    nickname = "Ruled"
+    glyph = "Rul"
+    category = "Surface"
+    description = "Surface of straight lines joining two curves, start to start and end to end"
+
+    def setup(self):
+        self.add_input("Curve A", "A", "First curve")
+        self.add_input("Curve B", "B", "Second curve")
+        self.add_output("Surface", "S", "Resulting surface")
+
+    def solve_instance(self, a, b):
+        _, Part = _part()
+        return Part.makeRuledSurface(a, b)
 
 
 # --------------------------------------------------------------------------
@@ -783,6 +801,25 @@ class Pipe(Component):
             raise ValueError("Radius must be positive")
         _, Part = _part()
         rail = curve if curve.ShapeType == "Wire" else Part.Wire(curve.Edges)
+        solid = self._sweep(rail, r)
+        if solid.isValid() or not rail.isClosed():
+            return solid
+        # A closed rail that is not flat (a knot): the swept frame comes back
+        # turned, so the tube's end lands on its start as a separate edge and the
+        # solid is open. Sweep two open halves, each a valid capped solid, and
+        # return them together; their shared caps lie inside the tube. (Fusing
+        # them took 13-22 s on a torus knot, too slow for a slider.)
+        edges = rail.Edges
+        if len(edges) >= 2:
+            halves = [Part.Wire(edges[:len(edges) // 2]), Part.Wire(edges[len(edges) // 2:])]
+        else:
+            e = edges[0]
+            halves = [Part.Wire([h]) for h in e.split((e.FirstParameter + e.LastParameter) / 2).Edges]
+        return Part.makeCompound([self._sweep(h, r) for h in halves])
+
+    @staticmethod
+    def _sweep(rail, r):
+        _, Part = _part()
         first = rail.Edges[0]
         start, tangent = first.valueAt(first.FirstParameter), first.tangentAt(first.FirstParameter)
         profile = Part.Wire(Part.makeCircle(r, start, tangent))
@@ -1282,7 +1319,7 @@ REGISTRY = [NumberSlider, Panel,
             ConstructPoint, VectorXYZ, Vector2Pt, Deconstruct, Distance, Populate2D,
             Circle, CircleCNR, Line, Arc3Pt, Polyline, Interpolate, DivideCurve, EvaluateCurve,
             OffsetCurve, RegularPolygon, Voronoi, Contour,
-            Box, Sphere, Cylinder, Loft, Extrude, Pipe, CapHoles, PlanarSurface, SurfaceFromPoints,
+            Box, Sphere, Cylinder, Loft, RuledSurface, Extrude, Pipe, CapHoles, PlanarSurface, SurfaceFromPoints,
             Section, Area,
             Move, Rotate, Scale, Mirror, LinearArray,
             Union, Difference, Intersection,

@@ -11,7 +11,7 @@ Wire components on a node canvas, drag a slider, and the result updates live in 
 
 Katydid is an independent project. It is not affiliated with Robert McNeel & Associates; Grasshopper and Rhino are their trademarks, used here only to describe the style of tool. All icons and code are original.
 
-**Status:** early but working (v0.1). 56 components, data trees, saving, and a tolerance-analysis tab.
+**Status:** early but working (v0.1). 57 components, data trees, saving, and a tolerance-analysis tab.
 
 ## Gallery
 
@@ -23,7 +23,9 @@ Each of these loads from the canvas's **Examples** menu and has a step-by-step t
 | ![Waffle dome](docs/images/waffle-render.png) **Waffle dome:** a capped loft sliced into two families of interlocking ribs | ![Wave surface](docs/images/wave-render.png) **Wave surface:** z = f(x, y) on a grafted grid, with contour lines |
 | ![Sunflower](docs/images/phyllotaxis-render.png) **Sunflower:** seeds one golden angle apart; the spirals appear on their own | ![Shukhov tower](docs/images/hyperboloid-render.png) **Shukhov tower:** straight struts forming a hyperboloid, with rings traced through a data tree |
 | ![Voronoi city](docs/images/city-render.png) **Voronoi city:** plots, streets and a skyline rising to a centre | ![Woven mat](docs/images/weave-render.png) **Woven mat:** two thread families over and under each other, from one grafted formula |
-| ![Spiral staircase](docs/images/staircase-render.png) **Spiral staircase:** treads, column, balusters and an interpolated handrail | | Tested on FreeCAD 1.1 on Windows; it should run wherever FreeCAD 1.0+ with PySide6 runs.
+| ![Spiral staircase](docs/images/staircase-render.png) **Spiral staircase:** treads, column, balusters and an interpolated handrail | ![Torus knot](docs/images/knot-render.png) **Torus knot:** a closed space curve from three formulas, piped into a tube |
+| ![Twisted lobed ring](docs/images/ring-render.png) **Twisted lobed ring:** a lobed profile swept round a circle while it turns | ![Frame tunnel](docs/images/frames-render.png) **Frame tunnel:** one frame, forty copies, each scaled and turned a little more |
+| ![Hypar umbrella](docs/images/hypar-render.png) **Hypar umbrella:** straight members on four doubly ruled saddles round a column | ![Slatted wave ceiling](docs/images/slats-render.png) **Slatted wave ceiling:** ruled timber boards following a drifting wave | Tested on FreeCAD 1.1 on Windows; it should run wherever FreeCAD 1.0+ with PySide6 runs.
 
 ## Install
 
@@ -52,7 +54,7 @@ Restart FreeCAD and pick **Katydid** in the workbench list. The canvas opens as 
 
 Component colours: grey OK, orange warning (missing input), red error (hover for the message), green selected. Wires: solid for one item, double for a list, dashed for a tree of several branches, thin dashed orange when empty.
 
-## Components (56)
+## Components (57)
 
 | Tab | Components |
 |---|---|
@@ -61,7 +63,7 @@ Component colours: grey OK, orange warning (missing input), red error (hover for
 | Sets | Series, List Item, List Length, Cull Pattern, Shift List |
 | Vector | Construct Point, Vector XYZ, Vector 2Pt, Deconstruct, Distance, Populate 2D |
 | Curve | Circle, Circle CNR, Line, Arc 3Pt, Polyline, Interpolate, Divide Curve, Evaluate Curve, Offset Curve, Regular Polygon, Voronoi, Contour |
-| Surface | Center Box, Sphere, Cylinder, Loft, Extrude, Pipe, Cap Holes, Planar Surface, Surface From Points, Section, Area |
+| Surface | Center Box, Sphere, Cylinder, Loft, Ruled Surface, Extrude, Pipe, Cap Holes, Planar Surface, Surface From Points, Section, Area |
 | Transform | Move, Rotate, Scale, Mirror, Linear Array |
 | Intersect | Solid Union, Solid Difference, Solid Intersection |
 | Tolerance | Dimension, Stack-up, Monte Carlo Stack-up, Bonus Tolerance, Virtual & Resultant Condition, Position to ± |

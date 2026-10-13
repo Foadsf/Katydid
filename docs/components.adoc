@@ -3,7 +3,7 @@
 include::_attributes.adoc[]
 
 [.lead]
-All 56 components, tab by tab. This page is generated from the code (`tools/gen_docs.py`), so it always matches the version you are reading.
+All 57 components, tab by tab. This page is generated from the code (`tools/gen_docs.py`), so it always matches the version you are reading.
 
 How to read the tables: *Access* says how an input takes its data (see xref:data-trees.adoc#access[access modes]). An input with a *Default* works without a wire, and menu:Set value…[] on the input's right-click menu changes that value. _Type a number or wire it_ means it needs a value before the component can run; _wire it_ means it needs data from another component (geometry, for example).
 
@@ -649,12 +649,31 @@ How to read the tables: *Access* says how an input takes its data (see xref:data
 |===
 |Input |Nick |Access |Default |Description
 |Curves |`C` |list |_wire it_ |Section curves, in order
+|Closed |`Cl` |item |`False` |Loft from the last section back to the first (a ring)
 |===
 
 [cols="3,1,1,7",options="header",role="params"]
 |===
 |Output |Nick |Access |Description
 |Loft |`L` |item |Resulting surface
+|===
+
+[[cmp-RuledSurface]]
+=== image:icons/RuledSurface.png[Ruled Surface,28,28,role=icon] Ruled Surface
+
+*Nickname* `Ruled` · Surface of straight lines joining two curves, start to start and end to end.
+
+[cols="3,1,1,2,5",options="header",role="params"]
+|===
+|Input |Nick |Access |Default |Description
+|Curve A |`A` |item |_wire it_ |First curve
+|Curve B |`B` |item |_wire it_ |Second curve
+|===
+
+[cols="3,1,1,7",options="header",role="params"]
+|===
+|Output |Nick |Access |Description
+|Surface |`S` |item |Resulting surface
 |===
 
 [[cmp-Extrude]]

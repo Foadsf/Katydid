@@ -1,0 +1,55 @@
+= Tutorial 19: A slatted wave ceiling
+:page-id: tutorial-slats
+include::_attributes.adoc[]
+
+[.lead]
+Thin timber slats whose edges follow a wave, each a little out of step with its neighbour, make the undulating ceilings and walls seen in many lobbies. Each slat is a ruled surface between a top curve and a bottom curve, thickened into a board. One formula, grafted per slat, drives the lot.
+
+image::slats-render.png[An undulating surface of thin timber slats]
+
+Reference: choose menu:Examples[Slatted wave ceiling] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== Slats and positions along them
+
+. Place eight sliders: _Slats: 30 (8 – 60)_ with Decimals `0`; _Spacing: 4 (2 – 10)_, _Length: 120 (40 – 200)_, _Depth: 10 (3 – 30)_, _Amplitude: 8 (0 – 20)_; and _Waves: 1.5 (0.5 – 4)_, _Drift: 0.18 (0 – 0.6)_ and _Thickness: 1.2 (0.3 – 3)_ with Decimals `2`.
+. Place a *Series* (Sets), _Slat no._, and wire *Slats → C*. Place two *Multiplication* (Maths) components: _Slat X_ (*Slat no. → A*, *Spacing → B*) and _Phase_ (*Slat no. → A*, *Drift → B*).
+. Place a *Range* (Maths), _Y values_, with *N* set to `40`, and wire *Length → E*: 41 positions along each slat.
+. Place an *Expression* (Maths), _Wave position_, with *F* set to `x*y/z`. Wire *Y values → x*, *Waves → y* and *Length → z*: how many waves along the slat each position is.
+
+=== Top and bottom edges
+
+[start=5]
+. Place an *Expression*, _Top_, with *F* set to `z*sin(2*pi*x + y)`. Wire *Wave position → x*, *Phase → y* with menu:Graft[] on *y*, and *Amplitude → z*. You get 30 branches, one per slat, of 41 heights; each slat's wave is shifted by its phase.
+. Place an *Expression*, _Bottom_, with *F* set to `x - y*(0.6 + 0.4*cos(2*pi*z))`. Wire *Top → x*, *Depth → y* and *Wave position → z*: the slat's depth itself varies along its length.
+. Place two *Construct Point* (Vector) components, _Top points_ and _Bottom points_. On both, wire *Slat X → X* with menu:Graft[] on *X* and *Y values → Y*; wire *Top → Z* on the first and *Bottom → Z* on the second.
+
+=== Slats
+
+[start=8]
+. Place two *Interpolate* (Curve) components, one for each set of points: one smooth curve per slat.
+. Place a *Ruled Surface* (Surface) and wire the top curves *→ A* and the bottom curves *→ B*. Branch by branch, each top curve is paired with its own bottom curve.
+. Place a *Vector XYZ* (Vector) and wire *Thickness → X*. Place an *Extrude* (Surface) and wire *Ruled Surface S → B* and *Vector V → D*: 30 boards.
+. Turn menu:Preview[] off on both Construct Points, both Interpolates and the Ruled Surface.
+
+.The finished definition
+image::slats-canvas.png[The slatted wave ceiling definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::slats-preview.png[The red preview of the slatted wave ceiling]
+
+== What is happening
+
+The pattern is one sine wave seen through 30 windows. Every slat uses the same wave along its length; only the phase changes from slat to slat, so the crests drift diagonally across the ceiling. With *Drift* at 0 all slats are identical and the wave runs straight across.
+
+A ruled surface joins two curves with straight lines, start to start and end to end. That is exactly what a board cut from a flat sheet is, so the slats could be cut on a CNC router from their flat outlines.
+
+Each update takes about one and a half seconds: 0.9 s to build the 30 boards and 0.55 s to draw them.
+
+== Things to try
+
+* Set *Drift* to 0, then to 0.6.
+* Raise *Waves* to 3 for tighter ripples, or *Amplitude* to 20 for deep ones.
+* Set *Slats* to 60 and *Spacing* to 2 for a denser ceiling.
+* Change the Bottom formula to `x - y` for slats of constant depth.

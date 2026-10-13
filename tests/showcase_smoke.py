@@ -19,7 +19,9 @@ from guitest import Run, pump  # noqa: E402
 SHOWS = [("Voronoi screen", "seed"), ("Twisted tower", "twist"), ("Waffle dome", "pitch"),
          ("Wave surface with contours", "freq"), ("Sunflower (phyllotaxis)", "angle"),
          ("Shukhov tower (hyperboloid)", "twist"), ("Spiral staircase", "turn"),
-         ("Voronoi city", "spread"), ("Woven mat", "amp")]
+         ("Voronoi city", "spread"), ("Woven mat", "amp"), ("Torus knot", "r"),
+         ("Twisted lobed ring", "depth"), ("Frame tunnel", "turn"), ("Hypar umbrella", "edge_h"),
+         ("Slatted wave ceiling", "drift")]
 
 
 def body(run):

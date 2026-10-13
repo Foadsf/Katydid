@@ -163,6 +163,56 @@ image::weave-render.png[A woven mat]
 Over and under: two thread families from one tree. +
 menu:Examples[Woven mat]
 ****
+
+[.card]
+****
+image::knot-render.png[A torus knot]
+
+*xref:tutorial-knot.adoc[15. A torus knot]*
+
+A closed space curve from three formulas, piped. +
+menu:Examples[Torus knot]
+****
+
+[.card]
+****
+image::ring-render.png[A twisted lobed ring]
+
+*xref:tutorial-ring.adoc[16. A twisted lobed ring]*
+
+Sections as branches and a closed loft. +
+menu:Examples[Twisted lobed ring]
+****
+
+[.card]
+****
+image::frames-render.png[A frame tunnel]
+
+*xref:tutorial-frames.adoc[17. A frame tunnel]*
+
+One frame, forty copies, scaled and turned. +
+menu:Examples[Frame tunnel]
+****
+
+[.card]
+****
+image::hypar-render.png[A hypar umbrella]
+
+*xref:tutorial-hypar.adoc[18. A hypar umbrella]*
+
+Straight members on curved saddles. +
+menu:Examples[Hypar umbrella]
+****
+
+[.card]
+****
+image::slats-render.png[A slatted wave ceiling]
+
+*xref:tutorial-slats.adoc[19. A slatted wave ceiling]*
+
+Ruled boards following a drifting wave. +
+menu:Examples[Slatted wave ceiling]
+****
 --
 
 == Conventions

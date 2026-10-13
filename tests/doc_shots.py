@@ -38,15 +38,18 @@ LOW_VIEW = {"tower-render.png", "tower-preview.png", "hyperboloid-render.png", "
 
 
 ZOOM = {"voronoi": 0.88, "waffle": 0.72, "wave": 0.7, "phyllotaxis": 0.78, "city": 0.8, "weave": 0.75,
-        "staircase": 0.85}
-TILT = {"phyllotaxis": 35}   # degrees back from a top view   # fitAll fits a bounding sphere: close in
+        "staircase": 0.85, "knot": 0.8, "ring": 0.8, "frames": 0.85, "hypar": 0.8, "slats": 0.8}
+TILT = {"phyllotaxis": 35, "knot": 30, "ring": 50}   # degrees back from a top view
+SMOOTH = {"knot", "ring"}
+SPIN = {"ring": 270}   # turn the closed loft's seam (on +X) to the back   # fitAll fits a bounding sphere: close in
 
 
 def view3d(name, run, w=1200, h=640):
     v = FreeCADGui.ActiveDocument.ActiveView
     tilt = TILT.get(name.split("-")[0])
     if tilt is not None:   # from above, tipped back: a pattern in plan reads best
-        v.setCameraOrientation(FreeCAD.Rotation(FreeCAD.Vector(1, 0, 0), tilt))
+        spin = FreeCAD.Rotation(FreeCAD.Vector(0, 0, 1), SPIN.get(name.split("-")[0], 0))
+        v.setCameraOrientation(spin.multiply(FreeCAD.Rotation(FreeCAD.Vector(1, 0, 0), tilt)))
     elif name in LOW_VIEW:
         v.viewDimetric()   # a lower eye: tall towers and stacked ribs read better
     else:
@@ -74,6 +77,12 @@ RENDERS = {  # showcase key -> [(component, colour, transparency %, lift in mm)]
                   ("balusters", (0.20, 0.21, 0.23), 0, 0.0), ("handrail", (0.20, 0.21, 0.23), 0, 0.0)],
     "city": [("blocks", (0.90, 0.88, 0.84), 0, 0.0), ("ground", (0.42, 0.52, 0.40), 0, 0.0)],
     "weave": [("warp", (0.12, 0.55, 0.60), 0, 0.0), ("weft", (0.93, 0.47, 0.36), 0, 0.0)],
+    "knot": [("tube", (0.32, 0.62, 0.88), 0, 0.0)],
+    "ring": [("ring", (0.86, 0.88, 0.92), 0, 0.0)],
+    "frames": [("tunnel", (0.80, 0.56, 0.32), 0, 0.0)],
+    "hypar": [("rot1", (0.86, 0.86, 0.84), 0, 0.0), ("rot2", (0.86, 0.86, 0.84), 0, 0.0),
+              ("roof", (0.30, 0.70, 0.78), 55, 0.0), ("column", (0.86, 0.86, 0.84), 0, 0.0)],
+    "slats": [("slat", (0.82, 0.62, 0.40), 0, 0.0)],
 }
 
 
@@ -86,6 +95,12 @@ def render(panel, d, parts, name, run):
     for key, colour, transparency, lift in parts:
         for o in bake([d[key]]):
             vo = o.ViewObject
+            if name.split("-")[0] in SMOOTH:
+                # FreeCAD's default 0.5 % deviation shows facets on one big smooth form. Only
+                # here: on 400 spheres it made one render take two minutes, then crashed.
+                vo.Deviation = 0.05
+                vo.AngularDeflection = 8.0
+                vo.DisplayMode = "Shaded"  # no edge lines: seams on a smooth form are distracting
             if o.Shape.Faces:
                 vo.ShapeColor = colour
                 vo.LineColor = tuple(c * 0.45 for c in colour)
