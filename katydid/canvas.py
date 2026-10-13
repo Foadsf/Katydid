@@ -16,6 +16,7 @@ except ImportError:  # standalone use outside FreeCAD
     from PySide6 import QtCore, QtGui, QtWidgets
 
 from . import components as lib
+from . import document
 from .engine import ERROR, OK, WARNING
 
 Qt = QtCore.Qt
@@ -258,6 +259,7 @@ class ComponentItem(QtWidgets.QGraphicsItem):
     def itemChange(self, change, value):
         if change == QtWidgets.QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
             self.kscene.update_wires(self)
+            self.kscene.edited.emit()
         return super().itemChange(change, value)
 
     def hoverEnterEvent(self, event):
@@ -398,6 +400,7 @@ def item_for(comp, scene) -> ComponentItem:
 # --------------------------------------------------------------------------
 class KatydidScene(QtWidgets.QGraphicsScene):
     solved = QtCore.Signal(object)
+    edited = QtCore.Signal()  # anything that changes the saved definition
 
     def __init__(self, graph, parent=None):
         super().__init__(parent)
@@ -414,14 +417,33 @@ class KatydidScene(QtWidgets.QGraphicsScene):
 
     def add_component(self, comp, pos: QPointF, centre=False) -> ComponentItem:
         self.graph.add(comp)
+        item = self._add_item(comp, pos, centre)
+        self.request_solve()
+        return item
+
+    def _add_item(self, comp, pos: QPointF, centre=False) -> ComponentItem:
         item = item_for(comp, self)
         if centre:
             pos = pos - QPointF(item.w / 2, item.h / 2)
         item.setPos(pos)
         self.addItem(item)
         self.items_by_comp[comp] = item
-        self.request_solve()
         return item
+
+    # persistence --------------------------------------------------------------
+    def to_json(self) -> str:
+        positions = {c: (i.pos().x(), i.pos().y()) for c, i in self.items_by_comp.items()}
+        return document.dumps(self.graph, positions)
+
+    def load_json(self, text: str) -> list[str]:
+        """Replace the canvas with a saved definition; returns load warnings."""
+        self.clear_all()
+        positions, warnings = document.build(self.graph, text)
+        for comp in self.graph.components:
+            self._add_item(comp, QPointF(*positions[comp]))
+        self.rebuild_wires()
+        self.request_solve()
+        return warnings
 
     def remove_components(self, comps):
         for comp in comps:
@@ -464,6 +486,7 @@ class KatydidScene(QtWidgets.QGraphicsScene):
 
     def request_solve(self):
         """Coalesce edits into one solve on the next event-loop turn."""
+        self.edited.emit()
         if not self._pending:
             self._pending = True
             QtCore.QTimer.singleShot(0, self.solve_now)
@@ -654,6 +677,7 @@ class KatydidView(QtWidgets.QGraphicsView):
             for comp in selected:
                 comp.preview = not comp.preview
             scene.solved.emit([])
+            scene.edited.emit()
             for item in scene.selectedItems():
                 item.update()
             return

@@ -76,6 +76,14 @@ class Component:
         self.outputs.append(p)
         return p
 
+    # -- persistence -------------------------------------------------------
+    def write_state(self) -> dict:
+        """Component-specific settings to save, beyond wires and input defaults."""
+        return {}
+
+    def read_state(self, state: dict) -> None:
+        """Restore what write_state() returned."""
+
     # -- solving -----------------------------------------------------------
     def solve_instance(self, *args):
         raise NotImplementedError

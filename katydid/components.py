@@ -42,6 +42,17 @@ class NumberSlider(Component):
         self.state, self.messages = "ok", []
         self.outputs[0].data = [self.value]
 
+    def write_state(self):
+        return {"value": self.value, "minimum": self.minimum,
+                "maximum": self.maximum, "decimals": self.decimals}
+
+    def read_state(self, state):
+        self.minimum = state.get("minimum", self.minimum)
+        self.maximum = state.get("maximum", self.maximum)
+        self.decimals = state.get("decimals", self.decimals)
+        self._set = None
+        self.set_value(state.get("value", self.value), expire=False)
+
 
 class Panel(Component):
     name = "Panel"

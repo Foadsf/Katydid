@@ -17,6 +17,10 @@ EDGE = {RED: (0.35, 0.02, 0.02), GREEN: (0.10, 0.35, 0.02)}
 
 class Preview:
     def __init__(self):
+        try:  # pay the one-off import when the canvas opens, not on the first solve
+            import MeshPart  # noqa: F401
+        except ImportError:
+            pass
         self.root = coin.SoSeparator()
         pick = coin.SoPickStyle()
         pick.style = coin.SoPickStyle.UNPICKABLE  # never steals FreeCAD selection
@@ -42,6 +46,11 @@ class Preview:
     def detach(self):
         if self._scenegraph is not None and self._doc in FreeCAD.listDocuments():
             self._scenegraph.removeChild(self.root)
+        self.forget()
+
+    def forget(self):
+        """Drop the scene graph without touching it (its document is closing)."""
+        self.content.removeAllChildren()
         self._scenegraph, self._doc = None, None
 
     def update(self, normal: list, selected: list) -> None:
@@ -53,17 +62,33 @@ class Preview:
                 self.content.addChild(_mesh_node(shapes, colour))
 
 
+def _triangulate(shape, tol):
+    """Preview-quality triangles. Shape.tessellate() ignores the tolerance on curved
+    faces (a r=42 sphere is 8000 triangles, ~130 ms, at any tolerance); MeshPart
+    with FreeCAD's display angle gives 1484 triangles in ~16 ms."""
+    try:
+        import MeshPart
+    except ImportError:
+        return shape.tessellate(tol)
+    mesh = MeshPart.meshFromShape(Shape=shape, LinearDeflection=tol,
+                                  AngularDeflection=0.5, Relative=False)
+    return mesh.Topology
+
+
 def _mesh_node(shapes, colour) -> coin.SoSeparator:
-    points, index, edge_points, edge_counts = [], [], [], []
+    import Part
+    shapes = [s for s in shapes if not s.isNull()]
+    # One meshing call for the whole group is ~40% cheaper than one per shape
+    # (measured: 4 boxes, 5.3 ms -> 3.1 ms; tests/preview_profile.py).
+    compound = Part.makeCompound(shapes)
+    tol = max(compound.BoundBox.DiagonalLength * 0.002, 0.01)
+    verts, tris = _triangulate(compound, tol)
+    points = [(v.x, v.y, v.z) for v in verts]
+    index = []
+    for a, b, c in tris:
+        index.extend((a, b, c, -1))
+    edge_points, edge_counts = [], []
     for shape in shapes:
-        if shape.isNull():
-            continue
-        tol = max(shape.BoundBox.DiagonalLength * 0.002, 0.01)
-        verts, tris = shape.tessellate(tol)
-        base = len(points)
-        points.extend((v.x, v.y, v.z) for v in verts)
-        for a, b, c in tris:
-            index.extend((a + base, b + base, c + base, -1))
         for edge in shape.Edges:
             try:
                 pts = edge.discretize(Deflection=tol)
