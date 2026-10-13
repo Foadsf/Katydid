@@ -15,11 +15,30 @@ def _part():
 
 
 def _point(p):
-    """A Part.Vertex, or anything with x/y/z, as a FreeCAD.Vector."""
+    """A Part.Vertex, a FreeCAD.Vector or an (x, y, z) sequence, as a FreeCAD.Vector."""
     FreeCAD, _ = _part()
     if hasattr(p, "Point"):
         return p.Point
-    return FreeCAD.Vector(p.x, p.y, p.z)
+    if isinstance(p, (tuple, list)):
+        return FreeCAD.Vector(*p)
+    if hasattr(p, "x"):
+        return FreeCAD.Vector(p.x, p.y, p.z)
+    raise TypeError(f"Expected a point or vector, got {type(p).__name__}")
+
+
+def _vertex(v):
+    _, Part = _part()
+    return Part.Vertex(v)
+
+
+def _edge(curve):
+    """A single curve: an Edge, or a Wire made of exactly one edge."""
+    if getattr(curve, "ShapeType", None) == "Edge":
+        return curve
+    edges = getattr(curve, "Edges", [])
+    if len(edges) == 1:
+        return edges[0]
+    raise ValueError("Expected a single curve")
 
 
 # --------------------------------------------------------------------------
@@ -104,6 +123,8 @@ def _format(item):
         return f"Solid (volume {item.Volume:.4g})"
     if shape_type:
         return shape_type
+    if hasattr(item, "x") and hasattr(item, "Length"):  # FreeCAD.Vector
+        return f"<{_num(item.x)}, {_num(item.y)}, {_num(item.z)}>"
     return str(item)
 
 
@@ -343,9 +364,579 @@ class Union(Component):
         return result.removeSplitter()
 
 
-REGISTRY = [NumberSlider, Panel, Addition, Multiplication, Series,
-            Circle, DivideCurve, Polyline, Box, Sphere, Cylinder, Loft, Move, Union]
-CATEGORIES = ["Params", "Maths", "Sets", "Curve", "Surface", "Transform", "Intersect"]
+# --------------------------------------------------------------------------
+# Maths
+# --------------------------------------------------------------------------
+class Range(Component):
+    name = "Range"
+    nickname = "Range"
+    glyph = "a…b"
+    category = "Maths"
+    description = "Evenly spaced numbers from start to end"
+
+    def setup(self):
+        self.add_input("Start", "S", "First number", default=0.0)
+        self.add_input("End", "E", "Last number", default=1.0)
+        self.add_input("Steps", "N", "Number of steps (values = steps + 1)", default=10.0)
+        self.add_output("Range", "R", "The numbers", access=LIST)
+
+    def solve_instance(self, start, end, steps):
+        n = int(steps)
+        if n < 1:
+            raise ValueError("Steps must be at least 1")
+        return [start + (end - start) * i / n for i in range(n + 1)]
+
+
+class Expression(Component):
+    name = "Expression"
+    nickname = "Expr"
+    glyph = "f(x)"
+    category = "Maths"
+    description = "Evaluate a formula in x, y and z (safe: arithmetic and math functions only)"
+
+    def setup(self):
+        self.add_input("Formula", "F", "For example: x*2 + sin(y)", default="x")
+        self.add_input("x", "x", "Variable x", default=0.0)
+        self.add_input("y", "y", "Variable y", default=0.0)
+        self.add_input("z", "z", "Variable z", default=0.0)
+        self.add_output("Result", "R", "Value of the formula")
+
+    def solve_instance(self, formula, x, y, z):
+        from .expr import evaluate
+        return evaluate(str(formula), x=x, y=y, z=z)
+
+
+class Remap(Component):
+    name = "Remap Numbers"
+    nickname = "ReMap"
+    glyph = "↦"
+    category = "Maths"
+    description = "Map a value from a source range to a target range"
+
+    def setup(self):
+        self.add_input("Value", "V", "Value to remap")
+        self.add_input("Source start", "S0", "Source range start", default=0.0)
+        self.add_input("Source end", "S1", "Source range end", default=1.0)
+        self.add_input("Target start", "T0", "Target range start", default=0.0)
+        self.add_input("Target end", "T1", "Target range end", default=1.0)
+        self.add_output("Mapped", "R", "Remapped value")
+
+    def solve_instance(self, v, s0, s1, t0, t1):
+        if s1 == s0:
+            raise ValueError("Source range has zero length")
+        return t0 + (v - s0) * (t1 - t0) / (s1 - s0)
+
+
+class Bounds(Component):
+    name = "Bounds"
+    nickname = "Bnd"
+    glyph = "⌊⌉"
+    category = "Maths"
+    description = "Smallest and largest number in each list"
+
+    def setup(self):
+        self.add_input("Numbers", "N", "Numbers", access=LIST)
+        self.add_output("Minimum", "Min", "Smallest number")
+        self.add_output("Maximum", "Max", "Largest number")
+
+    def solve_instance(self, numbers):
+        return min(numbers), max(numbers)
+
+
+# --------------------------------------------------------------------------
+# Sets (lists)
+# --------------------------------------------------------------------------
+class ListItem(Component):
+    name = "List Item"
+    nickname = "Item"
+    glyph = "[i]"
+    category = "Sets"
+    description = "The item at an index (wraps around by default)"
+
+    def setup(self):
+        self.add_input("List", "L", "List to pick from", access=LIST)
+        self.add_input("Index", "i", "Item index", default=0.0)
+        self.add_input("Wrap", "W", "Wrap indices outside the list", default=True)
+        self.add_output("Item", "i", "The item")
+
+    def solve_instance(self, items, index, wrap):
+        i = int(index)
+        if wrap:
+            i %= len(items)
+        elif not -len(items) <= i < len(items):
+            raise IndexError(f"Index {i} is outside the list of {len(items)}")
+        return items[i]
+
+
+class ListLength(Component):
+    name = "List Length"
+    nickname = "Lng"
+    glyph = "#"
+    category = "Sets"
+    description = "Number of items in each list"
+
+    def setup(self):
+        self.add_input("List", "L", "List to measure", access=LIST, optional=True)
+        self.add_output("Length", "L", "Number of items")
+
+    def solve_instance(self, items):
+        return float(len(items))
+
+
+class CullPattern(Component):
+    name = "Cull Pattern"
+    nickname = "Cull"
+    glyph = "✂"
+    category = "Sets"
+    description = "Keep the items where a repeating True/False pattern is True"
+
+    def setup(self):
+        self.add_input("List", "L", "List to cull", access=LIST)
+        self.add_input("Pattern", "P", "True keeps, False removes; repeats", access=LIST, default=True)
+        self.add_output("List", "L", "Kept items", access=LIST)
+
+    def solve_instance(self, items, pattern):
+        return [item for i, item in enumerate(items) if pattern[i % len(pattern)]]
+
+
+class ShiftList(Component):
+    name = "Shift List"
+    nickname = "Shift"
+    glyph = "⇆"
+    category = "Sets"
+    description = "Move items along the list"
+
+    def setup(self):
+        self.add_input("List", "L", "List to shift", access=LIST)
+        self.add_input("Shift", "S", "Positions to shift by", default=1.0)
+        self.add_input("Wrap", "W", "Bring items round to the other end", default=True)
+        self.add_output("List", "L", "Shifted list", access=LIST)
+
+    def solve_instance(self, items, shift, wrap):
+        s = int(shift)
+        if wrap:
+            s %= len(items)
+            return items[s:] + items[:s]
+        return items[s:] if s >= 0 else items[:s]
+
+
+# --------------------------------------------------------------------------
+# Vector
+# --------------------------------------------------------------------------
+class ConstructPoint(Component):
+    name = "Construct Point"
+    nickname = "Pt"
+    glyph = "•"
+    category = "Vector"
+    description = "Point from X, Y and Z"
+
+    def setup(self):
+        self.add_input("X", "X", "X coordinate", default=0.0)
+        self.add_input("Y", "Y", "Y coordinate", default=0.0)
+        self.add_input("Z", "Z", "Z coordinate", default=0.0)
+        self.add_output("Point", "Pt", "The point")
+
+    def solve_instance(self, x, y, z):
+        FreeCAD, _ = _part()
+        return _vertex(FreeCAD.Vector(x, y, z))
+
+
+class VectorXYZ(Component):
+    name = "Vector XYZ"
+    nickname = "Vec"
+    glyph = "↗"
+    category = "Vector"
+    description = "Vector from X, Y and Z"
+
+    def setup(self):
+        self.add_input("X", "X", "X component", default=0.0)
+        self.add_input("Y", "Y", "Y component", default=0.0)
+        self.add_input("Z", "Z", "Z component", default=0.0)
+        self.add_output("Vector", "V", "The vector")
+        self.add_output("Length", "L", "Its length")
+
+    def solve_instance(self, x, y, z):
+        FreeCAD, _ = _part()
+        v = FreeCAD.Vector(x, y, z)
+        return v, v.Length
+
+
+class Vector2Pt(Component):
+    name = "Vector 2Pt"
+    nickname = "Vec2Pt"
+    glyph = "A→B"
+    category = "Vector"
+    description = "Vector from point A to point B"
+
+    def setup(self):
+        self.add_input("Point A", "A", "Start point")
+        self.add_input("Point B", "B", "End point")
+        self.add_output("Vector", "V", "B - A")
+        self.add_output("Length", "L", "Distance from A to B")
+
+    def solve_instance(self, a, b):
+        v = _point(b) - _point(a)
+        return v, v.Length
+
+
+class Deconstruct(Component):
+    name = "Deconstruct"
+    nickname = "pDecon"
+    glyph = "xyz"
+    category = "Vector"
+    description = "X, Y and Z of a point or vector"
+
+    def setup(self):
+        self.add_input("Point", "P", "Point or vector")
+        self.add_output("X", "X", "X coordinate")
+        self.add_output("Y", "Y", "Y coordinate")
+        self.add_output("Z", "Z", "Z coordinate")
+
+    def solve_instance(self, p):
+        v = _point(p)
+        return v.x, v.y, v.z
+
+
+class Distance(Component):
+    name = "Distance"
+    nickname = "Dist"
+    glyph = "|AB|"
+    category = "Vector"
+    description = "Distance between two points"
+
+    def setup(self):
+        self.add_input("Point A", "A", "First point")
+        self.add_input("Point B", "B", "Second point")
+        self.add_output("Distance", "D", "Distance from A to B")
+
+    def solve_instance(self, a, b):
+        return (_point(b) - _point(a)).Length
+
+
+# --------------------------------------------------------------------------
+# Curves
+# --------------------------------------------------------------------------
+class CircleCNR(Component):
+    name = "Circle CNR"
+    nickname = "Circle"
+    glyph = "◎"
+    category = "Curve"
+    description = "Circle from centre, normal and radius"
+
+    def setup(self):
+        self.add_input("Center", "C", "Centre point", default=(0.0, 0.0, 0.0))
+        self.add_input("Normal", "N", "Normal of the circle's plane", default=(0.0, 0.0, 1.0))
+        self.add_input("Radius", "R", "Radius", default=1.0)
+        self.add_output("Circle", "C", "Resulting circle")
+
+    def solve_instance(self, c, n, r):
+        if r <= 0:
+            raise ValueError("Radius must be positive")
+        _, Part = _part()
+        normal = _point(n)
+        if normal.Length == 0:
+            raise ValueError("Normal must not be zero")
+        return Part.makeCircle(r, _point(c), normal)
+
+
+class Line(Component):
+    name = "Line"
+    nickname = "Ln"
+    glyph = "/"
+    category = "Curve"
+    description = "Straight line between two points"
+
+    def setup(self):
+        self.add_input("Start", "A", "Start point", default=(0.0, 0.0, 0.0))
+        self.add_input("End", "B", "End point", default=(10.0, 0.0, 0.0))
+        self.add_output("Line", "L", "Resulting line")
+
+    def solve_instance(self, a, b):
+        _, Part = _part()
+        pa, pb = _point(a), _point(b)
+        if (pb - pa).Length == 0:
+            raise ValueError("Start and end are the same point")
+        return Part.LineSegment(pa, pb).toShape()
+
+
+class Arc3Pt(Component):
+    name = "Arc 3Pt"
+    nickname = "Arc"
+    glyph = "⌒"
+    category = "Curve"
+    description = "Arc through three points"
+
+    def setup(self):
+        self.add_input("Start", "A", "Start point")
+        self.add_input("Through", "B", "Point on the arc")
+        self.add_input("End", "C", "End point")
+        self.add_output("Arc", "A", "Resulting arc")
+
+    def solve_instance(self, a, b, c):
+        _, Part = _part()
+        return Part.Arc(_point(a), _point(b), _point(c)).toShape()
+
+
+class Interpolate(Component):
+    name = "Interpolate"
+    nickname = "IntCrv"
+    glyph = "∿"
+    category = "Curve"
+    description = "Smooth curve through a list of points"
+
+    def setup(self):
+        self.add_input("Vertices", "V", "Points, in order", access=LIST)
+        self.add_input("Periodic", "P", "Close the curve smoothly", default=False)
+        self.add_output("Curve", "C", "Resulting curve")
+
+    def solve_instance(self, vertices, periodic):
+        if len(vertices) < 2:
+            raise ValueError("Interpolation needs at least two points")
+        _, Part = _part()
+        curve = Part.BSplineCurve()
+        curve.interpolate([_point(v) for v in vertices], PeriodicFlag=bool(periodic))
+        return curve.toShape()
+
+
+class EvaluateCurve(Component):
+    name = "Evaluate Curve"
+    nickname = "Eval"
+    glyph = "c(t)"
+    category = "Curve"
+    description = "Point and tangent at a normalised parameter (0 = start, 1 = end)"
+
+    def setup(self):
+        self.add_input("Curve", "C", "Curve to evaluate")
+        self.add_input("Parameter", "t", "0 to 1 along the curve", default=0.5)
+        self.add_output("Point", "P", "Point on the curve")
+        self.add_output("Tangent", "T", "Unit tangent there")
+
+    def solve_instance(self, curve, t):
+        edge = _edge(curve)
+        u = edge.FirstParameter + t * (edge.LastParameter - edge.FirstParameter)
+        tangent = edge.tangentAt(u)
+        return _vertex(edge.valueAt(u)), tangent
+
+
+class OffsetCurve(Component):
+    name = "Offset Curve"
+    nickname = "Offset"
+    glyph = "⊂⊃"
+    category = "Curve"
+    description = "Offset a planar curve in its own plane"
+
+    def setup(self):
+        self.add_input("Curve", "C", "Planar curve")
+        self.add_input("Distance", "D", "Offset distance (negative goes inward)", default=1.0)
+        self.add_output("Curve", "C", "Offset curve")
+
+    def solve_instance(self, curve, d):
+        _, Part = _part()
+        wire = curve if curve.ShapeType == "Wire" else Part.Wire(curve.Edges)
+        return wire.makeOffset2D(d, join=0, fill=False, openResult=not wire.isClosed())
+
+
+# --------------------------------------------------------------------------
+# Surfaces
+# --------------------------------------------------------------------------
+class Extrude(Component):
+    name = "Extrude"
+    nickname = "Extr"
+    glyph = "⇑"
+    category = "Surface"
+    description = "Extrude a curve or surface along a vector"
+
+    def setup(self):
+        self.add_input("Base", "B", "Curve or surface to extrude")
+        self.add_input("Direction", "D", "Extrusion vector", default=(0.0, 0.0, 10.0))
+        self.add_output("Extrusion", "E", "Resulting surface or solid")
+
+    def solve_instance(self, base, direction):
+        d = _point(direction)
+        if d.Length == 0:
+            raise ValueError("Direction must not be zero")
+        return base.extrude(d)
+
+
+class Pipe(Component):
+    name = "Pipe"
+    nickname = "Pipe"
+    glyph = "⊙"
+    category = "Surface"
+    description = "Round solid pipe along a curve"
+
+    def setup(self):
+        self.add_input("Curve", "C", "Rail curve")
+        self.add_input("Radius", "R", "Pipe radius", default=1.0)
+        self.add_output("Pipe", "P", "Resulting solid")
+
+    def solve_instance(self, curve, r):
+        if r <= 0:
+            raise ValueError("Radius must be positive")
+        _, Part = _part()
+        rail = curve if curve.ShapeType == "Wire" else Part.Wire(curve.Edges)
+        first = rail.Edges[0]
+        start, tangent = first.valueAt(first.FirstParameter), first.tangentAt(first.FirstParameter)
+        profile = Part.Wire(Part.makeCircle(r, start, tangent))
+        return rail.makePipeShell([profile], True, True)
+
+
+class CapHoles(Component):
+    name = "Cap Holes"
+    nickname = "Cap"
+    glyph = "⊓"
+    category = "Surface"
+    description = "Close planar openings to make a solid"
+
+    def setup(self):
+        self.add_input("Shape", "B", "Open surface")
+        self.add_output("Solid", "B", "Closed solid")
+
+    def solve_instance(self, shape):
+        _, Part = _part()
+        shell = shape.Shells[0] if shape.Shells else Part.Shell(shape.Faces)
+        free = shell.getFreeEdges().Edges
+        if not free:
+            solid = Part.Solid(shell)
+        else:
+            caps = [Part.Face(Part.Wire(group)) for group in Part.sortEdges(free)]
+            closed = Part.Shell(shell.Faces + caps)
+            # Without sewing the caps keep their own orientation and the solid is
+            # invalid (measured: extruded r=2 circle gave volume 41.9 instead of 125.7).
+            closed.sewShape()
+            solid = Part.Solid(closed)
+        if solid.Volume < 0:
+            solid.reverse()
+        if not solid.isValid():
+            raise ValueError("The capped shape is not a valid solid")
+        return solid
+
+
+# --------------------------------------------------------------------------
+# Transform
+# --------------------------------------------------------------------------
+class Rotate(Component):
+    name = "Rotate"
+    nickname = "Rot"
+    glyph = "↻"
+    category = "Transform"
+    description = "Rotate geometry about an axis"
+
+    def setup(self):
+        self.add_input("Geometry", "G", "Geometry to rotate")
+        self.add_input("Angle", "A", "Angle in degrees", default=90.0)
+        self.add_input("Center", "C", "Point on the axis", default=(0.0, 0.0, 0.0))
+        self.add_input("Axis", "X", "Axis direction", default=(0.0, 0.0, 1.0))
+        self.add_output("Geometry", "G", "Rotated geometry")
+
+    def solve_instance(self, g, angle, center, axis):
+        return g.rotated(_point(center), _point(axis), angle)
+
+
+class Scale(Component):
+    name = "Scale"
+    nickname = "Scale"
+    glyph = "⤢"
+    category = "Transform"
+    description = "Scale geometry uniformly about a point"
+
+    def setup(self):
+        self.add_input("Geometry", "G", "Geometry to scale")
+        self.add_input("Factor", "F", "Scale factor", default=2.0)
+        self.add_input("Center", "C", "Fixed point", default=(0.0, 0.0, 0.0))
+        self.add_output("Geometry", "G", "Scaled geometry")
+
+    def solve_instance(self, g, factor, center):
+        if factor == 0:
+            raise ValueError("Factor must not be zero")
+        out = g.copy()
+        out.scale(factor, _point(center))
+        return out
+
+
+class Mirror(Component):
+    name = "Mirror"
+    nickname = "Mirror"
+    glyph = "⇋"
+    category = "Transform"
+    description = "Mirror geometry in a plane"
+
+    def setup(self):
+        self.add_input("Geometry", "G", "Geometry to mirror")
+        self.add_input("Point", "P", "Point on the mirror plane", default=(0.0, 0.0, 0.0))
+        self.add_input("Normal", "N", "Normal of the mirror plane", default=(1.0, 0.0, 0.0))
+        self.add_output("Geometry", "G", "Mirrored geometry")
+
+    def solve_instance(self, g, point, normal):
+        return g.mirror(_point(point), _point(normal))
+
+
+class LinearArray(Component):
+    name = "Linear Array"
+    nickname = "ArrLin"
+    glyph = "▭▭"
+    category = "Transform"
+    description = "Copies of geometry along a vector"
+
+    def setup(self):
+        self.add_input("Geometry", "G", "Geometry to copy")
+        self.add_input("Direction", "D", "Step between copies", default=(10.0, 0.0, 0.0))
+        self.add_input("Count", "N", "Number of copies", default=3.0)
+        self.add_output("Geometry", "G", "The copies", access=LIST)
+
+    def solve_instance(self, g, direction, count):
+        step = _point(direction)
+        return [g.translated(step * i) for i in range(max(int(count), 0))]
+
+
+# --------------------------------------------------------------------------
+# Intersect
+# --------------------------------------------------------------------------
+class Difference(Component):
+    name = "Solid Difference"
+    nickname = "SDiff"
+    glyph = "∖"
+    category = "Intersect"
+    description = "Subtract every solid in B from A"
+
+    def setup(self):
+        self.add_input("Solid A", "A", "Solid to cut from")
+        self.add_input("Solids B", "B", "Solids to subtract", access=LIST)
+        self.add_output("Result", "R", "A minus B")
+
+    def solve_instance(self, a, b):
+        return a.cut(b).removeSplitter()
+
+
+class Intersection(Component):
+    name = "Solid Intersection"
+    nickname = "SInt"
+    glyph = "∩"
+    category = "Intersect"
+    description = "The volume shared by A and B"
+
+    def setup(self):
+        self.add_input("Solid A", "A", "First solid")
+        self.add_input("Solid B", "B", "Second solid")
+        self.add_output("Result", "R", "A and B")
+
+    def solve_instance(self, a, b):
+        result = a.common(b).removeSplitter()
+        if result.isNull() or not result.Solids:
+            raise ValueError("The solids do not overlap")
+        return result
+
+
+REGISTRY = [NumberSlider, Panel,
+            Addition, Multiplication, Range, Expression, Remap, Bounds,
+            Series, ListItem, ListLength, CullPattern, ShiftList,
+            ConstructPoint, VectorXYZ, Vector2Pt, Deconstruct, Distance,
+            Circle, CircleCNR, Line, Arc3Pt, Polyline, Interpolate, DivideCurve, EvaluateCurve,
+            OffsetCurve,
+            Box, Sphere, Cylinder, Loft, Extrude, Pipe, CapHoles,
+            Move, Rotate, Scale, Mirror, LinearArray,
+            Union, Difference, Intersection]
+CATEGORIES = ["Params", "Maths", "Sets", "Vector", "Curve", "Surface", "Transform", "Intersect"]
 
 
 def by_name(name: str):

@@ -25,9 +25,11 @@ ADDON = os.path.dirname(TESTS)
 BIN = os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs", "FreeCAD 1.1", "bin")
 RUNS = [("smoke", "freecad.exe", "gui_smoke.py"),
         ("tree", "freecad.exe", "tree_smoke.py"),
+        ("attractor", "freecad.exe", "attractor_smoke.py"),
         ("save", "freecad.exe", "persist_smoke.py"),
         ("load", "freecad.exe", "persist_smoke.py"),
-        ("headless", "freecadcmd.exe", "persist_headless.py")]
+        ("headless", "freecadcmd.exe", "persist_headless.py"),
+        ("geometry", "freecadcmd.exe", "test_geometry.py")]
 
 
 def surfacekit():
@@ -44,16 +46,26 @@ def launch(sk, exe, script, env, visible, timeout=240):
     if sk is not None and not visible and exe == "freecad.exe":
         app = sk.LaunchedApp(os.path.join(BIN, exe), [script], hidden=True, env=env,
                              timeout=60, max_memory_gb=8)
-        controls = {"desktop": "hidden", "focus_taken": app.focus_taken,
+        # focus_taken only says the foreground window changed, which also happens
+        # when YOU switch windows meanwhile; who owns the foreground tells them apart.
+        owners = {sk.window_pid(sk.foreground())}
+        controls = {"desktop": "hidden", "focus_changed": app.focus_taken,
                     "window_on_your_desktop": app.on_default_desktop}
         try:
-            code = app.proc.wait(timeout)
-        except subprocess.TimeoutExpired:
-            app.proc.kill()
+            end = time.monotonic() + timeout
             code = None
+            while time.monotonic() < end:
+                code = app.proc.poll()
+                if code is not None:
+                    break
+                owners.add(sk.window_pid(sk.foreground()))
+                time.sleep(0.5)
+            else:
+                app.proc.kill()
         finally:
             sk.LaunchedApp.registry.discard(app.pid)
             app.desktop.close()
+        controls["focus_taken"] = app.pid in owners
         return code, controls
     si = subprocess.STARTUPINFO()
     si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -105,7 +117,7 @@ def main(argv=None):
         summary[name] = {"passed": r["passed"], "total": r["total"], "failed": bad,
                          "seconds": round(time.perf_counter() - t0, 1), **controls}
         print(f"{name:9s}: {r['passed']}/{r['total']} passed  {', '.join(bad)}  "
-              f"[{controls.get('desktop')}, focus moved: {controls.get('focus_taken', 'n/a')}, "
+              f"[{controls.get('desktop')}, FreeCAD took focus: {controls.get('focus_taken', 'n/a')}, "
               f"window on your desktop: {controls.get('window_on_your_desktop', 'n/a')}]")
     with open(os.path.join(args.out, "summary.json"), "w", encoding="utf-8") as fh:
         json.dump(summary, fh, indent=1)

@@ -29,6 +29,23 @@ Restart FreeCAD, pick **Katydid** in the workbench list. The canvas opens as a f
 
 Component colours: grey OK, orange warning (missing input), red error (hover for the message), green selected. Wires: solid = one item, double = list, dashed = a tree of several branches, thin dashed orange = empty.
 
+## Components (42)
+
+| Tab | Components |
+|---|---|
+| Params | Number Slider, Panel |
+| Maths | Addition, Multiplication, Range, Expression, Remap Numbers, Bounds |
+| Sets | Series, List Item, List Length, Cull Pattern, Shift List |
+| Vector | Construct Point, Vector XYZ, Vector 2Pt, Deconstruct, Distance |
+| Curve | Circle, Circle CNR, Line, Arc 3Pt, Polyline, Interpolate, Divide Curve, Evaluate Curve, Offset Curve |
+| Surface | Center Box, Sphere, Cylinder, Loft, Extrude, Pipe, Cap Holes |
+| Transform | Move, Rotate, Scale, Mirror, Linear Array |
+| Intersect | Solid Union, Solid Difference, Solid Intersection |
+
+**Expression** formulas are parsed and checked, never passed to Python's `eval`: only numbers, `x`, `y`, `z`, `pi`, `e`, `tau`, arithmetic and math functions are allowed, so a shared file cannot run code.
+
+**Attractor** loads Grasshopper's classic attractor grid: two Series, Graft on Construct Point's Y input to make a 10 × 10 grid, Distance to an attractor point, Bounds (with Flatten) and Remap to turn distance into radius, then circles extruded by their radius. Drag *Attractor X/Y*. With 100 extruded tubes one update costs about 25 ms to solve and 125 ms to mesh the preview on this machine, so it redraws about 7 times a second; light definitions redraw over 30 times a second.
+
 ## Data trees
 
 Data flows as trees: branches of items addressed by paths like `{0;1}`. Each input is item, list or tree access. Components match inputs branch by branch (a tree with fewer branches repeats its last one; outputs take the paths of the first input with the most branches) and, within a branch, item by item (longest list). A list output gets a branch per iteration, so dividing three circles in `{0}` gives `{0;0}`, `{0;1}`, `{0;2}`. The Panel lists data under its branch paths. These rules are our reading of Grasshopper's, written down in `katydid/engine.py`; they have not been checked against Grasshopper itself.
@@ -52,10 +69,11 @@ The canvas follows the active FreeCAD document. Its definition is stored on a **
 ```powershell
 $py = "$env:LOCALAPPDATA\Programs\FreeCAD 1.1\bin\python.exe"
 & $py -I tests\mutate.py          # engine, tree and save-format tests, plus 5 deliberate breaks that must be caught
+& $py -I tests\test_components.py # maths/list components and the formula evaluator
 python tests\run_gui_tests.py     # everything in real FreeCAD, on a hidden desktop
 ```
 
-`run_gui_tests.py` starts each FreeCAD on a private Win32 desktop through `surfacekit` (from `C:\dev\scripts`), so nothing appears on your screen and focus never moves; every run reports both controls. It runs `gui_smoke.py` (canvas driven with real mouse and key events, bake), `tree_smoke.py` (the tree demo, the grip menu by real right-clicks, Flatten/Simplify, save, reopen, bake), `persist_smoke.py` in a save phase and then a reopen phase in a fresh FreeCAD, and `persist_headless.py` in console FreeCAD. Drag speed is only judged with `--visible`: on the hidden desktop FreeCAD's 3D repaint is several times slower than on the real display. Screenshots and results go to `../_runs/`; nothing is saved to your settings. `paint_profile.py` and `preview_profile.py` measure where frame time goes.
+`run_gui_tests.py` starts each FreeCAD on a private Win32 desktop through `surfacekit` (from `C:\dev\scripts`), so nothing appears on your screen; every run reports whether FreeCAD ever owned your foreground window and whether it had a window on your desktop. It runs `gui_smoke.py` (canvas driven with real mouse and key events, bake), `tree_smoke.py` (the tree demo, the grip menu by real right-clicks, Flatten/Simplify, save, reopen, bake), `attractor_smoke.py` (the attractor grid, a slider dragged with real mouse events, search, save and reopen), `persist_smoke.py` in a save phase and then a reopen phase in a fresh FreeCAD, and, in console FreeCAD, `persist_headless.py` and `test_geometry.py` (every geometry component against known answers, and the demos built without a GUI). `test_components.py` covers the maths and list components and the formula evaluator, including inputs it must refuse. Drag speed is only judged with `--visible`: on the hidden desktop FreeCAD's 3D repaint is several times slower than on the real display. Screenshots and results go to `../_runs/`; nothing is saved to your settings. `paint_profile.py` and `preview_profile.py` measure where frame time goes.
 
 ## Not yet
 

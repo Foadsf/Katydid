@@ -24,7 +24,8 @@ MUTATIONS = [
     ("input modifiers are ignored", "katydid/engine.py",
      "return tree.mapped(param.modifier, param.reverse)", "return tree"),
 ]
-TESTS = ["tests/test_tree.py", "tests/test_engine.py", "tests/test_document.py"]
+TESTS = ["tests/test_tree.py", "tests/test_engine.py", "tests/test_document.py",
+         "tests/test_components.py"]
 
 
 def run_suite(root):

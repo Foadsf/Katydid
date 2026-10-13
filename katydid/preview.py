@@ -62,15 +62,22 @@ class Preview:
                 self.content.addChild(_mesh_node(shapes, colour))
 
 
-def _triangulate(shape, tol):
-    """Preview-quality triangles. Shape.tessellate() ignores the tolerance on curved
-    faces (a r=42 sphere is 8000 triangles, ~130 ms, at any tolerance); MeshPart
-    with FreeCAD's display angle gives 1484 triangles in ~16 ms."""
+def _triangulate(shapes, tol):
+    """Preview-quality (vertices, triangles) for shapes with faces.
+
+    MeshPart with FreeCAD's display angle, on NEW shapes as a canvas update
+    produces them: a r=42 sphere 16 ms (Shape.tessellate: 8000 triangles, ~130 ms,
+    whatever the tolerance); 100 extruded tubes 73 ms (tessellate: 152 ms).
+    Measure on fresh shapes: OCCT caches a shape's triangulation, and a profile
+    that re-meshes the same shapes once made tessellate look 3x faster than it is.
+    """
+    import Part
+    compound = Part.makeCompound(shapes)
     try:
         import MeshPart
     except ImportError:
-        return shape.tessellate(tol)
-    mesh = MeshPart.meshFromShape(Shape=shape, LinearDeflection=tol,
+        return compound.tessellate(tol)
+    mesh = MeshPart.meshFromShape(Shape=compound, LinearDeflection=tol,
                                   AngularDeflection=0.5, Relative=False)
     return mesh.Topology
 
@@ -126,9 +133,9 @@ def _mesh_node(shapes, colour) -> coin.SoSeparator:
     sep = coin.SoSeparator()
 
     if faced:
-        # One meshing call for the whole group is ~40% cheaper than one per shape
+        # One meshing call per group is ~40% cheaper than one per shape
         # (measured: 4 boxes, 5.3 ms -> 3.1 ms; tests/preview_profile.py).
-        verts, tris = _triangulate(Part.makeCompound(faced), tol)
+        verts, tris = _triangulate(faced, tol)
         index = []
         for a, b, c in tris:
             index.extend((a, b, c, -1))

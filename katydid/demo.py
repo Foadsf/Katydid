@@ -45,6 +45,67 @@ def build(scene) -> dict:
     return c
 
 
+def build_attractor(scene) -> dict:
+    """The classic attractor grid: a 10 x 10 point grid made with Graft, circles
+    sized by distance to an attractor point, extruded by their radius."""
+    def slider(label, value, lo, hi, decimals=1):
+        s = lib.NumberSlider(value, lo, hi, decimals)
+        s.nickname = label
+        return s
+
+    c = {
+        "count": slider("Count", 10, 2, 20, 0),
+        "spacing": slider("Spacing", 10, 2, 30),
+        "ax": slider("Attractor X", 25, -20, 120),
+        "ay": slider("Attractor Y", 65, -20, 120),
+        "rmin": slider("Min radius", 0.5, 0.1, 5),
+        "rmax": slider("Max radius", 4.5, 0.5, 10),
+        "height": slider("Height", 3, 0, 10),
+        "xs": lib.Series(),
+        "ys": lib.Series(),
+        "grid": lib.ConstructPoint(),
+        "attractor": lib.ConstructPoint(),
+        "dist": lib.Distance(),
+        "bounds": lib.Bounds(),
+        "remap": lib.Remap(),
+        "circle": lib.CircleCNR(),
+        "mult": lib.Multiplication(),
+        "vec": lib.VectorXYZ(),
+        "extrude": lib.Extrude(),
+        "panel": lib.Panel(),
+    }
+    c["grid"].nickname = "Grid"
+    c["attractor"].nickname = "Attractor"
+    c["grid"].inputs[1].modifier = "graft"      # Y grafted: every X meets every Y
+    c["bounds"].inputs[0].modifier = "flatten"  # one min/max over the whole grid
+    c["grid"].preview = False
+    c["circle"].preview = False
+    layout = {"count": (-700, 40), "spacing": (-700, -20), "ax": (-700, 140), "ay": (-700, 200),
+              "rmin": (-700, 290), "rmax": (-700, 350), "height": (-700, 420),
+              "xs": (-400, -80), "ys": (-400, 20), "attractor": (-400, 150),
+              "grid": (-200, -40), "dist": (-30, 40), "bounds": (130, 120), "remap": (300, 40),
+              "circle": (500, -40), "mult": (500, 160), "vec": (660, 150), "extrude": (840, 40),
+              "panel": (660, 270)}
+    for key, (x, y) in layout.items():
+        scene.add_component(c[key], QPointF(x, y))
+
+    g = scene.graph
+    wires = [("spacing", 0, "xs", 1), ("count", 0, "xs", 2), ("spacing", 0, "ys", 1),
+             ("count", 0, "ys", 2), ("xs", 0, "grid", 0), ("ys", 0, "grid", 1),
+             ("ax", 0, "attractor", 0), ("ay", 0, "attractor", 1),
+             ("grid", 0, "dist", 0), ("attractor", 0, "dist", 1), ("dist", 0, "bounds", 0),
+             ("dist", 0, "remap", 0), ("bounds", 0, "remap", 1), ("bounds", 1, "remap", 2),
+             ("rmin", 0, "remap", 3), ("rmax", 0, "remap", 4),
+             ("grid", 0, "circle", 0), ("remap", 0, "circle", 2),
+             ("remap", 0, "mult", 0), ("height", 0, "mult", 1), ("mult", 0, "vec", 2),
+             ("circle", 0, "extrude", 0), ("vec", 0, "extrude", 1), ("bounds", 0, "panel", 0)]
+    for a, ai, b, bi in wires:
+        g.connect(c[a].outputs[ai], c[b].inputs[bi])
+    scene.rebuild_wires()
+    scene.request_solve()
+    return c
+
+
 def build_tree(scene) -> dict:
     """Data trees: rings -> a branch of points per ring -> a polyline per branch
     -> one loft, which needs Flatten on its input to see all the polylines."""

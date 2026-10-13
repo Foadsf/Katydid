@@ -45,7 +45,8 @@ WIRE_HOT = QColor(70, 170, 30, 235)
 PANEL_FILL = QColor(252, 248, 196)
 CATEGORY_COLOURS = {
     "Params": QColor(90, 90, 90), "Maths": QColor(40, 110, 170),
-    "Sets": QColor(120, 80, 160), "Curve": QColor(30, 130, 150), "Surface": QColor(40, 140, 90),
+    "Sets": QColor(120, 80, 160), "Vector": QColor(150, 110, 40), "Curve": QColor(30, 130, 150),
+    "Surface": QColor(40, 140, 90),
     "Transform": QColor(190, 110, 30), "Intersect": QColor(170, 50, 60),
 }
 
