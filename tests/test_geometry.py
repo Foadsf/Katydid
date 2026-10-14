@@ -600,6 +600,96 @@ class Demos(unittest.TestCase):
                   u * math.cos(a) + v * math.sin(a))
             self.assertLess(surf.distToShape(Part.Vertex(p))[0], 1e-3, (u, v))
 
+    def test_tensegrity_modules_balance(self):
+        """Every module has a self-stress with all cables pulling and all struts
+        pushing, and each module's top ring is the next one's bottom ring, so
+        the stresses add up to one for the whole tower."""
+        import numpy as np
+        from katydid import showcase
+        c = self.build(showcase.build_tensegrity)
+        n, m = int(c["n"].value), int(c["m"].value)
+        bottoms = [items for _, items in c["db"].outputs[0].data.branches()]
+        tops = [items for _, items in c["dt"].outputs[0].data.branches()]
+        self.assertEqual((len(bottoms), len(tops)), (m, m))
+        for j in range(m):
+            nodes = [v.Point for v in bottoms[j]] + [v.Point for v in tops[j]]
+            members = []   # (a, b, is_strut)
+            for i in range(n):
+                members += [(i, (i + 1) % n, False), (n + i, n + (i + 1) % n, False),   # rings
+                            (i, n + i, True), (i, n + (i - 1) % n, False)]               # strut, vertical
+            A = np.zeros((3 * len(nodes), len(members)))
+            for k, (a, b, _) in enumerate(members):
+                d = nodes[a] - nodes[b]
+                A[3 * a:3 * a + 3, k] += (d.x, d.y, d.z)
+                A[3 * b:3 * b + 3, k] -= (d.x, d.y, d.z)
+            q = np.linalg.svd(A)[2][-1]
+            q = q if q[2] < 0 else -q
+            self.assertLess(np.linalg.norm(A @ q), 1e-9, j)
+            self.assertTrue(all((qk < 0) == strut for qk, (_, _, strut) in zip(q, members)), (j, q))
+            if j + 1 < m:
+                for p in tops[j]:
+                    self.assertLess(min((p.Point - b.Point).Length for b in bottoms[j + 1]), 1e-6)
+        # the struts drawn are the ones balanced: bottom corner i to top corner i
+        strut = list(c["struts"].outputs[0].data)[0]
+        self.assertLess((strut.Vertexes[0].Point - bottoms[0][0].Point).Length, 1e-9)
+        self.assertLess((strut.Vertexes[-1].Point - tops[0][0].Point).Length, 1e-9)
+
+    def test_lotus_tiers_open_by_their_share_of_the_bloom(self):
+        from katydid import showcase
+        c = self.build(showcase.build_lotus)
+        P, M = int(c["P"].value), int(c["M"].value)
+        L, W, curl, bloom, taper = (c[k].value for k in ("L", "W", "curl", "bloom", "taper"))
+        branches = [items for _, items in c["flower"].outputs[0].data.branches()]
+        self.assertEqual((len(branches), len(branches[0])), (P, M))
+        alpha0 = math.atan2(curl * 0.95 ** 2, 0.95)   # the petal's own lean, tip against base
+        for k, petal in enumerate(branches[0]):
+            tip, base = sorted(petal.Edges, key=lambda e: e.Length)[:2]
+            b = base.valueAt((base.FirstParameter + base.LastParameter) / 2)
+            t = tip.valueAt((tip.FirstParameter + tip.LastParameter) / 2)
+            self.assertAlmostEqual(math.hypot(b.x, b.y), 0.06 * taper ** k * P * W, places=6)
+            self.assertAlmostEqual(b.z, 0.08 * k * L, places=6)
+            d, radial = t - b, V(b.x, b.y, 0).normalize()
+            out = d.x * radial.x + d.y * radial.y
+            self.assertLess(abs(d.x * radial.y - d.y * radial.x), 1e-6)   # leans straight outward
+            lean = math.degrees(math.atan2(out, d.z) - alpha0)
+            self.assertAlmostEqual(lean, bloom * (1 - k / M), places=6)
+
+    def test_auxetic_walls_and_poisson_ratio(self):
+        from katydid import showcase
+        c = self.build(showcase.build_auxetic)
+        lattice = list(c["lattice"].outputs[0].data)
+        self.assertEqual(len(lattice), 1)
+        self.assertTrue(lattice[0].isValid())
+        self.assertEqual(len(lattice[0].Solids), 1)
+        cutters = list(c["rows"].outputs[0].data)
+        self.assertEqual(len(cutters), 2 * int(c["nx"].value) * int(c["ny"].value))
+        first = cutters[0]
+        gaps = sorted(first.distToShape(other)[0] for other in cutters[1:])
+        self.assertAlmostEqual(gaps[0], c["t"].value, places=6)   # neighbours share a wall of thickness t
+        apex = list(c["p2"].outputs[0].data)[0]
+        self.assertLess(apex.Point.y, c["h"].value / 2)   # re-entrant: the apex points into the cell
+        l, h, th = c["l"].value, c["h"].value, math.radians(c["theta"].value)
+        nu = list(c["nu"].outputs[0].data)[0]
+        self.assertAlmostEqual(nu, math.cos(th) ** 2 / ((h / l + math.sin(th)) * math.sin(th)), places=9)
+        self.assertAlmostEqual(nu, -1.0, places=9)   # h/l = 2 at -30°
+
+    def test_amphitheatre_tiers_and_shell(self):
+        from katydid import showcase
+        c = self.build(showcase.build_amphitheatre)
+        sweep, r0, tread, riser = (c[k].value for k in ("sweep", "r0", "tread", "riser"))
+        tiers = list(c["tiers"].outputs[0].data)
+        self.assertEqual(len(tiers), int(c["K"].value))
+        for k, tier in enumerate(tiers):
+            r = r0 + k * tread
+            self.assertAlmostEqual(tier.Volume, sweep / 360 * math.pi * ((r + tread) ** 2 - r ** 2) * (k + 1) * riser,
+                                   places=5)
+            self.assertAlmostEqual(tier.BoundBox.ZMax, (k + 1) * riser, places=6)
+        for arch in list(c["arches"].outputs[0].data):
+            s, e = arch.Vertexes[0].Point, arch.Vertexes[-1].Point
+            self.assertAlmostEqual(s.z, 0.0, places=9)
+            self.assertAlmostEqual(e.z, 0.0, places=9)
+            self.assertLess(max(math.hypot(p.x, p.y) for p in (s, e)), r0)   # stands inside the orchestra
+
     def test_surface_from_points_passes_through_its_grid(self):
         pts = [V(x, y, (x * y) / 50.0) for y in range(0, 40, 10) for x in range(0, 50, 10)]
         srf = lib.SurfaceFromPoints().solve_instance(pts, 5)

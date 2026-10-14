@@ -1,0 +1,50 @@
+= Tutorial 37: A stepped amphitheatre
+:page-id: tutorial-amphitheatre
+include::_attributes.adoc[]
+
+[.lead]
+Stepped tiers of seats wrap round a circular orchestra, and a band shell of telescoping arches stands behind the stage. Each tier is a strip between two concentric arcs, extruded up to its own height; the shell is a loft through arches that grow wider and taller towards the audience.
+
+image::amphitheatre-render.png[A semicircular stepped stone amphitheatre round a round stage, with a ribbed band shell]
+
+Reference: choose menu:Examples[Stepped amphitheatre] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== The tiers
+
+. Place nine sliders: _Tiers: 12 (4 – 24)_ with Decimals `0`, _Inner radius: 14 (6 – 30)_, _Tread: 2.2 (1 – 4)_ and _Riser: 0.9 (0.3 – 2)_ with Decimals `2`, _Sweep: 210 (90 – 270)_ and _Shell bands: 8 (2 – 16)_ with Decimals `0`, _Shell span: 24 (10 – 40)_, _Shell height: 12 (5 – 25)_ and _Shell depth: 10 (4 – 20)_.
+. Place two *Expression* (Maths) components with *Sweep → x*, `sin(radians(x/2))` and `-cos(radians(x/2))`, and a *Multiplication* (Maths) of the first by `-1`.
+. Place three *Construct Point* (Vector) components: (−sin, −cos), (0, `-1`) and (sin, −cos), and an *Arc 3Pt* (Curve), _Unit arc_, through them: an arc of radius 1 centred on the stage.
+. Place a *Series* (Sets), _Tier radii_, with *Inner radius → S*, *Tread → N* and *Tiers → C*, and an *Addition* (Maths) of the radii and *Tread*.
+. Place two *Scale* (Transform) components on the unit arc, one by the radii and one by the radii plus a tread: the inner and outer edge of every tier.
+. Place a *Ruled Surface* (Surface), _Treads_, between them: one flat strip per tier.
+. Place a *Series*, _Tier heights_, with *Riser* as both *S* and *N* and *Tiers → C*, a *Vector XYZ* (Vector) with it as *Z*, and an *Extrude* (Surface), _Tiers_: each strip raised into a block one riser higher than the one inside it.
+. Place a *Multiplication*, *Inner radius* × `0.8`, and a *Cylinder* (Surface), _Orchestra_, of that radius, one *Riser* high.
+
+=== The band shell
+
+[start=9]
+. Place a *Range* (Maths) from `0` to `1` with *Shell bands → N*.
+. Place three *Expression* components on it: _Arch half-span_ `y*(1 + x)/4` with *Shell span*, _Arch height_ `y*(0.45 + 0.55*x)` with *Shell height*, and _Arch position_ `y*(1 - x)` with *Shell depth*; and a *Multiplication* of the half-span by `-1`.
+. Place three *Construct Point* components, (−half-span, position, 0), (0, position, height) and (half-span, position, 0), and an *Arc 3Pt*, _Arches_, through them.
+. Place a *Loft* (Surface), _Band shell_, and a *Pipe* (Surface), _Ribs_, with *R* `0.3`, both on the arches.
+. Turn menu:Preview[] off on the points, arcs, Scales and Treads.
+
+.The finished definition
+image::amphitheatre-canvas.png[The amphitheatre definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::amphitheatre-preview.png[The red preview of the amphitheatre]
+
+== What is happening
+
+Scaling one unit arc about its centre gives concentric arcs that all span the same angle, so each pair bounds a strip of an annulus. *Ruled Surface* joins matching points of two curves with straight lines, which for two concentric arcs in the same plane is exactly that flat strip. The geometry tests check every tier's volume against the area of its strip, (_Sweep_/360)·π·(_R_^2^ − _r_^2^), times its height, and that the shell's arches stand on the ground inside the orchestra.
+
+The shell's arches run from behind the stage (narrow and low) to the middle of the stage (wide and high). Lofting through them gives a flaring hood that opens towards the seats. The whole theatre updates in about a quarter of a second.
+
+== Things to try
+
+* Set *Sweep* to 270 for a theatre that almost surrounds its stage, or to 120 for a shallow fan.
+* Set *Riser* to 1.5 and *Tiers* to 24 for a steep, high bowl.
+* Set *Shell bands* to 16 for a finely ribbed shell.

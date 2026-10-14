@@ -34,6 +34,7 @@ RUNS = [("smoke", "freecad.exe", "gui_smoke.py"),
         ("headless", "freecadcmd.exe", "persist_headless.py"),
         ("geometry", "freecadcmd.exe", "test_geometry.py"),
         ("docshots", "freecad.exe", "doc_shots.py")]  # regenerates docs/images
+TIMEOUTS = {"docshots": 600}   # seconds; ~7 s per showcase for canvas, preview and render images
 
 
 def surfacekit():
@@ -115,7 +116,8 @@ def main(argv=None):
         if sk is not None and not args.visible:
             env["KATYDID_HIDDEN"] = "1"
         t0 = time.perf_counter()
-        code, controls = launch(sk, exe, os.path.join(TESTS, script), env, args.visible)
+        code, controls = launch(sk, exe, os.path.join(TESTS, script), env, args.visible,
+                                TIMEOUTS.get(name, 240))
         result = os.path.join(args.out, f"results_{name}.json")
         if not os.path.exists(result):
             print(f"{name:9s}: NO RESULTS (exit {code}) {controls}")

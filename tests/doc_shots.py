@@ -35,19 +35,20 @@ def canvas(panel, name, run):
 
 LOW_VIEW = {"tower-render.png", "tower-preview.png", "hyperboloid-render.png", "hyperboloid-preview.png",
             "staircase-render.png", "staircase-preview.png", "origami-render.png", "origami-preview.png",
-            "columns-render.png", "columns-preview.png"}
+            "columns-render.png", "columns-preview.png", "tensegrity-render.png", "tensegrity-preview.png"}
 
 
 ZOOM = {"voronoi": 0.88, "waffle": 0.72, "wave": 0.7, "phyllotaxis": 0.78, "city": 0.8, "weave": 0.75,
         "staircase": 0.85, "knot": 0.8, "ring": 0.8, "frames": 0.85, "hypar": 0.8, "slats": 0.8,
         "monolith": 0.95, "flange": 0.85, "bridge": 0.75, "shell": 0.85, "origami": 0.85, "rose": 0.85,
         "mashrabiya": 0.85, "columns": 0.85, "pendants": 0.8, "enneper": 0.8,
-        "stadium": 0.75, "whirlpool": 0.8, "impeller": 0.6, "morph": 1.0}
+        "stadium": 0.75, "whirlpool": 0.8, "impeller": 0.6, "morph": 1.0,
+        "tensegrity": 1.05, "lotus": 0.8, "auxetic": 0.85, "amphitheatre": 0.8}
 TILT = {"phyllotaxis": 35, "knot": 30, "ring": 50, "rose": 25,   # degrees back from a top view
-        "enneper": 55, "pendants": 120}                         # over 90: from below, looking up
+        "enneper": 55, "pendants": 120, "lotus": 55, "amphitheatre": 50}                         # over 90: from below, looking up
 SMOOTH = {"knot", "ring", "morph"}   # not "shell": its big loft hung the render at this deviation
-SHADED = {"shell"}          # no edge lines, default mesh
-SPIN = {"ring": 270, "pendants": 45}   # turn the closed loft's seam (on +X) to the back   # fitAll fits a bounding sphere: close in
+SHADED = {"shell", "lotus"}        # no edge lines, default mesh
+SPIN = {"ring": 270, "pendants": 45, "amphitheatre": 180}   # turn the closed loft's seam (on +X) to the back   # fitAll fits a bounding sphere: close in
 
 
 def view3d(name, run, w=1200, h=640):
@@ -112,6 +113,12 @@ RENDERS = {  # showcase key -> [(component, colour, transparency %, lift in mm)]
     "impeller": [("rotor", (0.80, 0.82, 0.86), 0, 0.0), ("hub", (0.45, 0.47, 0.52), 0, 0.0),
                  ("nose_at", (0.45, 0.47, 0.52), 0, 0.0), ("shroud", (0.82, 0.55, 0.25), 0, 0.0)],
     "morph": [("scaled", (0.80, 0.40, 0.55), 0, 0.0)],
+    "tensegrity": [("strut_p", (0.22, 0.24, 0.28), 0, 0.0), ("vert_p", (0.80, 0.82, 0.86), 0, 0.0),
+                   ("ring_p", (0.80, 0.82, 0.86), 0, 0.0), ("joints", (0.86, 0.66, 0.30), 0, 0.0)],
+    "lotus": [("flower", (0.96, 0.74, 0.82), 0, 0.0), ("pod", (0.80, 0.82, 0.40), 0, 0.0)],
+    "auxetic": [("lattice", (0.36, 0.56, 0.78), 0, 0.0)],
+    "amphitheatre": [("tiers", (0.86, 0.80, 0.70), 0, 0.0), ("stage", (0.66, 0.58, 0.48), 0, 0.0),
+                     ("shell", (0.96, 0.96, 0.94), 35, 0.0), ("ribs", (0.62, 0.42, 0.25), 0, 0.0)],
 }
 
 

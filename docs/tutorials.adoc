@@ -353,6 +353,46 @@ image::morph-render.png[A helicoid–catenoid morph]
 Bending one minimal surface into another. +
 menu:Examples[Helicoid–catenoid morph]
 ****
+
+[.card]
+****
+image::tensegrity-render.png[A tensegrity tower]
+
+*xref:tutorial-tensegrity.adoc[34. A tensegrity tower]*
+
+Struts that push, cables that pull, one exact twist. +
+menu:Examples[Tensegrity tower]
+****
+
+[.card]
+****
+image::lotus-render.png[A blooming lotus]
+
+*xref:tutorial-lotus.adoc[35. A blooming lotus]*
+
+One petal, staggered tiers, one Bloom slider. +
+menu:Examples[Blooming lotus]
+****
+
+[.card]
+****
+image::auxetic-render.png[An auxetic lattice]
+
+*xref:tutorial-auxetic.adoc[36. An auxetic lattice]*
+
+Bow-tie cells and a negative Poisson's ratio. +
+menu:Examples[Auxetic lattice]
+****
+
+[.card]
+****
+image::amphitheatre-render.png[A stepped amphitheatre]
+
+*xref:tutorial-amphitheatre.adoc[37. A stepped amphitheatre]*
+
+Ruled strips between arcs, and a band shell. +
+menu:Examples[Stepped amphitheatre]
+****
 --
 
 == Conventions

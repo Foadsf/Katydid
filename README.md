@@ -32,7 +32,11 @@ Each of these loads from the canvas's **Examples** menu and has a step-by-step t
 | ![Mashrabiya facade](docs/images/mashrabiya-render.png) **Mashrabiya facade:** hexagonal louvres that close towards the sun | ![Mushroom columns](docs/images/columns-render.png) **Mushroom columns:** fluted, scalloped canopies lofted and arrayed |
 | ![Pendant cloud](docs/images/pendants-render.png) **Pendant cloud:** hanging orbs tracing a damped ripple | ![Enneper surface](docs/images/enneper-render.png) **Enneper surface:** a minimal surface from its formula, with contours |
 | ![Woven-bowl stadium roof](docs/images/stadium-render.png) **Woven-bowl stadium roof:** arches from ground over rim to oculus | ![Whirlpool ziggurat](docs/images/whirlpool-render.png) **Whirlpool ziggurat:** pursuit polygons as slabs, with spiral ribs |
-| ![Impeller](docs/images/impeller-render.png) **Impeller with tip clearance:** twisted blades and a live stack-up | ![Helicoid–catenoid morph](docs/images/morph-render.png) **Helicoid–catenoid morph:** one slider through a family of minimal surfaces | Tested on FreeCAD 1.1 on Windows; it should run wherever FreeCAD 1.0+ with PySide6 runs.
+| ![Impeller](docs/images/impeller-render.png) **Impeller with tip clearance:** twisted blades and a live stack-up | ![Helicoid–catenoid morph](docs/images/morph-render.png) **Helicoid–catenoid morph:** one slider through a family of minimal surfaces |
+| ![Tensegrity tower](docs/images/tensegrity-render.png) **Tensegrity tower:** struts and cables at the one twist where they balance | ![Blooming lotus](docs/images/lotus-render.png) **Blooming lotus:** one lofted petal round staggered tiers, opened by one slider |
+| ![Auxetic lattice](docs/images/auxetic-render.png) **Auxetic lattice:** bow-tie cells with a live negative Poisson's ratio | ![Stepped amphitheatre](docs/images/amphitheatre-render.png) **Stepped amphitheatre:** ruled tiers round an orchestra, with a band shell |
+
+Tested on FreeCAD 1.1 on Windows; it should run wherever FreeCAD 1.0+ with PySide6 runs.
 
 ## Install
 

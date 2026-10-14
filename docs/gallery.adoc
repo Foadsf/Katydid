@@ -287,13 +287,53 @@ image::morph-render.png[A surface between a helicoid and a catenoid]
 One slider bends a spiral ramp into a soap-film ring. +
 menu:Examples[Helicoid–catenoid morph]
 ****
+
+[.card]
+****
+image::tensegrity-render.png[A twisting tower of struts held by cables]
+
+*xref:tutorial-tensegrity.adoc[Tensegrity tower]*
+
+Stacked prisms at the one twist where struts and cables balance. +
+menu:Examples[Tensegrity tower]
+****
+
+[.card]
+****
+image::lotus-render.png[A pink lotus with tiers of cupped petals]
+
+*xref:tutorial-lotus.adoc[Blooming lotus]*
+
+One lofted petal, copied round staggered tiers; one slider opens it. +
+menu:Examples[Blooming lotus]
+****
+
+[.card]
+****
+image::auxetic-render.png[A block cut into interlocking bow-tie cells]
+
+*xref:tutorial-auxetic.adoc[Auxetic lattice]*
+
+Re-entrant cells with a negative Poisson's ratio, shown live. +
+menu:Examples[Auxetic lattice]
+****
+
+[.card]
+****
+image::amphitheatre-render.png[A stepped amphitheatre with a ribbed band shell]
+
+*xref:tutorial-amphitheatre.adoc[Stepped amphitheatre]*
+
+Tiers from ruled strips between arcs, and a lofted band shell. +
+menu:Examples[Stepped amphitheatre]
+****
 --
 
 == The Examples menu
 
 image::ui-examples-menu.png[The Examples menu on the canvas toolbar]
 
-btn:[Examples] lists every ready-made definition: the twenty-eight above, the tutorial definitions and the tolerance examples. Choosing one replaces what is on the canvas, so save first if you want to keep your own work. Each loads in a second or two; the preview then updates as you drag.
+btn:[Examples] lists every ready-made definition: the thirty-two above, the tutorial definitions and the tolerance examples. Choosing one replaces what is on the canvas, so save first if you want to keep your own work. Each loads in a second or two; the preview then updates as you drag.
 
 These pictures come from the same definitions. The red preview is what you see while you work; the colours come from baking the final components and setting their colour in FreeCAD, which is how you would prepare a render of your own.
 
@@ -330,6 +370,10 @@ These pictures come from the same definitions. The red preview is what you see w
 |xref:tutorial-whirlpool.adoc[Whirlpool ziggurat] |An exact rotate-and-scale per tier, slabs by *Extrude*, corner spirals with Graft
 |xref:tutorial-impeller.adoc[Impeller with tip clearance] |A lofted blade arrayed by grafted angles, a seam-safe Boolean cut, *Stack-up* and *Monte Carlo*
 |xref:tutorial-morph.adoc[Helicoid–catenoid morph] |One slider through a family of minimal surfaces
+|xref:tutorial-tensegrity.adoc[Tensegrity tower] |*List Item* with index −1, *Shift List* to pair corners, a balance check by force densities
+|xref:tutorial-lotus.adoc[Blooming lotus] |One shape through *Scale*, *Rotate* and *Move* with a list per tier, then copies by Graft
+|xref:tutorial-auxetic.adoc[Auxetic lattice] |Six points wired into one *Polyline*, *Offset Curve* for walls, two interlocking rows, a property formula in a *Panel*
+|xref:tutorial-amphitheatre.adoc[Stepped amphitheatre] |Concentric arcs by *Scale*, *Ruled Surface* strips, *Extrude* by a list of heights
 |===
 
 If you are new to Katydid, do the xref:quick-start.adoc[quick start] and the xref:tutorial-attractor.adoc[attractor grid] first: these examples use the same moves at a larger scale.

@@ -1,0 +1,53 @@
+= Tutorial 34: A tensegrity tower
+:page-id: tutorial-tensegrity
+include::_attributes.adoc[]
+
+[.lead]
+In a tensegrity, struts that only push are held in place by cables that only pull. The simplest one is a _prism_: two polygons joined by struts, with the top polygon turned against the bottom. It holds itself together at exactly one twist, 90° + 180°/_n_ for an _n_-sided prism (150° for a triangle). Stack prisms so that each top ring is the next one's bottom ring and you get a tower.
+
+image::tensegrity-render.png[A slender twisting tower of dark struts held by thin silver cables, with brass joints]
+
+Reference: choose menu:Examples[Tensegrity tower] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== The modules
+
+. Place seven sliders: _Sides: 3 (3 – 6)_ and _Modules: 5 (1 – 12)_ with Decimals `0`, _Radius: 12 (4 – 20)_, _Taper: 0.9 (0.7 – 1)_ with Decimals `2`, _Module height: 10 (3 – 20)_, and _Strut radius: 0.5 (0.1 – 1.5)_ and _Cable radius: 0.12 (0.03 – 0.5)_ with Decimals `2`.
+. Place an *Expression* (Maths), _Twist_, `90 + 180/x`, with *Sides → x*.
+. Place a *Series* (Sets), _Module no._, with *Modules → C*.
+. Place two *Expression* components, _Bottom radius_ `z*y**x` and _Top radius_ `z*y**(x + 1)`, each with *Module no. → x*, *Taper → y* and *Radius → z*: each module is a little narrower than the one below.
+. Place a *Multiplication* (Maths), *Module no.* × *Twist*, and an *Addition* (Maths) of that and *Twist*: the bottom and top turns. Do the same with *Module height* for the bottom and top heights.
+. Place two *Regular Polygon* (Curve) components, _Bottom ring_ and _Top ring_, with their radius, *Sides*, turn *→ A* and height *→ Z*.
+
+=== Struts and cables
+
+[start=7]
+. Place two *Divide Curve* (Curve) components with *Sides → N*, one on each ring: the corners, in order.
+. Place a *Shift List* (Sets), _Previous corner_, with the top corners *→ L* and *S* `-1`.
+. Place two *Line* (Curve) components: _Struts_ from the bottom corners to the top corners, and _Vertical cables_ from the bottom corners to the previous top corners.
+. Place a *Pipe* (Surface) on the struts with *Strut radius*, and another on the vertical cables with *Cable radius*.
+. Place a *List Item* (Sets) with *Top ring → L* and *i* `-1`: the last ring of the tower. Place a *Pipe*, _Ring cables_, and wire *Bottom ring* and then the List Item into its *C* (hold kbd:[Shift] for the second), with *Cable radius*: every ring once.
+. For the joints, place a *Divide Curve* on the same two inputs, a *Deconstruct* (Vector), a *Sphere* (Surface) with *Strut radius* × `1.6` and a *Move* (Transform) with X, Y and Z wired in.
+. Turn menu:Preview[] off on the rings, Divide Curves, Shift List, Lines, List Item and Sphere.
+
+.The finished definition
+image::tensegrity-canvas.png[The tensegrity tower definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::tensegrity-preview.png[The red preview of the tensegrity tower]
+
+== What is happening
+
+A structure of straight members balances when, at every joint, the members' pulls and pushes add up to zero. Write each member's force as a number times its length vector (the _force density_) and the balance of all joints becomes one linear system. For a prism, that system has a solution with every cable pulling and every strut pushing only at the twist 90° + 180°/_n_, whatever the radii and height. At other twists the shape still draws, but no set of cable tensions can hold it.
+
+Each module here is such a prism. Each module's top ring is the next module's bottom ring, so the forces that balance each module on its own add up to forces that balance the whole tower. The geometry tests solve the balance system for every module of the definition and check the signs; changing the twist by 5° makes them fail. The struts of neighbouring modules meet at shared joints. In Kenneth Snelson's _Needle Tower_ the modules overlap instead, so no two struts touch.
+
+The tower updates in under half a second.
+
+== Things to try
+
+* Set *Sides* to 4: the twist becomes 135° and the struts cross more steeply.
+* Set *Modules* to 1 for the classic three-strut tensegrity prism.
+* Set *Taper* to 1 for a straight tower.
+* Change the Twist formula to `100 + 180/x`. The tower still draws, but the geometry tests would fail: it would not stand.
