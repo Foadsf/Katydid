@@ -1,0 +1,52 @@
+= Tutorial 29: Enneper's minimal surface
+:page-id: tutorial-enneper
+include::_attributes.adoc[]
+
+[.lead]
+A minimal surface is what a soap film makes: at every point it curves as much one way as the other. Alfred Enneper found this one in 1864, and it has a simple formula in two parameters _u_ and _v_. You will sample it on a grafted grid, fit a smooth surface through the samples and slice it into contour lines.
+
+image::enneper-render.png[A teal saddle-shaped minimal surface with gold contour lines]
+
+Reference: choose menu:Examples[Enneper surface] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== The parameter grid
+
+. Place four sliders: _Parameter range: 1.2 (0.5 – 2)_ with Decimals `2`, _Grid: 30 (10 – 50)_ and _Contours: 12 (2 – 40)_ with Decimals `0`, and _Size: 20 (5 – 40)_.
+. Place a *Multiplication* (Maths) with *B* `-1` after *Parameter range*, and two *Range* (Maths) components, _u_ and _v_, from −range to +range with *Grid → N*.
+
+=== The formula
+
+[start=3]
+. Place three *Expression* (Maths) components:
+** _X_: `z*(x - x**3/3 + x*y**2)`;
+** _Y_: `z*(y - y**3/3 + y*x**2)`;
+** _Z_: `z*(x**2 - y**2)`.
+** On all three wire *u → x*, *v → y* with menu:Graft[] on *y*, and *Size → z*.
+. Place a *Construct Point* (Vector) with *X*, *Y* and *Z*: 31 rows of 31 points.
+. Place an *Addition* (Maths), *Grid* + `1`, and a *Surface From Points* (Surface): the points *→ P* with menu:Flatten[], the Addition *→ U*.
+
+=== Contours
+
+[start=6]
+. Place an *Expression*, `0.95*z*x**2`, with *Parameter range → x* and *Size → z*: just inside the highest point, so the top level is not a single point. Place a *Multiplication* with *B* `-1` after it.
+. Place a *Range*, _Levels_, from the negative to the positive value with *Contours → N*, and a *Contour* (Curve) with *Surface → S* and *Levels → D*.
+. Turn menu:Preview[] off on Construct Point.
+
+.The finished definition
+image::enneper-canvas.png[The Enneper surface definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::enneper-preview.png[The red preview of the Enneper surface]
+
+== What is happening
+
+The formula comes from the Weierstrass–Enneper representation, which turns simple complex functions into minimal surfaces. The surface is a saddle whose edges curl over as _u_ and _v_ grow. It passes through itself once a point lies more than √3 from the origin in (_u_, _v_); the corners of the square grid lie √2 × the range out, so the surface stays clean up to a range of about 1.22. The geometry tests check that the fitted surface passes through points computed straight from the formula.
+
+Each update takes about a second, mostly the contours.
+
+== Things to try
+
+* Raise *Parameter range* to 1.8 and watch the flaps cross; lower it to 0.6 for a gentle saddle.
+* Raise *Contours* to 30 for a dense topographic look.

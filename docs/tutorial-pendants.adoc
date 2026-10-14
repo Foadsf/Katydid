@@ -1,0 +1,48 @@
+= Tutorial 28: A pendant cloud
+:page-id: tutorial-pendants
+include::_attributes.adoc[]
+
+[.lead]
+A grid of glowing orbs hangs from a ceiling, each on its own cable, and their heights trace a ripple spreading from the centre, like a frozen drop in a pond. It is the attractor idea once more, with a damped sine wave of the distance from the centre instead of a linear remap.
+
+image::pendants-render.png[Golden orbs hanging on cables under a ceiling, their heights forming concentric ripples]
+
+Reference: choose menu:Examples[Pendant cloud] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== The grid and the ripple
+
+. Place seven sliders: _Size: 70 (20 – 140)_, _Grid: 12 (4 – 24)_ with Decimals `0`, _Ceiling: 40 (20 – 80)_, _Drop: 16 (4 – 40)_, _Amplitude: 8 (0 – 20)_, _Frequency: 0.25 (0.05 – 0.8)_ with Decimals `3`, and _Orb radius: 1.3 (0.3 – 3)_ with Decimals `2`.
+. As in the xref:tutorial-wave.adoc[wave tutorial], place two *Multiplication* (Maths) components (*Size* × `-0.5` and × `0.5`) and two *Range* (Maths) components, _X values_ and _Y values_, from the low to the high edge with *Grid → N*.
+. Place an *Expression* (Maths), _Distance_, `sqrt(x**2 + y**2)`, with *X values → x* and *Y values → y* (menu:Graft[] on *y*): each grid point's distance from the centre.
+. Place an *Expression*, _Ripple_, `z*sin(y*x)/(1 + 0.08*x)`, with *Distance → x*, *Frequency → y* and *Amplitude → z*: a sine wave that fades with distance.
+. Place an *Expression*, _Orb height_, `x - y + z`, with *Ceiling → x*, *Drop → y* and *Ripple → z*.
+
+=== Cables, orbs and ceiling
+
+[start=6]
+. Place two *Construct Point* (Vector) components, _Anchors_ (*X values*, *Y values* with menu:Graft[], *Ceiling → Z*) and _Orb centres_ (the same, with *Orb height → Z*).
+. Place a *Line* (Curve) from *Anchors* to *Orb centres* and a *Pipe* (Surface), _Cables_, with *R* `0.08`.
+. Place a *Sphere* (Surface) with *Orb radius → R* and a *Move* (Transform), _Orbs_, with *X values → X*, *Y values → Y* (menu:Graft[]) and *Orb height → Z*.
+. Place an *Addition* (Maths), *Size* + `10`, a *Center Box* (Surface) with it in *X* and *Y* and *Z* `1.5`, and a *Move*, _Ceiling_, with *Ceiling → Z*.
+. Turn menu:Preview[] off on the points, Line, Sphere and Box.
+
+.The finished definition
+image::pendants-canvas.png[The pendant cloud definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::pendants-preview.png[The red preview of the pendant cloud]
+
+== What is happening
+
+`sin(k·d)` makes rings of equal height round the centre; dividing by `1 + 0.08·d` makes them fade outward, like a real ripple. Every orb's height is *Ceiling* − *Drop* + ripple, and its cable runs straight up to the ceiling above it, so changing any slider moves orbs and cables together. At the centre the ripple is 0, and the geometry tests check that the middle orb hangs exactly *Drop* below the ceiling.
+
+The cloud updates in about a second: half building 169 cables and orbs, half drawing them.
+
+== Things to try
+
+* Lower *Frequency* to 0.1 for one broad swell, or raise it to 0.6 for tight rings.
+* Set *Amplitude* to 0: every orb hangs at the same height, a flat plane of light.
+* Raise *Drop* to 30 for a deep cloud.
+* Raise *Grid* to 20 for 441 orbs; each update then takes about a second.

@@ -505,6 +505,51 @@ class Demos(unittest.TestCase):
                 self.assertAlmostEqual(e.Length, c["r3"].value, places=6)
         self.assertTrue(all(p.isValid() for p in c["pp"].outputs[0].data))
 
+    def test_mashrabiya_closes_towards_the_sun(self):
+        from katydid import showcase
+        c = self.build(showcase.build_mashrabiya)
+        n = int(c["cols"].value) * int(c["rows"].value)
+        louvres = list(c["facade"].outputs[0].data)
+        self.assertEqual(len(louvres), n)
+        self.assertTrue(all(s.isValid() for s in louvres[::9]))
+        dist, opening = list(c["dist"].outputs[0].data), list(c["open"].outputs[0].data)
+        self.assertAlmostEqual(opening[dist.index(min(dist))], c["closed"].value, places=9)
+        self.assertAlmostEqual(opening[dist.index(max(dist))], c["opened"].value, places=9)
+
+    def test_mushroom_columns(self):
+        from katydid import showcase
+        c = self.build(showcase.build_columns)
+        forest = list(c["forest"].outputs[0].data)
+        self.assertEqual(len(forest), int(c["cols"].value) * int(c["rows"].value))
+        column = list(c["column"].outputs[0].data)[0]
+        self.assertTrue(column.isValid())
+        # the scallops reach height + scallop at the flute peaks, and the rim passes through them
+        rim = list(c["rim"].outputs[0].data)[0]
+        peak = max((v.Point for v in c["pts"].outputs[0].data), key=lambda p: p.z)
+        self.assertAlmostEqual(peak.z, c["height"].value + c["scallop"].value, places=9)
+        self.assertLess(rim.distToShape(Part.Vertex(peak))[0], 1e-6)
+
+    def test_pendant_cloud(self):
+        from katydid import showcase
+        c = self.build(showcase.build_pendants)
+        orbs = list(c["orbs"].outputs[0].data)
+        self.assertEqual(len(orbs), (int(c["grid"].value) + 1) ** 2)
+        # the orb under the centre hangs exactly Drop below the ceiling (the ripple is 0 there)
+        centre = min(orbs, key=lambda o: math.hypot(o.BoundBox.Center.x, o.BoundBox.Center.y))
+        self.assertAlmostEqual(centre.BoundBox.Center.z, c["ceiling"].value - c["drop"].value, places=6)
+        cable = min(c["cable"].outputs[0].data, key=lambda ln: math.hypot(ln.Vertexes[0].Point.x, ln.Vertexes[0].Point.y))
+        self.assertAlmostEqual(cable.Length, c["drop"].value, places=6)
+
+    def test_enneper_surface_follows_its_formula(self):
+        from katydid import showcase
+        c = self.build(showcase.build_enneper)
+        surface = list(c["surface"].outputs[0].data)[0]
+        size = c["size"].value
+        for u, v in ((0.0, 0.0), (0.4, -0.8), (-1.2, 1.2)):
+            p = V(size * (u - u ** 3 / 3 + u * v * v), size * (v - v ** 3 / 3 + v * u * u), size * (u * u - v * v))
+            self.assertLess(surface.distToShape(Part.Vertex(p))[0], 1e-6, (u, v))
+        self.assertGreater(len(c["contours"].outputs[0].data), int(c["levels"].value))
+
     def test_surface_from_points_passes_through_its_grid(self):
         pts = [V(x, y, (x * y) / 50.0) for y in range(0, 40, 10) for x in range(0, 50, 10)]
         srf = lib.SurfaceFromPoints().solve_instance(pts, 5)

@@ -23,7 +23,9 @@ SHOWS = [("Voronoi screen", "seed"), ("Twisted tower", "twist"), ("Waffle dome",
          ("Twisted lobed ring", "depth"), ("Frame tunnel", "turn"), ("Hypar umbrella", "edge_h"),
          ("Slatted wave ceiling", "drift"), ("Carved monolith", "seed"),
          ("Flange with tolerance zones", "actual"), ("Network-arch bridge", "lean"),
-         ("Spiral shell", "open"), ("Miura-ori fold", "shear"), ("Guilloché rose", "k")]
+         ("Spiral shell", "open"), ("Miura-ori fold", "shear"), ("Guilloché rose", "k"),
+         ("Mashrabiya facade", "sx"), ("Mushroom columns", "scallop"), ("Pendant cloud", "freq"),
+         ("Enneper surface", "r")]
 
 
 def body(run):

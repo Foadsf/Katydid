@@ -1077,9 +1077,233 @@ def build_rose(scene) -> dict:
     return c
 
 
+def build_mashrabiya(scene) -> dict:
+    """A responsive mashrabiya: a hexagonal grid of cells, each a ruled frustum
+    from its outline to a smaller copy pushed forward. Cells facing the sun
+    close up and stand out; the rest open flat."""
+    c = {
+        "cols": _slider("Columns", 12, 4, 30, 0),
+        "rows": _slider("Rows", 9, 4, 24, 0),
+        "cell": _slider("Cell radius", 6, 3, 12),
+        "sides": _slider("Sides", 6, 3, 8, 0),
+        "sx": _slider("Sun X", 30, -40, 160),
+        "sy": _slider("Sun Y", 45, -40, 120),
+        "sz": _slider("Sun distance", 40, 5, 120),
+        "closed": _slider("Most closed", 0.15, 0.05, 0.9, 2),
+        "opened": _slider("Most open", 0.85, 0.1, 0.95, 2),
+        "deep": _slider("Most depth", 4, 0.5, 10),
+        "i": lib.Series(), "j": lib.Series(), "x": lib.Expression(), "y": lib.Expression(),
+        "centres": lib.ConstructPoint(), "outline": lib.RegularPolygon(), "cells": lib.Move(),
+        "sun": lib.ConstructPoint(), "dist": lib.Distance(), "bounds": lib.Bounds(),
+        "open": lib.Remap(), "depth": lib.Remap(), "shrunk": lib.Scale(), "inner": lib.Move(),
+        "louvres": lib.RuledSurface(), "facade": lib.Rotate(),
+    }
+    for key, nick in (("i", "Column no."), ("j", "Row no."), ("centres", "Cell centres"), ("sun", "Sun"),
+                      ("open", "Opening"), ("depth", "Depth"), ("inner", "Inner"), ("louvres", "Louvres")):
+        c[key].nickname = nick
+    # pointy-top hexagons: sqrt(3) R apart in a row, rows 1.5 R apart, odd rows shifted half a cell
+    _set(c["x"], F="(x + 0.5*(y % 2))*1.7320508*z")
+    _set(c["y"], F="1.5*x*y")
+    _set(c["outline"], A=30.0)
+    _set(c["facade"], A=90.0, X=(1.0, 0.0, 0.0))
+    c["x"].inputs[2].modifier = "graft"   # y = row number: one branch per row
+    c["y"].inputs[1].modifier = "graft"
+    c["bounds"].inputs[0].modifier = "flatten"
+    for key in ("centres", "outline", "cells", "sun", "shrunk", "inner", "louvres"):
+        c[key].preview = False
+    _place(scene, c, {
+        "cols": (-860, -300), "rows": (-860, -240), "cell": (-860, -140), "sides": (-860, -80),
+        "sx": (-860, 40), "sy": (-860, 100), "sz": (-860, 160), "closed": (-860, 260), "opened": (-860, 320),
+        "deep": (-860, 420),
+        "i": (-560, -320), "j": (-560, -210), "x": (-400, -320), "y": (-400, -190), "centres": (-220, -260),
+        "outline": (-400, -60), "cells": (-40, -160), "sun": (-560, 120), "dist": (-40, 40),
+        "bounds": (120, 120), "open": (280, 20), "depth": (280, 220), "shrunk": (440, -120),
+        "inner": (600, -60), "louvres": (760, -140), "facade": (920, -140)})
+    _wire(scene, c, [
+        ("cols", 0, "i", 2), ("rows", 0, "j", 2),
+        ("i", 0, "x", 1), ("j", 0, "x", 2), ("cell", 0, "x", 3),
+        ("j", 0, "y", 1), ("cell", 0, "y", 2),
+        ("x", 0, "centres", 0), ("y", 0, "centres", 1),
+        ("cell", 0, "outline", 0), ("sides", 0, "outline", 1),
+        ("outline", 0, "cells", 0), ("x", 0, "cells", 1), ("y", 0, "cells", 2),
+        ("sx", 0, "sun", 0), ("sy", 0, "sun", 1), ("sz", 0, "sun", 2),
+        ("centres", 0, "dist", 0), ("sun", 0, "dist", 1), ("dist", 0, "bounds", 0),
+        ("dist", 0, "open", 0), ("bounds", 0, "open", 1), ("bounds", 1, "open", 2),
+        ("closed", 0, "open", 3), ("opened", 0, "open", 4),
+        ("dist", 0, "depth", 0), ("bounds", 0, "depth", 1), ("bounds", 1, "depth", 2), ("deep", 0, "depth", 3),
+        ("cells", 0, "shrunk", 0), ("open", 0, "shrunk", 1), ("centres", 0, "shrunk", 2),
+        ("shrunk", 0, "inner", 0), ("depth", 0, "inner", 3),
+        ("cells", 0, "louvres", 0), ("inner", 0, "louvres", 1), ("louvres", 0, "facade", 0)])
+    return c
+
+
+def build_columns(scene) -> dict:
+    """Mushroom columns: a slender stem flaring into a fluted, scalloped
+    canopy, lofted through three sections and arrayed into a forest."""
+    c = {
+        "stem": _slider("Stem radius", 1.2, 0.4, 4, 2),
+        "neck": _slider("Neck radius", 2.2, 0.5, 6, 2),
+        "crown": _slider("Canopy radius", 12, 5, 25),
+        "height": _slider("Height", 20, 8, 40),
+        "flutes": _slider("Flutes", 12, 3, 24, 0),
+        "scallop": _slider("Scallop", 1.6, 0, 5, 2),
+        "cols": _slider("Columns", 4, 1, 8, 0),
+        "rows": _slider("Rows", 3, 1, 8, 0),
+        "base": lib.Circle(), "neck_z": lib.Multiplication(), "mid": lib.Circle(),
+        "k": lib.Series(), "theta": lib.Expression(), "nt": lib.Multiplication(),
+        "x": lib.Expression(), "y": lib.Expression(), "z": lib.Expression(), "pts": lib.ConstructPoint(),
+        "rim": lib.Interpolate(), "column": lib.Loft(),
+        "pitch": lib.Multiplication(), "dx": lib.VectorXYZ(), "dy": lib.VectorXYZ(),
+        "row": lib.LinearArray(), "forest": lib.LinearArray(),
+    }
+    for key, nick in (("base", "Base ring"), ("mid", "Neck ring"), ("rim", "Scalloped rim"), ("column", "Column"),
+                      ("k", "Point no."), ("theta", "θ"), ("pitch", "Pitch"), ("row", "Row"), ("forest", "Forest")):
+        c[key].nickname = nick
+    _set(c["neck_z"], B=0.7)
+    _set(c["k"], C=48.0)   # 48 rim points: 96 made each canopy surface heavier to draw for no visible gain
+    _set(c["theta"], F="2*pi*x/48")
+    _set(c["x"], F="y*cos(x)")
+    _set(c["y"], F="y*sin(x)")
+    _set(c["z"], F="y + z*cos(x)")
+    _set(c["rim"], P=True)
+    _set(c["pitch"], B=2.0)
+    c["column"].inputs[0].modifier = "flatten"
+    for key in ("base", "mid", "pts", "rim", "column", "row"):
+        c[key].preview = False
+    _place(scene, c, {
+        "stem": (-820, -260), "neck": (-820, -200), "crown": (-820, -140), "height": (-820, -40),
+        "flutes": (-820, 60), "scallop": (-820, 120), "cols": (-820, 240), "rows": (-820, 300),
+        "base": (-520, -280), "neck_z": (-520, -170), "mid": (-360, -200), "k": (-520, -40),
+        "theta": (-360, -40), "nt": (-200, 60), "x": (-200, -120), "y": (-40, -60), "z": (-40, 60),
+        "pts": (120, -40), "rim": (280, -40), "column": (440, -180), "pitch": (280, 180),
+        "dx": (440, 120), "dy": (440, 240), "row": (600, -120), "forest": (760, -60)})
+    wires = [
+        ("stem", 0, "base", 0),
+        ("height", 0, "neck_z", 0), ("neck", 0, "mid", 0), ("neck_z", 0, "mid", 1),
+        ("k", 0, "theta", 1), ("theta", 0, "nt", 0), ("flutes", 0, "nt", 1),
+        ("theta", 0, "x", 1), ("crown", 0, "x", 2), ("theta", 0, "y", 1), ("crown", 0, "y", 2),
+        ("nt", 0, "z", 1), ("height", 0, "z", 2), ("scallop", 0, "z", 3),
+        ("x", 0, "pts", 0), ("y", 0, "pts", 1), ("z", 0, "pts", 2), ("pts", 0, "rim", 0),
+        # three wires into one input: their curves merge, in this order, into the loft's sections
+        ("base", 0, "column", 0), ("mid", 0, "column", 0), ("rim", 0, "column", 0),
+        ("crown", 0, "pitch", 0), ("pitch", 0, "dx", 0), ("pitch", 0, "dy", 1),
+        ("column", 0, "row", 0), ("dx", 0, "row", 1), ("cols", 0, "row", 2),
+        ("row", 0, "forest", 0), ("dy", 0, "forest", 1), ("rows", 0, "forest", 2)]
+    _wire(scene, c, wires)
+    return c
+
+
+def build_pendants(scene) -> dict:
+    """A pendant cloud: a grid of orbs hanging from a ceiling, their drops
+    following a damped ripple, like a frozen wave of light."""
+    c = {
+        "size": _slider("Size", 70, 20, 140),
+        "grid": _slider("Grid", 12, 4, 24, 0),
+        "ceiling": _slider("Ceiling", 40, 20, 80),
+        "drop": _slider("Drop", 16, 4, 40),
+        "amp": _slider("Amplitude", 8, 0, 20),
+        "freq": _slider("Frequency", 0.25, 0.05, 0.8, 3),
+        "orb": _slider("Orb radius", 1.3, 0.3, 3, 2),
+        "lo": lib.Multiplication(), "hi": lib.Multiplication(), "xs": lib.Range(), "ys": lib.Range(),
+        "d": lib.Expression(), "ripple": lib.Expression(), "zo": lib.Expression(),
+        "top": lib.ConstructPoint(), "bottom": lib.ConstructPoint(), "cable": lib.Line(), "cables": lib.Pipe(),
+        "sphere": lib.Sphere(), "orbs": lib.Move(), "plate_w": lib.Addition(), "plate": lib.Box(),
+        "ceiling_at": lib.Move(),
+    }
+    for key, nick in (("xs", "X values"), ("ys", "Y values"), ("d", "Distance"), ("ripple", "Ripple"),
+                      ("zo", "Orb height"), ("top", "Anchors"), ("bottom", "Orb centres"), ("cables", "Cables"),
+                      ("orbs", "Orbs"), ("ceiling_at", "Ceiling")):
+        c[key].nickname = nick
+    _set(c["lo"], B=-0.5)
+    _set(c["hi"], B=0.5)
+    _set(c["d"], F="sqrt(x**2 + y**2)")
+    _set(c["ripple"], F="z*sin(y*x)/(1 + 0.08*x)")   # Gemini's damped ripple, A sin(k d) / (1 + c d)
+    _set(c["zo"], F="x - y + z")
+    _set(c["cables"], R=0.08)
+    _set(c["plate_w"], B=10.0)
+    _set(c["plate"], Z=1.5)
+    c["d"].inputs[2].modifier = "graft"
+    c["top"].inputs[1].modifier = "graft"
+    c["bottom"].inputs[1].modifier = "graft"
+    c["orbs"].inputs[2].modifier = "graft"
+    for key in ("top", "bottom", "cable", "sphere", "plate"):
+        c[key].preview = False
+    _place(scene, c, {
+        "size": (-820, -260), "grid": (-820, -200), "ceiling": (-820, -100), "drop": (-820, -40),
+        "amp": (-820, 60), "freq": (-820, 120), "orb": (-820, 220),
+        "lo": (-520, -300), "hi": (-520, -200), "xs": (-360, -300), "ys": (-360, -190), "d": (-180, -200),
+        "ripple": (-20, -120), "zo": (140, -60), "top": (140, -240), "bottom": (300, -100),
+        "cable": (460, -200), "cables": (620, -200), "sphere": (300, 80), "orbs": (460, 20),
+        "plate_w": (-360, 120), "plate": (-180, 160), "ceiling_at": (0, 160)})
+    _wire(scene, c, [
+        ("size", 0, "lo", 0), ("size", 0, "hi", 0),
+        ("lo", 0, "xs", 0), ("hi", 0, "xs", 1), ("grid", 0, "xs", 2),
+        ("lo", 0, "ys", 0), ("hi", 0, "ys", 1), ("grid", 0, "ys", 2),
+        ("xs", 0, "d", 1), ("ys", 0, "d", 2),
+        ("d", 0, "ripple", 1), ("freq", 0, "ripple", 2), ("amp", 0, "ripple", 3),
+        ("ceiling", 0, "zo", 1), ("drop", 0, "zo", 2), ("ripple", 0, "zo", 3),
+        ("xs", 0, "top", 0), ("ys", 0, "top", 1), ("ceiling", 0, "top", 2),
+        ("xs", 0, "bottom", 0), ("ys", 0, "bottom", 1), ("zo", 0, "bottom", 2),
+        ("top", 0, "cable", 0), ("bottom", 0, "cable", 1), ("cable", 0, "cables", 0),
+        ("orb", 0, "sphere", 0),
+        ("sphere", 0, "orbs", 0), ("xs", 0, "orbs", 1), ("ys", 0, "orbs", 2), ("zo", 0, "orbs", 3),
+        ("size", 0, "plate_w", 0), ("plate_w", 0, "plate", 0), ("plate_w", 0, "plate", 1),
+        ("plate", 0, "ceiling_at", 0), ("ceiling", 0, "ceiling_at", 3)])
+    return c
+
+
+def build_enneper(scene) -> dict:
+    """Enneper's minimal surface from its parametric formula on a (u, v) grid,
+    with contour lines at even heights."""
+    c = {
+        "r": _slider("Parameter range", 1.2, 0.5, 2, 2),
+        "grid": _slider("Grid", 30, 10, 50, 0),
+        "size": _slider("Size", 20, 5, 40),
+        "levels": _slider("Contours", 12, 2, 40, 0),
+        "nr": lib.Multiplication(), "u": lib.Range(), "v": lib.Range(),
+        "x": lib.Expression(), "y": lib.Expression(), "z": lib.Expression(), "pts": lib.ConstructPoint(),
+        "n": lib.Addition(), "surface": lib.SurfaceFromPoints(),
+        "zmax": lib.Expression(), "zmin": lib.Multiplication(), "heights": lib.Range(), "contours": lib.Contour(),
+    }
+    for key, nick in (("u", "u"), ("v", "v"), ("heights", "Levels")):
+        c[key].nickname = nick
+    _set(c["nr"], B=-1.0)
+    _set(c["x"], F="z*(x - x**3/3 + x*y**2)")
+    _set(c["y"], F="z*(y - y**3/3 + y*x**2)")
+    _set(c["z"], F="z*(x**2 - y**2)")
+    _set(c["n"], B=1.0)
+    _set(c["zmax"], F="0.95*z*x**2")   # just inside the highest point, so the top level is not a single point
+    # (the surface crosses itself beyond |(u, v)| = sqrt(3); the grid's corners are sqrt(2) x range out)
+    _set(c["zmin"], B=-1.0)
+    for key in ("x", "y", "z"):
+        c[key].inputs[2].modifier = "graft"   # y = v: one branch per row
+    c["surface"].inputs[0].modifier = "flatten"
+    c["pts"].preview = False
+    _place(scene, c, {
+        "r": (-760, -200), "grid": (-760, -140), "size": (-760, -40), "levels": (-760, 60),
+        "nr": (-480, -220), "u": (-320, -240), "v": (-320, -130), "x": (-140, -260), "y": (-140, -150),
+        "z": (-140, -40), "pts": (40, -160), "n": (40, 0), "surface": (200, -120),
+        "zmax": (-320, 80), "zmin": (-140, 120), "heights": (40, 120), "contours": (360, 0)})
+    _wire(scene, c, [
+        ("r", 0, "nr", 0),
+        ("nr", 0, "u", 0), ("r", 0, "u", 1), ("grid", 0, "u", 2),
+        ("nr", 0, "v", 0), ("r", 0, "v", 1), ("grid", 0, "v", 2),
+        ("u", 0, "x", 1), ("v", 0, "x", 2), ("size", 0, "x", 3),
+        ("u", 0, "y", 1), ("v", 0, "y", 2), ("size", 0, "y", 3),
+        ("u", 0, "z", 1), ("v", 0, "z", 2), ("size", 0, "z", 3),
+        ("x", 0, "pts", 0), ("y", 0, "pts", 1), ("z", 0, "pts", 2),
+        ("grid", 0, "n", 0), ("pts", 0, "surface", 0), ("n", 0, "surface", 1),
+        ("r", 0, "zmax", 1), ("size", 0, "zmax", 3), ("zmax", 0, "zmin", 0),
+        ("zmin", 0, "heights", 0), ("zmax", 0, "heights", 1), ("levels", 0, "heights", 2),
+        ("surface", 0, "contours", 0), ("heights", 0, "contours", 2)])
+    return c
+
+
 SHOWCASE = {"voronoi": build_voronoi, "tower": build_tower, "waffle": build_waffle, "wave": build_wave,
             "phyllotaxis": build_phyllotaxis, "hyperboloid": build_hyperboloid,
             "staircase": build_staircase, "city": build_city, "weave": build_weave,
             "knot": build_knot, "ring": build_ring, "frames": build_frames, "hypar": build_hypar,
             "slats": build_slats, "monolith": build_monolith, "flange": build_flange,
-            "bridge": build_bridge, "shell": build_shell, "origami": build_origami, "rose": build_rose}
+            "bridge": build_bridge, "shell": build_shell, "origami": build_origami, "rose": build_rose,
+            "mashrabiya": build_mashrabiya, "columns": build_columns, "pendants": build_pendants,
+            "enneper": build_enneper}

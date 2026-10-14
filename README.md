@@ -28,7 +28,9 @@ Each of these loads from the canvas's **Examples** menu and has a step-by-step t
 | ![Hypar umbrella](docs/images/hypar-render.png) **Hypar umbrella:** straight members on four doubly ruled saddles round a column | ![Slatted wave ceiling](docs/images/slats-render.png) **Slatted wave ceiling:** ruled timber boards following a drifting wave |
 | ![Carved monolith](docs/images/monolith-render.png) **Carved monolith:** attractor-sized spherical voids subtracted from a block | ![Flange with tolerance zones](docs/images/flange-render.png) **Flange with tolerance zones:** bonus tolerance and virtual condition drawn in 3D |
 | ![Network-arch bridge](docs/images/bridge-render.png) **Network-arch bridge:** twin leaning arches with crossing hangers | ![Spiral shell](docs/images/shell-render.png) **Spiral shell:** a self-similar logarithmic spiral, lofted |
-| ![Miura-ori fold](docs/images/origami-render.png) **Miura-ori fold:** flat parallelogram facets from a straight loft | ![Guilloché rose](docs/images/rose-render.png) **Guilloché rose:** three-point arcs between turned rings, in brass wire | Tested on FreeCAD 1.1 on Windows; it should run wherever FreeCAD 1.0+ with PySide6 runs.
+| ![Miura-ori fold](docs/images/origami-render.png) **Miura-ori fold:** flat parallelogram facets from a straight loft | ![Guilloché rose](docs/images/rose-render.png) **Guilloché rose:** three-point arcs between turned rings, in brass wire |
+| ![Mashrabiya facade](docs/images/mashrabiya-render.png) **Mashrabiya facade:** hexagonal louvres that close towards the sun | ![Mushroom columns](docs/images/columns-render.png) **Mushroom columns:** fluted, scalloped canopies lofted and arrayed |
+| ![Pendant cloud](docs/images/pendants-render.png) **Pendant cloud:** hanging orbs tracing a damped ripple | ![Enneper surface](docs/images/enneper-render.png) **Enneper surface:** a minimal surface from its formula, with contours | Tested on FreeCAD 1.1 on Windows; it should run wherever FreeCAD 1.0+ with PySide6 runs.
 
 ## Install
 

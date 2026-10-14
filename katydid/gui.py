@@ -27,7 +27,9 @@ EXAMPLES = [  # (menu label, key); None draws a separator
     ("Voronoi city", "city"), ("Woven mat", "weave"), ("Torus knot", "knot"),
     ("Twisted lobed ring", "ring"), ("Frame tunnel", "frames"), ("Hypar umbrella", "hypar"),
     ("Slatted wave ceiling", "slats"), ("Carved monolith", "monolith"), ("Network-arch bridge", "bridge"),
-    ("Spiral shell", "shell"), ("Miura-ori fold", "origami"), ("Guilloché rose", "rose"), (None, None),
+    ("Spiral shell", "shell"), ("Miura-ori fold", "origami"), ("Guilloché rose", "rose"),
+    ("Mashrabiya facade", "mashrabiya"), ("Mushroom columns", "columns"), ("Pendant cloud", "pendants"),
+    ("Enneper surface", "enneper"), (None, None),
     ("Tolerance stack-up", "stackup"), ("GD&T calculators", "gdt"),
     ("Flange with tolerance zones", "flange")]
 

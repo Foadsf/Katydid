@@ -1,0 +1,62 @@
+= Tutorial 26: A responsive mashrabiya facade
+:page-id: tutorial-mashrabiya
+include::_attributes.adoc[]
+
+[.lead]
+A mashrabiya is a lattice screen that shades and cools; the Al Bahr Towers in Abu Dhabi made it kinetic, with units that close as the sun reaches them. Here every cell of a hexagonal grid is a frustum, from its outline to a smaller copy pushed forward: cells facing the sun close to sharp pyramids, the rest open into flat frames.
+
+image::mashrabiya-render.png[A bronze hexagonal facade whose cells close into pyramids on one side and open into frames on the other]
+
+Reference: choose menu:Examples[Mashrabiya facade] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== The hexagonal grid
+
+. Place ten sliders: _Columns: 12 (4 – 30)_, _Rows: 9 (4 – 24)_ and _Sides: 6 (3 – 8)_ with Decimals `0`; _Cell radius: 6 (3 – 12)_; _Sun X: 30 (-40 – 160)_, _Sun Y: 45 (-40 – 120)_, _Sun distance: 40 (5 – 120)_; _Most closed: 0.15 (0.05 – 0.9)_ and _Most open: 0.85 (0.1 – 0.95)_ with Decimals `2`; and _Most depth: 4 (0.5 – 10)_.
+. Place two *Series* (Sets), _Column no._ and _Row no._, with *Columns* and *Rows* into *C*.
+. Place an *Expression* (Maths), _X_, with *F* set to `(x + 0.5*(y % 2))*1.7320508*z`. Wire *Column no. → x*, *Row no. → y* with menu:Graft[] on *y*, and *Cell radius → z*. Pointy-topped hexagons sit √3 × R apart, and odd rows shift by half a cell.
+. Place an *Expression*, _Y_, `1.5*x*y`, with *Row no. → x* (menu:Graft[]) and *Cell radius → y*: rows 1.5 × R apart.
+. Place a *Construct Point* (Vector), _Cell centres_, with *X* and *Y*.
+
+=== Cells
+
+[start=6]
+. Place a *Regular Polygon* (Curve) with *Cell radius → R*, *Sides → S* and *A* set to `30` (pointy top). It is built at the origin.
+. Place a *Move* (Transform) and wire *Polygon → G*, *X → X* and *Y → Y*: one outline per grid point.
+
+=== The sun
+
+[start=8]
+. Place a *Construct Point*, _Sun_, from the three sun sliders, and a *Distance* (Vector) from *Cell centres → A* to *Sun → B*.
+. Place a *Bounds* (Maths) with menu:Flatten[] on *N* and two *Remap Numbers* (Maths), both with *Distance → V*, *Bounds Min → S0* and *Bounds Max → S1*:
+** _Opening_: *Most closed → T0*, *Most open → T1*;
+** _Depth_: *Most depth → T0* (T1 stays 1).
+
+=== Louvres
+
+[start=10]
+. Place a *Scale* (Transform). Wire the outlines *→ G*, *Opening → F* and *Cell centres → C*: each outline shrinks about its own centre.
+. Place a *Move*, _Inner_, and wire *Scale → G* and *Depth → Z*: the small copy steps forward.
+. Place a *Ruled Surface* (Surface), _Louvres_, and wire the outlines *→ A* and *Inner → B*: one frustum per cell.
+. Place a *Rotate* (Transform) with *A* `90` and axis *X* `1, 0, 0`, and wire *Louvres → G*: the facade stands up.
+. Turn menu:Preview[] off on everything except the Rotate.
+
+.The finished definition
+image::mashrabiya-canvas.png[The mashrabiya definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::mashrabiya-preview.png[The red preview of the mashrabiya]
+
+== What is happening
+
+The two Remaps turn one distance into two behaviours: the nearer the sun, the smaller the inner opening and the further it stands out, so the cell closes into a pyramid that shades its own window. A ruled surface between two polygons with the same number of corners joins corner to corner, so each frustum has flat trapezoid faces. The geometry tests check that the cell nearest the sun gets exactly the *Most closed* opening and the farthest the *Most open*.
+
+Ruled surfaces are the slow part, about 12 ms per cell headless and more in the GUI: moving the sun takes four to five seconds with 108 cells. Lower *Columns* and *Rows* while you explore.
+
+== Things to try
+
+* Drag *Sun X* and *Sun Y* across the facade and watch the closed region follow.
+* Set *Sides* to 3 for triangular louvres like Al Bahr's (on the same hexagonal grid).
+* Raise *Most depth* to 10 for deep, sculptural pyramids.
+* Swap the opening values (*Most closed* 0.85, *Most open* 0.15) and the facade opens towards the sun instead.

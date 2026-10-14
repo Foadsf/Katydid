@@ -1,0 +1,51 @@
+= Tutorial 27: Mushroom columns
+:page-id: tutorial-columns
+include::_attributes.adoc[]
+
+[.lead]
+A slender stem flaring into a fluted canopy, in the spirit of Frank Lloyd Wright's Johnson Wax columns and Félix Candela's umbrellas, repeated into a forest. One loft through three sections makes a column; two *Linear Array* components plant the forest.
+
+image::columns-render.png[A forest of white fluted mushroom columns with scalloped canopies]
+
+Reference: choose menu:Examples[Mushroom columns] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== Three sections
+
+. Place eight sliders: _Stem radius: 1.2 (0.4 – 4)_, _Neck radius: 2.2 (0.5 – 6)_ and _Scallop: 1.6 (0 – 5)_ with Decimals `2`; _Canopy radius: 12 (5 – 25)_, _Height: 20 (8 – 40)_; and _Flutes: 12 (3 – 24)_, _Columns: 4 (1 – 8)_, _Rows: 3 (1 – 8)_ with Decimals `0`.
+. Place a *Circle* (Curve), _Base ring_, with *Stem radius → R*.
+. Place a *Multiplication* (Maths) with *B* `0.7` after *Height*, and a *Circle*, _Neck ring_, with *Neck radius → R* and the Multiplication *→ Z*.
+. For the scalloped rim, place a *Series* (Sets) with *C* set to `48`, an *Expression* (Maths), _θ_, `2*pi*x/48`, and a *Multiplication* of *θ* by *Flutes*.
+. Place three *Expression* components:
+** `y*cos(x)` and `y*sin(x)`, with *θ → x* and *Canopy radius → y*;
+** `y + z*cos(x)`, with *θ × Flutes → x*, *Height → y* and *Scallop → z*.
+** Wire them into a *Construct Point* (Vector).
+. Place an *Interpolate* (Curve) with *P* set to `True`: the scalloped rim, rising and falling *Flutes* times.
+
+=== One column, many columns
+
+[start=7]
+. Place a *Loft* (Surface) and wire *three* curves into its *C*: the base ring, then (holding kbd:[Shift]) the neck ring, then the rim. Tick menu:Flatten[] on *C*. Several wires into one input merge their data in the order they were connected.
+. Place a *Multiplication* with *B* `2` after *Canopy radius*: the spacing. Place two *Vector XYZ* (Vector) components, one with the spacing in *X* and one in *Y*.
+. Place a *Linear Array* (Transform), _Row_: *Loft → G*, the X vector *→ D*, *Columns → N*. Place a second, _Forest_: *Row → G*, the Y vector *→ D*, *Rows → N*.
+. Turn menu:Preview[] off on the rings, rim, Loft and Row.
+
+.The finished definition
+image::columns-canvas.png[The mushroom columns definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::columns-preview.png[The red preview of the column forest]
+
+== What is happening
+
+A loft passes a smooth surface through its sections in order, so the stem flares through the neck to the canopy, and the scalloped rim makes the flutes run all the way down into the neck. The second Linear Array receives a list of columns and copies each one, which is how one array of arrays makes a grid. The spacing is twice the canopy radius, so neighbouring rims touch at their widest points. The geometry tests check that the rim passes through its scallop peaks at *Height* + *Scallop*.
+
+The forest solves in a few hundredths of a second; drawing twelve fluted canopies takes about two thirds of a second. The rim has 48 points: 96 made each canopy five times slower to draw for no visible gain.
+
+== Things to try
+
+* Set *Flutes* to 6 for bold lobes, or to 20 for fine pleats; set *Scallop* to 0 for a smooth bowl.
+* Raise *Height* to 35 for tall, slender columns.
+* Set *Columns* and *Rows* to 6 for a hypostyle hall.
+* Make *Neck radius* larger than *Canopy radius* for an hourglass instead of a mushroom.

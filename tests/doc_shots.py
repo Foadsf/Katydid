@@ -34,16 +34,19 @@ def canvas(panel, name, run):
 
 
 LOW_VIEW = {"tower-render.png", "tower-preview.png", "hyperboloid-render.png", "hyperboloid-preview.png",
-            "staircase-render.png", "staircase-preview.png", "origami-render.png", "origami-preview.png"}
+            "staircase-render.png", "staircase-preview.png", "origami-render.png", "origami-preview.png",
+            "columns-render.png", "columns-preview.png"}
 
 
 ZOOM = {"voronoi": 0.88, "waffle": 0.72, "wave": 0.7, "phyllotaxis": 0.78, "city": 0.8, "weave": 0.75,
         "staircase": 0.85, "knot": 0.8, "ring": 0.8, "frames": 0.85, "hypar": 0.8, "slats": 0.8,
-        "monolith": 0.95, "flange": 0.85, "bridge": 0.75, "shell": 0.85, "origami": 0.85, "rose": 0.85}
-TILT = {"phyllotaxis": 35, "knot": 30, "ring": 50, "rose": 25}   # degrees back from a top view
+        "monolith": 0.95, "flange": 0.85, "bridge": 0.75, "shell": 0.85, "origami": 0.85, "rose": 0.85,
+        "mashrabiya": 0.85, "columns": 0.85, "pendants": 0.8, "enneper": 0.8}
+TILT = {"phyllotaxis": 35, "knot": 30, "ring": 50, "rose": 25,   # degrees back from a top view
+        "enneper": 55, "pendants": 120}                         # over 90: from below, looking up
 SMOOTH = {"knot", "ring"}   # not "shell": its big loft hung the render at this deviation
 SHADED = {"shell"}          # no edge lines, default mesh
-SPIN = {"ring": 270}   # turn the closed loft's seam (on +X) to the back   # fitAll fits a bounding sphere: close in
+SPIN = {"ring": 270, "pendants": 45}   # turn the closed loft's seam (on +X) to the back   # fitAll fits a bounding sphere: close in
 
 
 def view3d(name, run, w=1200, h=640):
@@ -96,6 +99,11 @@ RENDERS = {  # showcase key -> [(component, colour, transparency %, lift in mm)]
     "origami": [("sheet", (0.95, 0.94, 0.90), 0, 0.0)],
     "rose": [("pp", (0.86, 0.70, 0.36), 0, 0.0), ("pn", (0.86, 0.70, 0.36), 0, 0.0),
              ("inner", (0.86, 0.70, 0.36), 0, 0.0), ("outer", (0.86, 0.70, 0.36), 0, 0.0)],
+    "mashrabiya": [("facade", (0.80, 0.58, 0.32), 0, 0.0)],
+    "columns": [("forest", (0.90, 0.89, 0.86), 0, 0.0)],
+    "pendants": [("orbs", (1.00, 0.84, 0.52), 0, 0.0), ("cables", (0.55, 0.55, 0.58), 0, 0.0),
+                 ("ceiling_at", (0.85, 0.85, 0.83), 0, 0.0)],
+    "enneper": [("surface", (0.32, 0.62, 0.66), 0, 0.0), ("contours", (0.98, 0.86, 0.45), 0, 0.15)],
 }
 
 

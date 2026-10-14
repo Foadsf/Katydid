@@ -273,6 +273,46 @@ image::rose-render.png[A guilloché rose]
 Shifted rings and three-point arcs. +
 menu:Examples[Guilloché rose]
 ****
+
+[.card]
+****
+image::mashrabiya-render.png[A mashrabiya facade]
+
+*xref:tutorial-mashrabiya.adoc[26. A responsive mashrabiya facade]*
+
+Louvres that close towards the sun. +
+menu:Examples[Mashrabiya facade]
+****
+
+[.card]
+****
+image::columns-render.png[Mushroom columns]
+
+*xref:tutorial-columns.adoc[27. Mushroom columns]*
+
+Three sections, one loft, a forest. +
+menu:Examples[Mushroom columns]
+****
+
+[.card]
+****
+image::pendants-render.png[A pendant cloud]
+
+*xref:tutorial-pendants.adoc[28. A pendant cloud]*
+
+A frozen ripple of hanging orbs. +
+menu:Examples[Pendant cloud]
+****
+
+[.card]
+****
+image::enneper-render.png[Enneper's minimal surface]
+
+*xref:tutorial-enneper.adoc[29. Enneper's minimal surface]*
+
+A soap-film surface from its formula. +
+menu:Examples[Enneper surface]
+****
 --
 
 == Conventions
