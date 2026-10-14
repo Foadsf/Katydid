@@ -13,6 +13,10 @@ image::attractor-canvas.png[The attractor grid on the Katydid canvas]
 
 [.hero-strip]
 --
+image::dini-render.png[Dini's surface,link=tutorial-dini.html]
+image::pangolin-render.png[Pangolin-scale tower,link=tutorial-pangolin.html]
+image::gaudi-render.png[Gaudí double-twist columns,link=tutorial-gaudi.html]
+image::gridshell-render.png[Tri-axial grid-shell,link=tutorial-gridshell.html]
 image::amphitheatre-render.png[Stepped amphitheatre,link=tutorial-amphitheatre.html]
 image::auxetic-render.png[Auxetic lattice,link=tutorial-auxetic.html]
 image::lotus-render.png[Blooming lotus,link=tutorial-lotus.html]
@@ -47,7 +51,7 @@ image::tower-render.png[Twisted tower,link=tutorial-tower.html]
 image::voronoi-render.png[Voronoi screen,link=tutorial-voronoi.html]
 --
 
-Made with Katydid, newest first: all 32 designs from the xref:gallery.adoc[gallery]. Each loads from the btn:[Examples] menu; click a picture for its step-by-step tutorial.
+Made with Katydid, newest first: all 36 designs from the xref:gallery.adoc[gallery]. Each loads from the btn:[Examples] menu; click a picture for its step-by-step tutorial.
 
 [.cards]
 --
@@ -90,7 +94,7 @@ Lists, data trees, the attractor grid, tolerance stack-ups and GD&T, step by ste
 ****
 *xref:gallery.adoc[Gallery]*
 
-All 32 showcase designs side by side, each with a tutorial.
+All 36 showcase designs side by side, each with a tutorial.
 ****
 
 [.card]

@@ -1,0 +1,55 @@
+= Tutorial 38: A tri-axial timber grid-shell
+:page-id: tutorial-gridshell
+include::_attributes.adoc[]
+
+[.lead]
+A canopy that dips into a funnel over a single column, cut by vertical planes in three directions 60° apart. Each cut becomes a deep timber rib. Shift one family of planes by half a spacing and the triangular grid turns into a _kagome_ weave of triangles and hexagons, the pattern of Shigeru Ban's woven timber roof for the Centre Pompidou-Metz.
+
+image::gridshell-render.png[A wavy canopy with a central funnel, carried by a woven lattice of timber ribs in triangles and hexagons]
+
+Reference: choose menu:Examples[Tri-axial grid-shell] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== The canopy
+
+. Place eight sliders: _Half-span: 20 (10 – 35)_, _Grid: 24 (10 – 40)_ with Decimals `0`, _Column height: 4 (1 – 12)_, _Funnel depth: 12 (2 – 25)_, _Ripple: 1.5 (0 – 4)_, _Spacing: 3 (1.5 – 6)_, _Shift: 0.5 (0 – 1)_ and _Rib depth: 0.8 (0.2 – 2)_, the last four with Decimals `2`.
+. Place a *Multiplication* (Maths), *Half-span* × `-1`, and two *Range* (Maths) components, _x_ and _y_, from it to *Half-span* with *Grid → N*.
+. Place an *Expression* (Maths), _r²_, `x*x + y*y`, with _x_ *→ x* and _y_ *→ y*, with menu:Graft[] on *y*: one branch per row of the grid.
+. Place an *Expression*, _Funnel shape_, `z + y*x/(x + 12)`, with _r²_, *Funnel depth* and *Column height*: exactly *Column height* at the centre, rising towards *Column height* + *Funnel depth* at the rim. Place another, _Ripple shape_, `z*sin(x/5)*cos(y/5)`, with _x_, _y_ (grafted) and *Ripple*, and an *Addition* (Maths) of the two.
+. Place a *Construct Point* (Vector) with _x_, _y_ (grafted) and the Addition, an *Addition*, *Grid* + `1`, and a *Surface From Points* (Surface), _Canopy_, with menu:Flatten[] on *P* and the row length *→ U*.
+
+=== Three families of cuts
+
+[start=6]
+. Place a *Series* (Sets), _Family_, with *C* `3`, a *Multiplication* by `60`, and two *Expression* components, `cos(radians(x))` and `sin(radians(x))`, into a *Vector XYZ* (Vector): the normals of three families of vertical planes.
+. Place three *Expression* components: _Levels each side_ `ceil(1.42*x/y)` (*Half-span*, *Spacing*), _First offset_ `-x*y` (levels, *Spacing*) and _Level count_ `2*x + 1`, and a *Series* with them and *Spacing*: plane offsets covering the canopy's diagonal.
+. Place an *Expression*, _Family shift_, `x*y*z`, with _Family_, *Shift* and *Spacing*, and an *Addition* of the offsets and the shift, with menu:Graft[] on the shift: one list of offsets per family.
+. Place a *Contour* (Curve), _Contours_, with the canopy, the normals (menu:Graft[] on *N*) and the offsets.
+
+=== Ribs and column
+
+[start=10]
+. Place a *Divide Curve* (Curve) with *N* `40` and an *Interpolate* (Curve), _Rib lines_: smooth curves through the contours.
+. Place a *Multiplication*, *Rib depth* × `-1`, a *Vector XYZ* with it as *Z*, and an *Extrude* (Surface), _Ribs_, of the rib lines: a deep ribbon under each line.
+. Place a *Cylinder* (Surface), _Column_, with *R* `1.2` and *Column height* as its length: the funnel's lowest point rests on its top.
+. Turn menu:Preview[] off on the points, Contours, Divide Curve and Rib lines.
+
+.The finished definition
+image::gridshell-canvas.png[The tri-axial grid-shell definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::gridshell-preview.png[The red preview of the grid-shell]
+
+== What is happening
+
+Each family of planes is square to one of three directions 60° apart, so the rib lines seen from above form three sets of parallel lines. The offsets of family _f_ are moved by _f_ × *Shift* × *Spacing*. Three lines, one from each family, meet in a single point only when the first and third family's offsets minus the second's add up to zero. With *Shift* 0 that happens at every crossing, giving a triangular grid with three rib lines through each node. With *Shift* 0.5 it never happens: only two rib lines cross at any node, and the cells become triangles round hexagons. That is the kagome pattern, and it is easier to build because no node has to join three ribs.
+
+The geometry tests check that every rib lies in its plane, that each family's planes sit where the shift puts them, that the rib lines lie on the canopy (within the 0.05 % contour tolerance) and that the funnel rests on the column. The grid-shell updates in about a second (about 0.9 s to solve, most of it tracing the contours, and 0.3 s to draw).
+
+== Things to try
+
+* Set *Shift* to 0 for a triangular grid, and back to 0.5 for the kagome weave.
+* Set *Spacing* to 2 for a dense lattice, or 5 for an open one.
+* Set *Funnel depth* to 4 for a gently dished roof, or 25 for a deep funnel.
+* Set *Ripple* to 0 for a smooth, rotationally symmetric funnel.

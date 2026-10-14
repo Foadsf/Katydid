@@ -393,6 +393,46 @@ image::amphitheatre-render.png[A stepped amphitheatre]
 Ruled strips between arcs, and a band shell. +
 menu:Examples[Stepped amphitheatre]
 ****
+
+[.card]
+****
+image::gridshell-render.png[Tri-axial grid-shell]
+
+*xref:tutorial-gridshell.adoc[38. Tri-axial grid-shell]*
+
+Three families of contours 60° apart; a half shift makes a kagome weave. +
+menu:Examples[Tri-axial grid-shell]
+****
+
+[.card]
+****
+image::gaudi-render.png[Gaudí double-twist columns]
+
+*xref:tutorial-gaudi.adoc[39. Gaudí double-twist columns]*
+
+Two counter-twisted prisms intersected, under catenary vaults. +
+menu:Examples[Gaudí double-twist columns]
+****
+
+[.card]
+****
+image::pangolin-render.png[Pangolin-scale tower]
+
+*xref:tutorial-pangolin.adoc[40. Pangolin-scale tower]*
+
+Overlapping scales that flare open near an attractor. +
+menu:Examples[Pangolin-scale tower]
+****
+
+[.card]
+****
+image::dini-render.png[Dini's surface]
+
+*xref:tutorial-dini.adoc[41. Dini's surface]*
+
+A twisted pseudosphere from three formulas. +
+menu:Examples[Dini's surface]
+****
 --
 
 == Conventions

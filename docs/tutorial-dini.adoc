@@ -1,0 +1,40 @@
+= Tutorial 41: Dini's surface
+:page-id: tutorial-dini
+include::_attributes.adoc[]
+
+[.lead]
+Ulisse Dini's surface is a pseudosphere, the trumpet-shaped surface of constant negative curvature, twisted round into a helix. It comes straight from three formulas in two parameters: _u_ goes round the axis and _v_ runs from the narrow tip to the flared rim.
+
+image::dini-render.png[A blue spiralling trumpet-like surface winding down to a sharp tip]
+
+Reference: choose menu:Examples[Dini's surface] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+. Place six sliders: _Turns: 2 (1 – 4)_ with Decimals `1`, _Twist: 0.2 (0 – 0.6)_ with Decimals `2`, _Grid around: 80 (30 – 120)_ and _Grid along: 16 (6 – 30)_ with Decimals `0`, _Neck: 0.15 (0.05 – 0.6)_ with Decimals `2`, and _Size: 6 (2 – 15)_.
+. Place an *Expression* (Maths), `2*pi*x`, with *Turns*, and a *Range* (Maths), _u_, from `0` to it with *Grid around → N*.
+. Place a *Range*, _v_, from *Neck* to `1.5` with *Grid along → N*.
+. Place three *Expression* components, each with _u_ *→ x* and _v_ *→ y*, with menu:Graft[] on *y*:
+** `cos(x)*sin(y)`
+** `sin(x)*sin(y)`
+** `cos(y) + log(tan(y/2)) + z*x`, with *Twist → z*.
+. Place a *Construct Point* (Vector) with the three, an *Addition* (Maths), *Grid around* + `1`, and a *Surface From Points* (Surface), _Dini surface_, with menu:Flatten[] on *P* and the row length *→ U*.
+. Place a *Scale* (Transform) with *Size → F*, and turn menu:Preview[] off on the points and the unscaled surface.
+
+.The finished definition
+image::dini-canvas.png[The Dini's surface definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::dini-preview.png[The red preview of Dini's surface]
+
+== What is happening
+
+Without the `z*x` term (*Twist* 0) the formulas give the pseudosphere: circles of radius sin _v_ stacked at heights cos _v_ + ln tan(_v_/2), flaring from a cusp to a rim. Adding *Twist* × _u_ lifts each point in proportion to how far round it is, so going once round climbs 2π × *Twist*. The trumpet becomes a helix, and it overlaps itself after each turn. With _a_ = 1, Dini's surface keeps a constant Gaussian curvature of −1/(1 + *Twist*²) everywhere.
+
+The tip, _v_ → 0, runs off to minus infinity, so *Neck* stops the grid short of it. Grafting _v_ makes one row of points per value of _v_, the layout *Surface From Points* expects. The geometry tests check that the surface passes through the formula's points. The surface updates in about half a second.
+
+== Things to try
+
+* Set *Twist* to 0 for the plain pseudosphere (only one turn's worth is visible).
+* Set *Turns* to 4 and *Twist* to 0.1 for a tightly wound shell.
+* Lower *Neck* to 0.05 for a longer, sharper spike.

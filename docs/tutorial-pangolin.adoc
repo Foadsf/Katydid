@@ -1,0 +1,53 @@
+= Tutorial 40: A pangolin-scale tower
+:page-id: tutorial-pangolin
+include::_attributes.adoc[]
+
+[.lead]
+An egg-shaped tower clad in overlapping cupped scales, like a pangolin or a pine cone. Each floor's scales sit half a scale round from the floor below, so they overlap like roof tiles. An attractor point makes the scales near it flare open while the rest lie flat.
+
+image::pangolin-render.png[An ovoid tower covered in overlapping bronze scales that flare open on one side]
+
+Reference: choose menu:Examples[Pangolin-scale tower] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== Stations
+
+. Place ten sliders: _Floors: 14 (6 – 24)_ and _Scales: 16 (8 – 28)_ with Decimals `0`, _Radius: 12 (6 – 20)_, _Height: 50 (20 – 80)_, _Scale length: 6 (2 – 12)_, _Scale width: 6 (2 – 12)_, _Attractor X: 25 (-40 – 40)_, _Attractor Z: 32 (0 – 80)_, _Most flare: 60 (0 – 80)_ and _Least flare: 4 (0 – 40)_.
+. Place a *Series* (Sets), _Floor no._, with *Floors → C*, and two *Expression* (Maths) components: _Floor height_ `x*y/(z - 1)` (floor no., *Height*, *Floors*) and _Floor radius_ `z*(0.55 + 0.45*sin(pi*(x + 0.5)/y))` (floor no., *Floors*, *Radius*): narrow at top and bottom, widest in the middle.
+. Place a *Series*, _Scale no._, with *Scales → C*, and two *Expression* components, _Scale angle_ `360*x/y` and _Stagger_ `180*x/y`, the second on the floor no. Place an *Addition* (Maths) of the stagger and the scale angles, with menu:Graft[] on the stagger: one branch per floor.
+. Place two *Expression* components, `x*cos(radians(y))` and `x*sin(radians(y))`, with the floor radius (menu:Graft[]) and the angles, and a *Construct Point* (Vector), _Stations_, with the floor heights (menu:Graft[]) as *Z*.
+. Place a *Construct Point*, _Attractor_, at (*Attractor X*, 0, *Attractor Z*), a *Distance* (Vector) from the stations to it, a *Bounds* (Maths) with menu:Flatten[], and a *Remap Numbers* (Maths), _Flare_, from the bounds to *Most flare* … *Least flare*: near scales flare most.
+
+=== One scale
+
+[start=6]
+. Place a *Range* (Maths), _Along the scale_, `0` to `1` with *N* `2`, and two *Expression* components: _Width profile_ `y*(0.45 + 2.4*x*(1 - x) - 0.33*x)` with *Scale width*, and _Down_ `-x*y` with *Scale length*.
+. Place three *Multiplication* (Maths) components on the width: × `0.25` (the cup), × `0.5` and × `-0.5`. Place three *Construct Point* components, (0, −half, down), (cup, 0, down) and (0, half, down), an *Arc 3Pt* (Curve), _Sections_, through them, and a *Loft* (Surface), _Scale_: a scale hanging from the origin, bulging outward.
+
+=== Placing the scales
+
+[start=8]
+. Place a *Rotate* (Transform) with the scale, the flare angles *→ A* and *X* (axis) `0, -1, 0`: each scale swings its tip outward about its root.
+. Place a second *Rotate* with the angles from step 3, and a *Move* (Transform), _Scales_, with the two coordinate expressions *→ X*, *Y* and the floor heights (menu:Graft[]) *→ Z*.
+. For the core, place a *Multiplication*, floor radius × `0.92`, a *Circle* (Curve) with the floor heights *→ Z*, and a *Loft*, _Core_.
+. Turn menu:Preview[] off on the points, Sections, Scale, both Rotates and the Circle.
+
+.The finished definition
+image::pangolin-canvas.png[The pangolin tower definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::pangolin-preview.png[The red preview of the pangolin tower]
+
+== What is happening
+
+Each scale is built once, hanging from the origin with its root's two corners on the Y axis. Rotating about that axis tilts the tip out without moving the root. Turning it to its angle and moving it to its station then hangs every scale from its own point, and the geometry tests check that both root corners sit half a root width either side of the station. The flare angles come from the scales' distances to the attractor, remapped so the nearest scale gets *Most flare* and the farthest *Least flare*.
+
+The tower updates in about half a second, almost all of it drawing 224 scales.
+
+== Things to try
+
+* Drag *Attractor Z* up and down and watch the open patch move.
+* Set *Least flare* to 30 for a bristling cone all over.
+* Set *Floors* to 24 and *Scales* to 28 with *Scale length* 4 for fine, fish-like scales.
+* Set *Most flare* to 0 for a sleek, closed skin.

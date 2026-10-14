@@ -7,6 +7,7 @@
 import json
 import math
 import os
+import random
 import sys
 import traceback
 import unittest
@@ -340,6 +341,24 @@ class Demos(unittest.TestCase):
         good = result.isValid() and abs(result.Volume - expected) < 1e-3 * expected
         self.assertTrue(good or diff.state == "warning", (round(result.Volume, 1), round(expected, 1),
                                                           result.isValid(), diff.state))
+
+    def test_intersection_of_counter_twisted_lofts(self):
+        # Gaudi's column: OpenCascade's exact common of these two lofts is EMPTY.
+        def twisted(sign):
+            polys = [lib.RegularPolygon().solve_instance(2.0, 8, sign * 45.0 * k / 8, 14.0 * k / 8) for k in range(9)]
+            return lib.CapHoles().solve_instance(lib.Loft().solve_instance(polys, False, False))
+        a, b = twisted(1), twisted(-1)
+        inter = lib.Intersection()
+        col = inter.solve_instance(a, b)
+        self.assertTrue(col.isValid() and len(col.Solids) == 1)
+        self.assertEqual(inter.state, "ok")
+        random.seed(2)
+        for _ in range(400):   # the result is exactly the points inside both
+            p = V(random.uniform(-2, 2), random.uniform(-2, 2), random.uniform(0, 14))
+            self.assertEqual(col.isInside(p, 1e-6, True), a.isInside(p, 1e-6, True) and b.isInside(p, 1e-6, True))
+        far = lib.Sphere().solve_instance(1.0).translated(V(50, 0, 0))
+        with self.assertRaisesRegex(ValueError, "do not overlap"):
+            lib.Intersection().solve_instance(a, far)
 
     def test_twisted_lobed_ring(self):
         from katydid import showcase
@@ -689,6 +708,79 @@ class Demos(unittest.TestCase):
             self.assertAlmostEqual(s.z, 0.0, places=9)
             self.assertAlmostEqual(e.z, 0.0, places=9)
             self.assertLess(max(math.hypot(p.x, p.y) for p in (s, e)), r0)   # stands inside the orchestra
+
+    def test_gridshell_ribs_lie_on_the_canopy_in_three_directions(self):
+        from katydid import showcase
+        c = self.build(showcase.build_gridshell)
+        skin = list(c["skin"].outputs[0].data)[0]
+        s, p = c["s"].value, c["p"].value
+        lines = c["spline"].outputs[0].data.branches()
+        families = {}
+        for path, items in lines:
+            families.setdefault(path[1], []).extend(items)
+        self.assertEqual(sorted(families), [0, 1, 2])
+        for f, curves in families.items():
+            n = V(math.cos(math.radians(60 * f)), math.sin(math.radians(60 * f)), 0)
+            for crv in curves[::4]:
+                pts = crv.discretize(12)
+                d = [q.dot(n) for q in pts]
+                self.assertLess(max(d) - min(d), 1e-5)   # a vertical plane, square to the family's normal
+                # the family's planes sit f*p of a spacing off the grid: p = 0.5 makes a kagome weave
+                # (Contour nudges each plane by a thousandth of its mesh tolerance, ~3e-5 here)
+                self.assertAlmostEqual(((d[0] - f * p * s) / s + 0.5) % 1 - 0.5, 0.0, places=4)
+                self.assertLess(max(skin.distToShape(Part.Vertex(q))[0] for q in pts[1:-1]), 0.05)
+        self.assertEqual(len(list(c["ribs"].outputs[0].data)), sum(len(v) for v in families.values()))
+        # the funnel's lowest point rests on the column top
+        self.assertLess(skin.distToShape(Part.Vertex(V(0, 0, c["C"].value)))[0], 1e-6)
+        self.assertAlmostEqual(list(c["column"].outputs[0].data)[0].BoundBox.ZMax, c["C"].value, places=9)
+
+    def test_gaudi_column_is_the_common_part_of_two_twists(self):
+        from katydid import showcase
+        c = self.build(showcase.build_gaudi)
+        a, b = (list(c[k].outputs[0].data)[0] for k in ("ca", "cb"))
+        col = list(c["column"].outputs[0].data)[0]
+        self.assertTrue(col.isValid())
+        R, H = c["R"].value, c["Hc"].value
+        random.seed(3)
+        for _ in range(300):
+            p = V(random.uniform(-R, R), random.uniform(-R, R), random.uniform(0, H))
+            self.assertEqual(col.isInside(p, 1e-6, True), a.isInside(p, 1e-6, True) and b.isInside(p, 1e-6, True))
+        bays, W = int(c["bays"].value), c["W"].value
+        self.assertEqual(len(list(c["cols"].outputs[0].data)), 2 * (bays + 1))
+        self.assertEqual(len(list(c["vaults"].outputs[0].data)), bays)
+        for arch in list(c["row0"].outputs[0].data):   # each arch springs from two column tops
+            ends = sorted((v.Point for v in arch.Vertexes), key=lambda q: q.x)
+            self.assertAlmostEqual(ends[0].z, H, places=6)
+            self.assertAlmostEqual(ends[-1].z, H, places=6)
+            self.assertAlmostEqual(ends[-1].x - ends[0].x, W, places=6)
+            self.assertAlmostEqual(ends[0].x / W, round(ends[0].x / W), places=6)
+
+    def test_pangolin_scales_hang_from_their_stations(self):
+        from katydid import showcase
+        c = self.build(showcase.build_pangolin)
+        scales = list(c["scales"].outputs[0].data)
+        stations = [v.Point if hasattr(v, "Point") else v for v in c["st"].outputs[0].data]
+        self.assertEqual(len(scales), int(c["F"].value) * int(c["S"].value))
+        self.assertEqual(len(stations), len(scales))
+        half_root = 0.5 * 0.45 * c["Wd"].value
+        for sc, st in list(zip(scales, stations))[::17]:
+            d = sorted((v.Point - st).Length for v in sc.Vertexes)
+            self.assertAlmostEqual(d[0], half_root, places=6)   # the root's two corners sit either side of it
+            self.assertAlmostEqual(d[1], half_root, places=6)
+        flare = list(c["flare"].outputs[0].data)
+        self.assertAlmostEqual(max(flare), c["fmax"].value, places=6)   # nearest the attractor
+        self.assertAlmostEqual(min(flare), c["fmin"].value, places=6)
+
+    def test_dini_surface_follows_its_formula(self):
+        from katydid import showcase
+        c = self.build(showcase.build_dini)
+        surf = list(c["surface"].outputs[0].data)[0]
+        nu, nv, v0, b = int(c["nu"].value), int(c["nv"].value), c["v0"].value, c["b"].value
+        end = 2 * math.pi * c["turns"].value
+        for i, j in ((0, 0), (nu // 3, nv // 2), (nu, nv)):
+            u, v = end * i / nu, v0 + (1.5 - v0) * j / nv
+            p = V(math.cos(u) * math.sin(v), math.sin(u) * math.sin(v), math.cos(v) + math.log(math.tan(v / 2)) + b * u)
+            self.assertLess(surf.distToShape(Part.Vertex(p))[0], 1e-6, (i, j))
 
     def test_surface_from_points_passes_through_its_grid(self):
         pts = [V(x, y, (x * y) / 50.0) for y in range(0, 40, 10) for x in range(0, 50, 10)]

@@ -34,7 +34,7 @@ RUNS = [("smoke", "freecad.exe", "gui_smoke.py"),
         ("headless", "freecadcmd.exe", "persist_headless.py"),
         ("geometry", "freecadcmd.exe", "test_geometry.py"),
         ("docshots", "freecad.exe", "doc_shots.py")]  # regenerates docs/images
-TIMEOUTS = {"docshots": 600}   # seconds; ~7 s per showcase for canvas, preview and render images
+TIMEOUTS = {"docshots": 1200}   # seconds; 7-16 s per showcase for canvas, preview and render images
 
 
 def surfacekit():

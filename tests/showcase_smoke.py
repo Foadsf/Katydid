@@ -28,7 +28,9 @@ SHOWS = [("Voronoi screen", "seed"), ("Twisted tower", "twist"), ("Waffle dome",
          ("Enneper surface", "r"), ("Woven-bowl stadium roof", "a"), ("Whirlpool ziggurat", "t"),
          ("Helicoid–catenoid morph", "alpha"), ("Impeller with tip clearance", "twist"),
          ("Tensegrity tower", "taper"), ("Blooming lotus", "bloom"), ("Auxetic lattice", "theta"),
-         ("Stepped amphitheatre", "sweep")]
+         ("Stepped amphitheatre", "sweep"),
+         ("Tri-axial grid-shell", "p"), ("Gaudí double-twist columns", "R"), ("Pangolin-scale tower", "ax"),
+         ("Dini's surface", "b")]
 
 
 def body(run):

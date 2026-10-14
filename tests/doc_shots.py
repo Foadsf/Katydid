@@ -35,7 +35,8 @@ def canvas(panel, name, run):
 
 LOW_VIEW = {"tower-render.png", "tower-preview.png", "hyperboloid-render.png", "hyperboloid-preview.png",
             "staircase-render.png", "staircase-preview.png", "origami-render.png", "origami-preview.png",
-            "columns-render.png", "columns-preview.png", "tensegrity-render.png", "tensegrity-preview.png"}
+            "columns-render.png", "columns-preview.png", "tensegrity-render.png", "tensegrity-preview.png",
+            "pangolin-render.png", "pangolin-preview.png"}
 
 
 ZOOM = {"voronoi": 0.88, "waffle": 0.72, "wave": 0.7, "phyllotaxis": 0.78, "city": 0.8, "weave": 0.75,
@@ -43,10 +44,11 @@ ZOOM = {"voronoi": 0.88, "waffle": 0.72, "wave": 0.7, "phyllotaxis": 0.78, "city
         "monolith": 0.95, "flange": 0.85, "bridge": 0.75, "shell": 0.85, "origami": 0.85, "rose": 0.85,
         "mashrabiya": 0.85, "columns": 0.85, "pendants": 0.8, "enneper": 0.8,
         "stadium": 0.75, "whirlpool": 0.8, "impeller": 0.6, "morph": 1.0,
-        "tensegrity": 1.05, "lotus": 0.8, "auxetic": 0.85, "amphitheatre": 0.8}
+        "tensegrity": 1.05, "lotus": 0.8, "auxetic": 0.85, "amphitheatre": 0.8,
+        "gridshell": 0.8, "gaudi": 0.85, "pangolin": 0.7, "dini": 0.9}
 TILT = {"phyllotaxis": 35, "knot": 30, "ring": 50, "rose": 25,   # degrees back from a top view
         "enneper": 55, "pendants": 120, "lotus": 55, "amphitheatre": 50}                         # over 90: from below, looking up
-SMOOTH = {"knot", "ring", "morph"}   # not "shell": its big loft hung the render at this deviation
+SMOOTH = {"knot", "ring", "morph", "dini"}   # not "shell": its big loft hung the render at this deviation
 SHADED = {"shell", "lotus"}        # no edge lines, default mesh
 SPIN = {"ring": 270, "pendants": 45, "amphitheatre": 180}   # turn the closed loft's seam (on +X) to the back   # fitAll fits a bounding sphere: close in
 
@@ -119,6 +121,13 @@ RENDERS = {  # showcase key -> [(component, colour, transparency %, lift in mm)]
     "auxetic": [("lattice", (0.36, 0.56, 0.78), 0, 0.0)],
     "amphitheatre": [("tiers", (0.86, 0.80, 0.70), 0, 0.0), ("stage", (0.66, 0.58, 0.48), 0, 0.0),
                      ("shell", (0.96, 0.96, 0.94), 35, 0.0), ("ribs", (0.62, 0.42, 0.25), 0, 0.0)],
+    "gridshell": [("skin", (0.95, 0.95, 0.92), 60, 0.0), ("ribs", (0.78, 0.58, 0.36), 0, 0.0),
+                  ("column", (0.85, 0.85, 0.83), 0, 0.0)],
+    "gaudi": [("cols", (0.88, 0.84, 0.76), 0, 0.0), ("vaults", (0.92, 0.88, 0.80), 0, 0.0),
+              ("rib0", (0.70, 0.55, 0.40), 0, 0.0), ("rib1", (0.70, 0.55, 0.40), 0, 0.0),
+              ("ribx", (0.70, 0.55, 0.40), 0, 0.0)],
+    "pangolin": [("scales", (0.62, 0.46, 0.32), 0, 0.0), ("core", (0.25, 0.25, 0.27), 0, 0.0)],
+    "dini": [("scaled", (0.40, 0.62, 0.80), 0, 0.0)],
 }
 
 

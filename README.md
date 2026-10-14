@@ -35,6 +35,8 @@ Each of these loads from the canvas's **Examples** menu and has a step-by-step t
 | ![Impeller](docs/images/impeller-render.png) **Impeller with tip clearance:** twisted blades and a live stack-up | ![Helicoid–catenoid morph](docs/images/morph-render.png) **Helicoid–catenoid morph:** one slider through a family of minimal surfaces |
 | ![Tensegrity tower](docs/images/tensegrity-render.png) **Tensegrity tower:** struts and cables at the one twist where they balance | ![Blooming lotus](docs/images/lotus-render.png) **Blooming lotus:** one lofted petal round staggered tiers, opened by one slider |
 | ![Auxetic lattice](docs/images/auxetic-render.png) **Auxetic lattice:** bow-tie cells with a live negative Poisson's ratio | ![Stepped amphitheatre](docs/images/amphitheatre-render.png) **Stepped amphitheatre:** ruled tiers round an orchestra, with a band shell |
+| ![Tri-axial grid-shell](docs/images/gridshell-render.png) **Tri-axial grid-shell:** timber ribs from three families of contours, in a kagome weave | ![Gaudí double-twist columns](docs/images/gaudi-render.png) **Gaudí double-twist columns:** two counter-twisted prisms intersected, under catenary vaults |
+| ![Pangolin-scale tower](docs/images/pangolin-render.png) **Pangolin-scale tower:** overlapping scales that flare open near an attractor | ![Dini's surface](docs/images/dini-render.png) **Dini's surface:** a twisted pseudosphere from three formulas |
 
 Tested on FreeCAD 1.1 on Windows; it should run wherever FreeCAD 1.0+ with PySide6 runs.
 

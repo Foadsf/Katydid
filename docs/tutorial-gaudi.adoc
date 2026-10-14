@@ -1,0 +1,53 @@
+= Tutorial 39: Gaudí's double-twist columns
+:page-id: tutorial-gaudi
+include::_attributes.adoc[]
+
+[.lead]
+For the columns of the Sagrada Família, Antoni Gaudí twisted one prism clockwise and a copy of it anticlockwise, and kept only the volume the two share. The flutes split and merge as they rise. Here a row of such columns carries catenary arches, the inverted shape of a hanging chain, with barrel vaults between them.
+
+image::gaudi-render.png[Two rows of twisted stone columns carrying brown catenary arches and pale barrel vaults]
+
+Reference: choose menu:Examples[Gaudí double-twist columns] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== The column
+
+. Place nine sliders: _Sides: 4 (3 – 12)_ with Decimals `0`, _Radius: 2 (1 – 4)_ with Decimals `2`, _Column height: 14 (6 – 24)_, _Twist: 90 (0 – 90)_, _Sections: 16 (4 – 24)_ and _Bays: 3 (1 – 6)_ with Decimals `0`, _Bay width: 10 (6 – 20)_, _Catenary: 4 (2 – 15)_ and _Rib radius: 0.25 (0.1 – 0.8)_ with Decimals `2`.
+. Place a *Range* (Maths), _Along the shaft_, from `0` to `1` with *Sections → N*, and three *Multiplication* (Maths) components: the range × *Twist*, that × `-1`, and the range × *Column height*.
+. Place two *Regular Polygon* (Curve) components, _Turned one way_ and _Turned the other way_, with *Radius*, *Sides*, the turns *→ A* and the heights *→ Z*.
+. Place two *Loft* (Surface) components, one per stack, and two *Cap Holes* (Surface): two solid twisted prisms.
+. Place a *Solid Intersection* (Intersect), _Double-twist column_, with the two solids.
+
+=== The portico
+
+[start=6]
+. Place an *Addition* (Maths), *Bays* + `1`, a *Series* (Sets) with *Bay width → N* and it *→ C* (the column positions along X), and a *Series* with *Bay width → N* and *C* `2` (the two rows).
+. Place a *Move* (Transform), _Columns_, with the column, the X positions and the rows *→ Y*, with menu:Graft[] on *Y*.
+. For one arch, place two *Multiplication* components, *Bay width* × `-0.5` and × `0.5`, and a *Range* between them with *N* `24`. Place three *Expression* (Maths) components: _Catenary_ `y*cosh(x/y)` (the range, *Catenary*), _At the springing_ `y*cosh(x/(2*y))` (*Bay width*, *Catenary*) and _Arch height_ `x + y - z` (*Column height*, the springing value, the catenary).
+. Place a *Construct Point* (Vector) with the range *→ X* and the arch heights *→ Z*, and an *Interpolate* (Curve), _Arch_.
+. Place a *Series* from half a bay with *Bay width* steps and *Bays → C*: the bay centres. Place two *Move* components, _Front arches_ and _Back arches_ (*Y* = *Bay width*), with the bay centres *→ X* and menu:Graft[] on *X*.
+. Place a *Rotate* (Transform) of the arch by `90` and a *Move*, _Cross arches_, to the column positions with *Y* half a bay.
+. Place a *Loft*, _Vaults_, and wire the front and then the back arches into its *C* (hold kbd:[Shift] for the second). Place three *Pipe* (Surface) components with *Rib radius* on the three sets of arches.
+. Turn menu:Preview[] off on the polygons, Lofts, Cap Holes, column, points, arches, Rotate and Moves (except _Columns_).
+
+.The finished definition
+image::gaudi-canvas.png[The Gaudí columns definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::gaudi-preview.png[The red preview of the columns and vaults]
+
+== What is happening
+
+Both prisms start from the same polygon and turn by the same amount in opposite directions, so at each height the column's section is the overlap of a polygon turned +θ and the same polygon turned −θ. With four sides and 90° of twist each way, the two squares are 45° apart a quarter of the way up, where their overlap is a regular octagon, and 90° apart halfway up, where they coincide again as a square turned 45°. Up the shaft the section goes square, octagon, square, octagon, square, and the edges spiral across the faces.
+
+The two smooth lofts start from exactly the same polygon, which is hard for FreeCAD's Boolean: with six or more sides its exact intersection comes back empty. When that happens and the solids touch, *Solid Intersection* now tries again with a tolerance of 1/10 000 of the solids' size. It keeps that result only if it is a valid solid inside both, and says so in the component's tooltip. The geometry tests check, at hundreds of random points, that the column contains exactly the points inside both prisms. That check matters: with only 8 sections at this twist, FreeCAD's exact intersection returned a solid it reported as valid, but about 1 % of the test points were in the wrong place and the volume was 1.7 % too large. With 16 sections, or with the tolerance retry, every point agrees.
+
+Each arch is the catenary _z_ = _H_ + _a_·cosh(_W_/2_a_) − _a_·cosh(_x_/_a_), which springs from the column tops at height _H_. A larger *Catenary* gives a flatter arch. Grafting the X positions puts each bay's front and back arch in a branch of its own, so wiring both into one *Loft* makes one vault per bay. The portico updates in under a second, most of it the one Boolean.
+
+== Things to try
+
+* Set *Sides* to 8 and *Twist* to 45 for finer flutes (slower: the Boolean has more faces).
+* Set *Twist* to 0: both prisms are the same and the column is a plain square pillar.
+* Set *Catenary* to 2 for tall, pointed arches, or 15 for shallow ones.
+* Set *Bays* to 6 for a long cloister.

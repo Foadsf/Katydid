@@ -985,11 +985,33 @@ class Intersection(Component):
         self.add_input("Solid B", "B", "Second solid")
         self.add_output("Result", "R", "A and B")
 
+    FUZZY = 1e-4  # retry tolerance, as a fraction of the larger solid's diagonal
+
     def solve_instance(self, a, b):
         result = a.common(b).removeSplitter()
         if result.isNull() or not result.Solids:
-            raise ValueError("The solids do not overlap")
+            result = self._retry(a, b)
         return _checked_boolean(self, result)
+
+    def _retry(self, a, b):
+        """Two smooth lofts twisted opposite ways from the same base polygon (Gaudi's
+        column, 6+ sides) gave an EMPTY exact intersection. With a small fuzzy
+        tolerance the result matched 3000 sampled points exactly. The same retry
+        on a failed tube cut gave a 'valid' solid of volume 0, so a retried
+        result is kept only if it is a real part of both solids."""
+        if a.distToShape(b)[0] > 1e-7:
+            raise ValueError("The solids do not overlap")
+        fuzzy = self.FUZZY * max(a.BoundBox.DiagonalLength, b.BoundBox.DiagonalLength)
+        result = a.common(b, fuzzy).removeSplitter()
+        ok = (result.Solids and result.isValid() and result.Volume > 0
+              and result.Volume <= min(a.Volume, b.Volume) * (1 + 1e-6)
+              and all(s.isInside(result.Solids[0].CenterOfMass, fuzzy, True) for s in (a, b)))
+        if not ok:
+            raise ValueError("FreeCAD's Boolean found no shared volume, although the solids touch. "
+                             "If they overlap, moving or turning one slightly usually helps.")
+        self.messages.append(f"The exact Boolean returned nothing; this result uses a tolerance of "
+                             f"{fuzzy:.2g} mm.")
+        return result
 
 
 # --------------------------------------------------------------------------

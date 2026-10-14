@@ -1833,6 +1833,296 @@ def build_amphitheatre(scene) -> dict:
     return c
 
 
+def build_gridshell(scene) -> dict:
+    """A tri-axial timber grid-shell: a canopy funnelling down onto one column
+    (its lowest point sits exactly on the column top),
+    cut by vertical planes in three directions 60° apart; shifting one family
+    by half a spacing turns the triangular grid into a kagome weave."""
+    c = {
+        "S": _slider("Half-span", 20, 10, 35),
+        "grid": _slider("Grid", 24, 10, 40, 0),
+        "C": _slider("Column height", 4, 1, 12),
+        "D": _slider("Funnel depth", 12, 2, 25),
+        "ripple": _slider("Ripple", 1.5, 0, 4, 2),
+        "s": _slider("Spacing", 3, 1.5, 6, 2),
+        "p": _slider("Shift", 0.5, 0, 1, 2),
+        "depth": _slider("Rib depth", 0.8, 0.2, 2, 2),
+        # canopy
+        "nS": lib.Multiplication(), "xr": lib.Range(), "yr": lib.Range(), "r2": lib.Expression(),
+        "fz": lib.Expression(), "wz": lib.Expression(), "z": lib.Addition(), "pts": lib.ConstructPoint(),
+        "nu": lib.Addition(), "skin": lib.SurfaceFromPoints(),
+        # three families of cutting planes
+        "f": lib.Series(), "ang": lib.Multiplication(), "nx": lib.Expression(), "ny": lib.Expression(),
+        "normal": lib.VectorXYZ(), "m": lib.Expression(), "first": lib.Expression(), "count": lib.Expression(),
+        "levels": lib.Series(), "shift": lib.Expression(), "offsets": lib.Addition(), "cuts": lib.Contour(),
+        # ribs and column
+        "div": lib.DivideCurve(), "spline": lib.Interpolate(), "down": lib.Multiplication(), "dv": lib.VectorXYZ(),
+        "ribs": lib.Extrude(), "column": lib.Cylinder(),
+    }
+    for key, nick, f in (("r2", "r²", "x*x + y*y"), ("fz", "Funnel shape", "z + y*x/(x + 12)"),
+                         ("wz", "Ripple shape", "z*sin(x/5)*cos(y/5)"), ("nx", "Normal X", "cos(radians(x))"),
+                         ("ny", "Normal Y", "sin(radians(x))"), ("m", "Levels each side", "ceil(1.42*x/y)"),
+                         ("first", "First offset", "-x*y"), ("count", "Level count", "2*x + 1"),
+                         ("shift", "Family shift", "x*y*z")):
+        c[key].nickname = nick
+        _set(c[key], F=f)
+    for key, nick in (("xr", "x"), ("yr", "y"), ("skin", "Canopy"), ("f", "Family"), ("cuts", "Contours"),
+                      ("spline", "Rib lines"), ("ribs", "Ribs"), ("column", "Column")):
+        c[key].nickname = nick
+    _set(c["nS"], B=-1.0)
+    _set(c["nu"], B=1.0)
+    _set(c["f"], C=3.0)
+    _set(c["ang"], B=60.0)
+    _set(c["div"], N=40.0)
+    _set(c["down"], B=-1.0)
+    _set(c["column"], R=1.2)
+    for comp, i in ((c["r2"], 2), (c["wz"], 2), (c["pts"], 1)):
+        comp.inputs[i].modifier = "graft"   # y: one branch per row of the grid
+    c["skin"].inputs[0].modifier = "flatten"
+    c["offsets"].inputs[1].modifier = "graft"   # one list of offsets per family
+    c["cuts"].inputs[1].modifier = "graft"
+    for key in ("pts", "cuts", "div", "spline"):
+        c[key].preview = False
+    _place(scene, c, {
+        "S": (-960, -320), "grid": (-960, -260), "C": (-960, -160), "D": (-960, -100), "ripple": (-960, -40),
+        "s": (-960, 80), "p": (-960, 140), "depth": (-960, 240),
+        "nS": (-700, -340), "xr": (-540, -360), "yr": (-540, -260), "r2": (-380, -360), "fz": (-220, -360),
+        "wz": (-380, -240), "z": (-60, -300), "pts": (100, -320), "nu": (-380, -140), "skin": (260, -300),
+        "f": (-700, 60), "ang": (-540, 60), "nx": (-380, 20), "ny": (-380, 120), "normal": (-220, 60),
+        "m": (-700, 200), "first": (-540, 200), "count": (-540, 300), "levels": (-380, 240),
+        "shift": (-380, 360), "offsets": (-220, 280), "cuts": (420, -40), "div": (580, -40),
+        "spline": (740, -40), "down": (580, 120), "dv": (740, 120), "ribs": (900, -20),
+        "column": (420, -180)})
+    _wire(scene, c, [
+        ("S", 0, "nS", 0), ("nS", 0, "xr", 0), ("S", 0, "xr", 1), ("grid", 0, "xr", 2),
+        ("nS", 0, "yr", 0), ("S", 0, "yr", 1), ("grid", 0, "yr", 2),
+        ("xr", 0, "r2", 1), ("yr", 0, "r2", 2), ("r2", 0, "fz", 1), ("D", 0, "fz", 2), ("C", 0, "fz", 3),
+        ("xr", 0, "wz", 1), ("yr", 0, "wz", 2), ("ripple", 0, "wz", 3),
+        ("fz", 0, "z", 0), ("wz", 0, "z", 1),
+        ("xr", 0, "pts", 0), ("yr", 0, "pts", 1), ("z", 0, "pts", 2),
+        ("grid", 0, "nu", 0), ("pts", 0, "skin", 0), ("nu", 0, "skin", 1),
+        ("f", 0, "ang", 0), ("ang", 0, "nx", 1), ("ang", 0, "ny", 1), ("nx", 0, "normal", 0), ("ny", 0, "normal", 1),
+        ("S", 0, "m", 1), ("s", 0, "m", 2), ("m", 0, "first", 1), ("s", 0, "first", 2), ("m", 0, "count", 1),
+        ("first", 0, "levels", 0), ("s", 0, "levels", 1), ("count", 0, "levels", 2),
+        ("f", 0, "shift", 1), ("p", 0, "shift", 2), ("s", 0, "shift", 3),
+        ("levels", 0, "offsets", 0), ("shift", 0, "offsets", 1),
+        ("skin", 0, "cuts", 0), ("normal", 0, "cuts", 1), ("offsets", 0, "cuts", 2),
+        ("cuts", 0, "div", 0), ("div", 0, "spline", 0),
+        ("depth", 0, "down", 0), ("down", 0, "dv", 2), ("spline", 0, "ribs", 0), ("dv", 0, "ribs", 1),
+        ("C", 0, "column", 1)])
+    return c
+
+
+def build_gaudi(scene) -> dict:
+    """Gaudí's double-twist column (two copies of one polygonal prism, twisted
+    opposite ways and intersected) repeated under catenary arches and vaults."""
+    c = {
+        "n": _slider("Sides", 4, 3, 12, 0),
+        "R": _slider("Radius", 2, 1, 4, 2),
+        "Hc": _slider("Column height", 14, 6, 24),
+        "twist": _slider("Twist", 90, 0, 90),
+        "secs": _slider("Sections", 16, 4, 24, 0),
+        "bays": _slider("Bays", 3, 1, 6, 0),
+        "W": _slider("Bay width", 10, 6, 20),
+        "a": _slider("Catenary", 4, 2, 15, 2),
+        "rib_r": _slider("Rib radius", 0.25, 0.1, 0.8, 2),
+        # the column
+        "u": lib.Range(), "ang": lib.Multiplication(), "nang": lib.Multiplication(), "zs": lib.Multiplication(),
+        "pa": lib.RegularPolygon(), "pb": lib.RegularPolygon(), "la": lib.Loft(), "lb": lib.Loft(),
+        "ca": lib.CapHoles(), "cb": lib.CapHoles(), "column": lib.Intersection(),
+        # the portico
+        "nb": lib.Addition(), "xs": lib.Series(), "ys": lib.Series(), "cols": lib.Move(),
+        "nW": lib.Multiplication(), "hW": lib.Multiplication(), "t": lib.Range(), "g": lib.Expression(),
+        "top": lib.Expression(), "az": lib.Expression(), "apts": lib.ConstructPoint(), "arch": lib.Interpolate(),
+        "xc": lib.Series(), "row0": lib.Move(), "row1": lib.Move(), "turned": lib.Rotate(), "cross": lib.Move(),
+        "vaults": lib.Loft(), "rib0": lib.Pipe(), "rib1": lib.Pipe(), "ribx": lib.Pipe(),
+    }
+    for key, nick, f in (("g", "Catenary", "y*cosh(x/y)"), ("top", "At the springing", "y*cosh(x/(2*y))"),
+                         ("az", "Arch height", "x + y - z")):
+        c[key].nickname = nick
+        _set(c[key], F=f)
+    for key, nick in (("u", "Along the shaft"), ("pa", "Turned one way"), ("pb", "Turned the other way"),
+                      ("column", "Double-twist column"), ("cols", "Columns"), ("arch", "Arch"),
+                      ("row0", "Front arches"), ("row1", "Back arches"), ("cross", "Cross arches"),
+                      ("vaults", "Vaults")):
+        c[key].nickname = nick
+    _set(c["u"], S=0.0, E=1.0)
+    _set(c["nang"], B=-1.0)
+    _set(c["nb"], B=1.0)
+    _set(c["xs"], S=0.0)
+    _set(c["ys"], S=0.0, C=2.0)
+    _set(c["nW"], B=-0.5)
+    _set(c["hW"], B=0.5)
+    _set(c["t"], N=24.0)
+    _set(c["turned"], A=90.0)
+    c["cols"].inputs[2].modifier = "graft"     # both rows of every column
+    c["row0"].inputs[1].modifier = "graft"     # one branch per bay, so the
+    c["row1"].inputs[1].modifier = "graft"     # front and back arch of a bay meet in Loft
+    for key in ("pa", "pb", "la", "lb", "ca", "cb", "column", "apts", "arch", "row0", "row1", "turned", "cross"):
+        c[key].preview = False
+    _place(scene, c, {
+        "n": (-980, -320), "R": (-980, -260), "Hc": (-980, -200), "twist": (-980, -140), "secs": (-980, -80),
+        "bays": (-980, 40), "W": (-980, 100), "a": (-980, 160), "rib_r": (-980, 260),
+        "u": (-700, -320), "ang": (-540, -360), "nang": (-380, -360), "zs": (-540, -260),
+        "pa": (-220, -380), "pb": (-220, -270), "la": (-60, -380), "lb": (-60, -270), "ca": (100, -380),
+        "cb": (100, -270), "column": (260, -330),
+        "nb": (-700, 20), "xs": (-540, 0), "ys": (-540, 100), "cols": (420, -280),
+        "nW": (-700, 200), "hW": (-700, 290), "t": (-540, 220), "g": (-380, 220), "top": (-380, 320),
+        "az": (-220, 260), "apts": (-60, 240), "arch": (100, 240), "xc": (-380, 440),
+        "row0": (260, 120), "row1": (260, 240), "turned": (260, 360), "cross": (420, 360),
+        "vaults": (420, 160), "rib0": (580, 80), "rib1": (580, 200), "ribx": (580, 360)})
+    _wire(scene, c, [
+        ("secs", 0, "u", 2), ("u", 0, "ang", 0), ("twist", 0, "ang", 1), ("ang", 0, "nang", 0),
+        ("u", 0, "zs", 0), ("Hc", 0, "zs", 1),
+        ("R", 0, "pa", 0), ("n", 0, "pa", 1), ("ang", 0, "pa", 2), ("zs", 0, "pa", 3),
+        ("R", 0, "pb", 0), ("n", 0, "pb", 1), ("nang", 0, "pb", 2), ("zs", 0, "pb", 3),
+        ("pa", 0, "la", 0), ("pb", 0, "lb", 0), ("la", 0, "ca", 0), ("lb", 0, "cb", 0),
+        ("ca", 0, "column", 0), ("cb", 0, "column", 1),
+        ("bays", 0, "nb", 0), ("W", 0, "xs", 1), ("nb", 0, "xs", 2), ("W", 0, "ys", 1),
+        ("column", 0, "cols", 0), ("xs", 0, "cols", 1), ("ys", 0, "cols", 2),
+        ("W", 0, "nW", 0), ("W", 0, "hW", 0), ("nW", 0, "t", 0), ("hW", 0, "t", 1),
+        ("t", 0, "g", 1), ("a", 0, "g", 2), ("W", 0, "top", 1), ("a", 0, "top", 2),
+        ("Hc", 0, "az", 1), ("top", 0, "az", 2), ("g", 0, "az", 3),
+        ("t", 0, "apts", 0), ("az", 0, "apts", 2), ("apts", 0, "arch", 0),
+        ("hW", 0, "xc", 0), ("W", 0, "xc", 1), ("bays", 0, "xc", 2),
+        ("arch", 0, "row0", 0), ("xc", 0, "row0", 1),
+        ("arch", 0, "row1", 0), ("xc", 0, "row1", 1), ("W", 0, "row1", 2),
+        ("arch", 0, "turned", 0), ("turned", 0, "cross", 0), ("xs", 0, "cross", 1), ("hW", 0, "cross", 2),
+        # front then back arch of each bay: one vault per branch
+        ("row0", 0, "vaults", 0), ("row1", 0, "vaults", 0),
+        ("row0", 0, "rib0", 0), ("rib_r", 0, "rib0", 1), ("row1", 0, "rib1", 0), ("rib_r", 0, "rib1", 1),
+        ("cross", 0, "ribx", 0), ("rib_r", 0, "ribx", 1)])
+    return c
+
+
+def build_pangolin(scene) -> dict:
+    """A pangolin-scale tower: overlapping cupped shingles on a staggered grid
+    round an ovoid core, lying flat far from an attractor and flaring open
+    near it."""
+    c = {
+        "F": _slider("Floors", 14, 6, 24, 0),
+        "S": _slider("Scales", 16, 8, 28, 0),
+        "R": _slider("Radius", 12, 6, 20),
+        "H": _slider("Height", 50, 20, 80),
+        "L": _slider("Scale length", 6, 2, 12),
+        "Wd": _slider("Scale width", 6, 2, 12),
+        "ax": _slider("Attractor X", 25, -40, 40),
+        "az": _slider("Attractor Z", 32, 0, 80),
+        "fmax": _slider("Most flare", 60, 0, 80),
+        "fmin": _slider("Least flare", 4, 0, 40),
+        # stations
+        "k": lib.Series(), "zk": lib.Expression(), "rk": lib.Expression(), "j": lib.Series(),
+        "ja": lib.Expression(), "stag": lib.Expression(), "theta": lib.Addition(),
+        "cx": lib.Expression(), "cy": lib.Expression(), "st": lib.ConstructPoint(),
+        "attr": lib.ConstructPoint(), "dist": lib.Distance(), "bounds": lib.Bounds(), "flare": lib.Remap(),
+        # one scale
+        "u": lib.Range(), "w": lib.Expression(), "z": lib.Expression(), "cup": lib.Multiplication(),
+        "hw": lib.Multiplication(), "nhw": lib.Multiplication(),
+        "pl": lib.ConstructPoint(), "pm": lib.ConstructPoint(), "pr": lib.ConstructPoint(),
+        "arcs": lib.Arc3Pt(), "scale": lib.Loft(),
+        # placing them
+        "tilted": lib.Rotate(), "turned": lib.Rotate(), "scales": lib.Move(),
+        "core_r": lib.Multiplication(), "rings": lib.Circle(), "core": lib.Loft(),
+    }
+    for key, nick, f in (("zk", "Floor height", "x*y/(z - 1)"),
+                         ("rk", "Floor radius", "z*(0.55 + 0.45*sin(pi*(x + 0.5)/y))"),
+                         ("ja", "Scale angle", "360*x/y"), ("stag", "Stagger", "180*x/y"),
+                         ("cx", "X", "x*cos(radians(y))"), ("cy", "Y", "x*sin(radians(y))"),
+                         ("w", "Width profile", "y*(0.45 + 2.4*x*(1 - x) - 0.33*x)"), ("z", "Down", "-x*y")):
+        c[key].nickname = nick
+        _set(c[key], F=f)
+    for key, nick in (("k", "Floor no."), ("j", "Scale no."), ("st", "Stations"), ("attr", "Attractor"),
+                      ("flare", "Flare"), ("u", "Along the scale"), ("arcs", "Sections"), ("scale", "Scale"),
+                      ("scales", "Scales"), ("core", "Core")):
+        c[key].nickname = nick
+    _set(c["u"], S=0.0, E=1.0, N=2.0)
+    _set(c["cup"], B=0.25)
+    _set(c["hw"], B=0.5)
+    _set(c["nhw"], B=-0.5)
+    _set(c["tilted"], X=(0.0, -1.0, 0.0))   # tips swing outward, away from the core
+    _set(c["core_r"], B=0.92)
+    c["theta"].inputs[0].modifier = "graft"   # one branch per floor, every scale angle in it
+    for key in ("cx", "cy"):
+        c[key].inputs[1].modifier = "graft"   # the floor's radius for its branch
+    c["st"].inputs[2].modifier = "graft"      # and its height
+    c["bounds"].inputs[0].modifier = "flatten"
+    c["scales"].inputs[3].modifier = "graft"
+    for key in ("st", "attr", "pl", "pm", "pr", "arcs", "scale", "tilted", "turned", "rings"):
+        c[key].preview = False
+    _place(scene, c, {
+        "F": (-980, -340), "S": (-980, -280), "R": (-980, -220), "H": (-980, -160), "L": (-980, -60),
+        "Wd": (-980, 0), "ax": (-980, 100), "az": (-980, 160), "fmax": (-980, 260), "fmin": (-980, 320),
+        "k": (-700, -360), "zk": (-540, -400), "rk": (-540, -300), "j": (-700, -200), "ja": (-540, -200),
+        "stag": (-540, -110), "theta": (-380, -160), "cx": (-220, -260), "cy": (-220, -160), "st": (-60, -220),
+        "attr": (-700, 120), "dist": (100, -120), "bounds": (260, -60), "flare": (420, -120),
+        "u": (-700, 260), "w": (-540, 240), "z": (-540, 340), "cup": (-380, 220), "hw": (-380, 300),
+        "nhw": (-380, 380), "pl": (-220, 260), "pm": (-220, 340), "pr": (-220, 420), "arcs": (-60, 320),
+        "scale": (100, 320), "tilted": (580, 120), "turned": (740, 40), "scales": (900, -60),
+        "core_r": (100, -380), "rings": (260, -380), "core": (420, -380)})
+    _wire(scene, c, [
+        ("F", 0, "k", 2), ("k", 0, "zk", 1), ("H", 0, "zk", 2), ("F", 0, "zk", 3),
+        ("k", 0, "rk", 1), ("F", 0, "rk", 2), ("R", 0, "rk", 3),
+        ("S", 0, "j", 2), ("j", 0, "ja", 1), ("S", 0, "ja", 2), ("k", 0, "stag", 1), ("S", 0, "stag", 2),
+        ("stag", 0, "theta", 0), ("ja", 0, "theta", 1),
+        ("rk", 0, "cx", 1), ("theta", 0, "cx", 2), ("rk", 0, "cy", 1), ("theta", 0, "cy", 2),
+        ("cx", 0, "st", 0), ("cy", 0, "st", 1), ("zk", 0, "st", 2),
+        ("ax", 0, "attr", 0), ("az", 0, "attr", 2), ("st", 0, "dist", 0), ("attr", 0, "dist", 1),
+        ("dist", 0, "bounds", 0), ("dist", 0, "flare", 0), ("bounds", 0, "flare", 1), ("bounds", 1, "flare", 2),
+        ("fmax", 0, "flare", 3), ("fmin", 0, "flare", 4),
+        ("u", 0, "w", 1), ("Wd", 0, "w", 2), ("u", 0, "z", 1), ("L", 0, "z", 2), ("w", 0, "cup", 0),
+        ("w", 0, "hw", 0), ("w", 0, "nhw", 0),
+        ("nhw", 0, "pl", 1), ("z", 0, "pl", 2), ("cup", 0, "pm", 0), ("z", 0, "pm", 2),
+        ("hw", 0, "pr", 1), ("z", 0, "pr", 2),
+        ("pl", 0, "arcs", 0), ("pm", 0, "arcs", 1), ("pr", 0, "arcs", 2), ("arcs", 0, "scale", 0),
+        ("scale", 0, "tilted", 0), ("flare", 0, "tilted", 1), ("tilted", 0, "turned", 0), ("theta", 0, "turned", 1),
+        ("turned", 0, "scales", 0), ("cx", 0, "scales", 1), ("cy", 0, "scales", 2), ("zk", 0, "scales", 3),
+        ("rk", 0, "core_r", 0), ("core_r", 0, "rings", 0), ("zk", 0, "rings", 1), ("rings", 0, "core", 0)])
+    return c
+
+
+def build_dini(scene) -> dict:
+    """Dini's surface: a pseudosphere twisted into a helix, from its formula."""
+    c = {
+        "turns": _slider("Turns", 2, 1, 4, 1),
+        "b": _slider("Twist", 0.2, 0, 0.6, 2),
+        "nu": _slider("Grid around", 80, 30, 120, 0),
+        "nv": _slider("Grid along", 16, 6, 30, 0),
+        "v0": _slider("Neck", 0.15, 0.05, 0.6, 2),
+        "size": _slider("Size", 6, 2, 15),
+        "end": lib.Expression(), "u": lib.Range(), "v": lib.Range(),
+        "x": lib.Expression(), "y": lib.Expression(), "z": lib.Expression(), "pts": lib.ConstructPoint(),
+        "n": lib.Addition(), "surface": lib.SurfaceFromPoints(), "scaled": lib.Scale(),
+    }
+    c["u"].nickname = "u"
+    c["v"].nickname = "v"
+    c["surface"].nickname = "Dini surface"
+    _set(c["end"], F="2*pi*x")
+    _set(c["v"], E=1.5)
+    _set(c["x"], F="cos(x)*sin(y)")
+    _set(c["y"], F="sin(x)*sin(y)")
+    _set(c["z"], F="cos(y) + log(tan(y/2)) + z*x")
+    _set(c["n"], B=1.0)
+    for key in ("x", "y", "z"):
+        c[key].inputs[2].modifier = "graft"   # y = v: one branch per row
+    c["surface"].inputs[0].modifier = "flatten"
+    for key in ("pts", "surface"):
+        c[key].preview = False
+    _place(scene, c, {
+        "turns": (-760, -220), "b": (-760, -160), "nu": (-760, -60), "nv": (-760, 0), "v0": (-760, 100),
+        "size": (-760, 200), "end": (-460, -260), "u": (-300, -260), "v": (-300, -120),
+        "x": (-120, -260), "y": (-120, -140), "z": (-120, -20), "pts": (60, -140), "n": (60, 20),
+        "surface": (220, -100), "scaled": (380, -80)})
+    _wire(scene, c, [
+        ("turns", 0, "end", 1), ("end", 0, "u", 1), ("nu", 0, "u", 2),
+        ("v0", 0, "v", 0), ("nv", 0, "v", 2),
+        ("u", 0, "x", 1), ("v", 0, "x", 2), ("u", 0, "y", 1), ("v", 0, "y", 2),
+        ("u", 0, "z", 1), ("v", 0, "z", 2), ("b", 0, "z", 3),
+        ("x", 0, "pts", 0), ("y", 0, "pts", 1), ("z", 0, "pts", 2),
+        ("nu", 0, "n", 0), ("pts", 0, "surface", 0), ("n", 0, "surface", 1),
+        ("surface", 0, "scaled", 0), ("size", 0, "scaled", 1)])
+    return c
+
+
 SHOWCASE = {"voronoi": build_voronoi, "tower": build_tower, "waffle": build_waffle, "wave": build_wave,
             "phyllotaxis": build_phyllotaxis, "hyperboloid": build_hyperboloid,
             "staircase": build_staircase, "city": build_city, "weave": build_weave,
@@ -1842,4 +2132,5 @@ SHOWCASE = {"voronoi": build_voronoi, "tower": build_tower, "waffle": build_waff
             "mashrabiya": build_mashrabiya, "columns": build_columns, "pendants": build_pendants,
             "enneper": build_enneper, "stadium": build_stadium, "whirlpool": build_whirlpool,
             "impeller": build_impeller, "morph": build_morph, "tensegrity": build_tensegrity,
-            "lotus": build_lotus, "auxetic": build_auxetic, "amphitheatre": build_amphitheatre}
+            "lotus": build_lotus, "auxetic": build_auxetic, "amphitheatre": build_amphitheatre,
+            "gridshell": build_gridshell, "gaudi": build_gaudi, "pangolin": build_pangolin, "dini": build_dini}

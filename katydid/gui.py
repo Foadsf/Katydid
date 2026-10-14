@@ -31,7 +31,9 @@ EXAMPLES = [  # (menu label, key); None draws a separator
     ("Mashrabiya facade", "mashrabiya"), ("Mushroom columns", "columns"), ("Pendant cloud", "pendants"),
     ("Enneper surface", "enneper"), ("Woven-bowl stadium roof", "stadium"), ("Whirlpool ziggurat", "whirlpool"),
     ("Helicoid–catenoid morph", "morph"), ("Tensegrity tower", "tensegrity"), ("Blooming lotus", "lotus"),
-    ("Auxetic lattice", "auxetic"), ("Stepped amphitheatre", "amphitheatre"), (None, None),
+    ("Auxetic lattice", "auxetic"), ("Stepped amphitheatre", "amphitheatre"),
+    ("Tri-axial grid-shell", "gridshell"), ("Gaudí double-twist columns", "gaudi"), ("Pangolin-scale tower", "pangolin"),
+    ("Dini's surface", "dini"), (None, None),
     ("Tolerance stack-up", "stackup"), ("GD&T calculators", "gdt"),
     ("Flange with tolerance zones", "flange"), ("Impeller with tip clearance", "impeller")]
 
