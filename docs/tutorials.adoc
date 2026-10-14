@@ -313,6 +313,46 @@ image::enneper-render.png[Enneper's minimal surface]
 A soap-film surface from its formula. +
 menu:Examples[Enneper surface]
 ****
+
+[.card]
+****
+image::stadium-render.png[A woven-bowl stadium roof]
+
+*xref:tutorial-stadium.adoc[30. A woven-bowl stadium roof]*
+
+The rose in three dimensions. +
+menu:Examples[Woven-bowl stadium roof]
+****
+
+[.card]
+****
+image::whirlpool-render.png[A whirlpool ziggurat]
+
+*xref:tutorial-whirlpool.adoc[31. A whirlpool ziggurat]*
+
+Pursuit polygons and logarithmic spirals. +
+menu:Examples[Whirlpool ziggurat]
+****
+
+[.card]
+****
+image::impeller-render.png[An impeller]
+
+*xref:tutorial-impeller.adoc[32. An impeller with its tip clearance]*
+
+Twisted blades and a live stack-up. +
+menu:Examples[Impeller with tip clearance]
+****
+
+[.card]
+****
+image::morph-render.png[A helicoid–catenoid morph]
+
+*xref:tutorial-morph.adoc[33. A helicoid–catenoid morph]*
+
+Bending one minimal surface into another. +
+menu:Examples[Helicoid–catenoid morph]
+****
 --
 
 == Conventions

@@ -1,0 +1,40 @@
+= Tutorial 30: A woven-bowl stadium roof
+:page-id: tutorial-stadium
+include::_attributes.adoc[]
+
+[.lead]
+Long-span stadium roofs often weave two families of arches between a ground ring and a raised inner opening, the _oculus_. Each arch here runs from a point on the ground, over the rim and down to the oculus, a few places further round; the other family turns the other way. It is the xref:tutorial-rose.adoc[guilloché rose] lifted into three dimensions.
+
+image::stadium-render.png[A white lattice bowl of interlacing arches around a central oculus, with a translucent roof]
+
+Reference: choose menu:Examples[Woven-bowl stadium roof] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+. Place nine sliders: _Radius: 50 (25 – 90)_, _Rim scale: 0.7 (0.4 – 0.95)_ and _Oculus scale: 0.35 (0.1 – 0.6)_ with Decimals `2`, _Rim height: 18 (5 – 40)_, _Oculus height: 14 (2 – 40)_; _Arches: 36 (12 – 72)_, _Rim turn: 4 (0 – 12)_ and _Oculus turn: 8 (0 – 24)_ with Decimals `0`; and _Member radius: 0.5 (0.1 – 1.5)_ with Decimals `2`.
+. Place two *Multiplication* (Maths) components, *Radius* × *Rim scale* and *Radius* × *Oculus scale*. Place three *Circle* (Curve) components: _Ground ring_ (*Radius*), _Rim_ (rim radius, *Rim height → Z*) and _Oculus_ (oculus radius, *Oculus height → Z*).
+. Place three *Divide Curve* (Curve) components with *Arches → N*.
+. Place two *Multiplication* components with *B* `-1` after the two turn sliders, and four *Shift List* (Sets) components: the rim points shifted by ± *Rim turn* and the oculus points by ± *Oculus turn*.
+. Place two *Arc 3Pt* (Curve) components: ground points *→ A*, rim points shifted + *→ B*, oculus points shifted + *→ C*; and the same with the − lists.
+. Place two *Pipe* (Surface) components for the arches with *Member radius → R*. Add a *Multiplication* (*Member radius* × `2`) and three more *Pipe* components for the three rings.
+. Place a *Loft* (Surface), _Roof_, and wire *Rim* and then *Oculus* into its *C* (hold kbd:[Shift] for the second): a translucent roof between them.
+. Turn menu:Preview[] off on the Circles, Divide Curves, Shift Lists and Arcs.
+
+.The finished definition
+image::stadium-canvas.png[The stadium roof definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::stadium-preview.png[The red preview of the stadium roof]
+
+== What is happening
+
+Each arch is the circle through three points: on the ground, on the rim *Rim turn* places round, and on the oculus *Oculus turn* places round. Because the turns are counted in places on rings divided equally, every arch of a family is the same arch rotated, and the two families cross symmetrically. The geometry tests check that every arch starts on the ground ring and ends on the oculus at its height.
+
+The roof updates in under a second, most of it drawing 75 pipes.
+
+== Things to try
+
+* Set both turns to 0: the arches run straight up and over, like the ribs of an umbrella.
+* Raise *Oculus height* above *Rim height* (30) for a domed crown.
+* Set *Arches* to 72 for a fine weave, and lower *Member radius*.
+* Set *Oculus turn* to twice *Rim turn* and then to the same value, and compare the lattice.

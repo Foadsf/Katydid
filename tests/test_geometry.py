@@ -550,6 +550,56 @@ class Demos(unittest.TestCase):
             self.assertLess(surface.distToShape(Part.Vertex(p))[0], 1e-6, (u, v))
         self.assertGreater(len(c["contours"].outputs[0].data), int(c["levels"].value))
 
+    def test_stadium_arches_span_ground_to_oculus(self):
+        from katydid import showcase
+        c = self.build(showcase.build_stadium)
+        R, n = c["R"].value, int(c["n"].value)
+        for fam in ("ap", "an"):
+            arcs = list(c[fam].outputs[0].data)
+            self.assertEqual(len(arcs), n)
+            for a in arcs[::7]:
+                s, e = a.Vertexes[0].Point, a.Vertexes[-1].Point
+                self.assertAlmostEqual(math.hypot(s.x, s.y), R, places=6)
+                self.assertAlmostEqual(math.hypot(e.x, e.y), R * c["ocu_s"].value, places=6)
+                self.assertAlmostEqual(e.z, c["ocu_h"].value, places=6)
+
+    def test_whirlpool_tiers_follow_the_pursuit_rule(self):
+        from katydid import showcase
+        c = self.build(showcase.build_whirlpool)
+        t = c["t"].value
+        polys = list(c["poly"].outputs[0].data)
+        self.assertEqual(len(polys), int(c["tiers"].value))
+        for k in (0, 5, 17):   # every corner of tier k+1 lies t of the way along an edge of tier k
+            a = [V(v.Point.x, v.Point.y, 0) for v in polys[k].Vertexes]
+            b = [V(v.Point.x, v.Point.y, 0) for v in polys[k + 1].Vertexes]
+            for i in range(len(a)):
+                p = a[i] + (a[(i + 1) % len(a)] - a[i]) * t
+                self.assertLess(min((p - q).Length for q in b), 1e-6, (k, i))
+
+    def test_impeller_and_its_tip_clearance(self):
+        from katydid import showcase
+        c = self.build(showcase.build_impeller)
+        self.assertEqual(len(list(c["rotor"].outputs[0].data)), int(c["blades"].value))
+        self.assertTrue(list(c["shroud"].outputs[0].data)[0].isValid())
+        nominal = list(c["stack"].outputs[0].data)[0]
+        worst = list(c["stack"].outputs[1].data)[0]
+        self.assertAlmostEqual(nominal, c["gap"].value, places=9)    # bore - tip - runout(0)
+        self.assertAlmostEqual(worst, 0.1 + 0.05 + 0.05, places=9)   # sum of the tolerances
+        blade = list(c["blade"].outputs[0].data)[0]
+        tip = max(math.hypot(v.Point.x, v.Point.y) for v in blade.Vertexes)
+        self.assertAlmostEqual(tip, c["tip_r"].value, places=6)
+
+    def test_helicoid_catenoid_morph(self):
+        from katydid import showcase
+        c = self.build(showcase.build_morph)
+        surf = list(c["surface"].outputs[0].data)[0]
+        a = math.radians(c["alpha"].value)
+        for u, v in ((0.0, 0.0), (1.0, 0.5), (-2.0, -1.0)):
+            p = V(math.cos(a) * math.sinh(v) * math.sin(u) + math.sin(a) * math.cosh(v) * math.cos(u),
+                  -math.cos(a) * math.sinh(v) * math.cos(u) + math.sin(a) * math.cosh(v) * math.sin(u),
+                  u * math.cos(a) + v * math.sin(a))
+            self.assertLess(surf.distToShape(Part.Vertex(p))[0], 1e-3, (u, v))
+
     def test_surface_from_points_passes_through_its_grid(self):
         pts = [V(x, y, (x * y) / 50.0) for y in range(0, 40, 10) for x in range(0, 50, 10)]
         srf = lib.SurfaceFromPoints().solve_instance(pts, 5)

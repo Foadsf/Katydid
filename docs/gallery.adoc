@@ -4,7 +4,7 @@ include::_attributes.adoc[]
 :toc!:
 
 [.lead]
-Twenty-four parametric designs, each built only from the components that ship with Katydid. Load any of them with btn:[Examples] on the canvas toolbar, drag the sliders, and bake the result into your document. Each one has a step-by-step tutorial.
+Twenty-eight parametric designs, each built only from the components that ship with Katydid. Load any of them with btn:[Examples] on the canvas toolbar, drag the sliders, and bake the result into your document. Each one has a step-by-step tutorial.
 
 [.cards.gallery]
 --
@@ -247,13 +247,53 @@ image::enneper-render.png[A teal minimal surface with gold contours]
 A minimal surface from its formula, sampled, fitted and contoured. +
 menu:Examples[Enneper surface]
 ****
+
+[.card]
+****
+image::stadium-render.png[A woven lattice bowl of arches around an oculus]
+
+*xref:tutorial-stadium.adoc[Woven-bowl stadium roof]*
+
+Two families of three-point arches from the ground over the rim to the oculus. +
+menu:Examples[Woven-bowl stadium roof]
+****
+
+[.card]
+****
+image::whirlpool-render.png[A twisting stepped ziggurat with spiral ribs]
+
+*xref:tutorial-whirlpool.adoc[Whirlpool ziggurat]*
+
+Pursuit polygons as slabs; the corners trace logarithmic spirals. +
+menu:Examples[Whirlpool ziggurat]
+****
+
+[.card]
+****
+image::impeller-render.png[A twisted-blade impeller in a cut-away shroud]
+
+*xref:tutorial-impeller.adoc[Impeller with tip clearance]*
+
+Twisted blades round a hub, with a live tip-clearance stack-up. +
+menu:Examples[Impeller with tip clearance]
+****
+
+[.card]
+****
+image::morph-render.png[A surface between a helicoid and a catenoid]
+
+*xref:tutorial-morph.adoc[Helicoid–catenoid morph]*
+
+One slider bends a spiral ramp into a soap-film ring. +
+menu:Examples[Helicoid–catenoid morph]
+****
 --
 
 == The Examples menu
 
 image::ui-examples-menu.png[The Examples menu on the canvas toolbar]
 
-btn:[Examples] lists every ready-made definition: the twenty-four above, the tutorial definitions and the tolerance examples. Choosing one replaces what is on the canvas, so save first if you want to keep your own work. Each loads in a second or two; the preview then updates as you drag.
+btn:[Examples] lists every ready-made definition: the twenty-eight above, the tutorial definitions and the tolerance examples. Choosing one replaces what is on the canvas, so save first if you want to keep your own work. Each loads in a second or two; the preview then updates as you drag.
 
 These pictures come from the same definitions. The red preview is what you see while you work; the colours come from baking the final components and setting their colour in FreeCAD, which is how you would prepare a render of your own.
 
@@ -286,6 +326,10 @@ These pictures come from the same definitions. The red preview is what you see w
 |xref:tutorial-columns.adoc[Mushroom columns] |Several wires into one input, a scalloped rim, an array of arrays with *Linear Array*
 |xref:tutorial-pendants.adoc[Pendant cloud] |A damped ripple formula, cables and orbs that move together
 |xref:tutorial-enneper.adoc[Enneper surface] |A parametric surface on a (u, v) grid, *Surface From Points*, *Contour*
+|xref:tutorial-stadium.adoc[Woven-bowl stadium roof] |*Arc 3Pt* through three turned rings, two wires into one *Loft*
+|xref:tutorial-whirlpool.adoc[Whirlpool ziggurat] |An exact rotate-and-scale per tier, slabs by *Extrude*, corner spirals with Graft
+|xref:tutorial-impeller.adoc[Impeller with tip clearance] |A lofted blade arrayed by grafted angles, a seam-safe Boolean cut, *Stack-up* and *Monte Carlo*
+|xref:tutorial-morph.adoc[Helicoid–catenoid morph] |One slider through a family of minimal surfaces
 |===
 
 If you are new to Katydid, do the xref:quick-start.adoc[quick start] and the xref:tutorial-attractor.adoc[attractor grid] first: these examples use the same moves at a larger scale.

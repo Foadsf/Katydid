@@ -1,0 +1,40 @@
+= Tutorial 33: A helicoid–catenoid morph
+:page-id: tutorial-morph
+include::_attributes.adoc[]
+
+[.lead]
+The helicoid (a spiral ramp) and the catenoid (the waist a soap film makes between two rings) are the same surface bent two ways: one family of minimal surfaces joins them, and every member has the same lengths and areas. One slider, _Morph_, moves through the family.
+
+image::morph-render.png[A pink surface halfway between a spiral ramp and a waisted ring]
+
+Reference: choose menu:Examples[Helicoid–catenoid morph] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+. Place four sliders: _Morph: 45 (0 – 90)_, _Grid: 40 (10 – 60)_ with Decimals `0`, _Height range: 1.5 (0.5 – 2.2)_ with Decimals `2`, and _Size: 12 (4 – 30)_.
+. Place a *Range* (Maths), _u_, with *S* `-3.14159265`, *E* `3.14159265` and *Grid → N*. Place a *Multiplication* (*Height range* × `-1`) and a *Range*, _v_, from it to *Height range* with *Grid → N*.
+. Place three *Expression* (Maths) components with *u → x*, *v → y* (menu:Graft[] on *y*) and *Morph → z*:
+** `cos(radians(z))*sinh(y)*sin(x) + sin(radians(z))*cosh(y)*cos(x)`
+** `-cos(radians(z))*sinh(y)*cos(x) + sin(radians(z))*cosh(y)*sin(x)`
+** `x*cos(radians(z)) + y*sin(radians(z))`
+. Wire them into a *Construct Point* (Vector), then a *Surface From Points* (Surface) with menu:Flatten[] on *P* and *Grid* + 1 (an *Addition*) as *U*.
+. Place a *Scale* (Transform) with the surface *→ G* and *Size → F*.
+. Turn menu:Preview[] off on Construct Point and Surface From Points.
+
+.The finished definition
+image::morph-canvas.png[The morph definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::morph-preview.png[The red preview of the morphing surface]
+
+== What is happening
+
+At *Morph* 0 the formulas reduce to (sinh _v_ sin _u_, −sinh _v_ cos _u_, _u_): a helicoid, a straight line turning as it rises. At 90 they become (cosh _v_ cos _u_, cosh _v_ sin _u_, _v_): a catenoid, circles of radius cosh _v_ stacked up. In between, the surface twists from one to the other while every curve on it keeps its length. You can bend a catenoid into a helicoid without stretching it, the way you can roll paper into a tube. The geometry tests check that the surface follows the formula to within a thousandth.
+
+Each update takes about a second.
+
+== Things to try
+
+* Drag *Morph* slowly from 0 to 90.
+* Raise *Height range* to 2.2 for a taller ramp and a flared catenoid.
+* Lower *Grid* to 15 to see how few points the smooth surface needs.

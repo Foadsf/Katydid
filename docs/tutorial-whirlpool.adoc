@@ -1,0 +1,52 @@
+= Tutorial 31: A whirlpool ziggurat
+:page-id: tutorial-whirlpool
+include::_attributes.adoc[]
+
+[.lead]
+Draw a polygon, put a new polygon's corners a fraction _t_ of the way along each edge, and repeat: the polygons spiral inward and the corners trace logarithmic spirals (the "mice problem", where mice chase each other round a square). Stack the polygons as slabs and you get a twisting ziggurat, with copper ribs along the spirals.
+
+image::whirlpool-render.png[A stepped hexagonal ziggurat whose tiers twist as they shrink, with copper spiral ribs at the corners]
+
+Reference: choose menu:Examples[Whirlpool ziggurat] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== Turn and shrink per tier
+
+. Place five sliders: _Sides: 6 (3 – 12)_ and _Tiers: 24 (4 – 60)_ with Decimals `0`, _Radius: 30 (10 – 60)_, _Pursuit: 0.12 (0.02 – 0.5)_ with Decimals `3`, and _Step: 0.8 (0.2 – 3)_ with Decimals `2`.
+. Place an *Expression* (Maths), _Turn per tier_, `degrees(atan2(x*sin(2*pi/y), 1 - x + x*cos(2*pi/y)))`, and another, _Shrink per tier_, `sqrt((1 - x)**2 + x**2 + 2*x*(1 - x)*cos(2*pi/y))`. Wire *Pursuit → x* and *Sides → y* on both.
+
+=== Tiers
+
+[start=3]
+. Place a *Series* (Sets), _Tier no._, with *Tiers → C*.
+. Place an *Expression*, _Tier radius_, `z*y**x`, with *Tier no. → x*, *Shrink → y* and *Radius → z*; and two *Multiplication* (Maths) components: *Tier no.* × *Turn* (the angle) and *Tier no.* × *Step* (the height).
+. Place a *Regular Polygon* (Curve) with the radius, *Sides*, the angle *→ A* and the height *→ Z*.
+. Place a *Planar Surface* (Surface), a *Vector XYZ* (Vector) with *Step → Z*, and an *Extrude* (Surface), _Tiers_: one slab per polygon.
+
+=== Spiral ribs
+
+[start=7]
+. Place a *Series*, _Corner no._, with *Sides → C*, and an *Expression*, `360*x/y`, with *Corner no. → x* and *Sides → y*: each corner's angle on the polygon.
+. Place an *Addition* (Maths) and wire the tier angles *→ A* and the corner angles *→ B* with menu:Graft[] on *B*: one branch per corner, the tiers in order.
+. Place two *Expression* components, `x*cos(radians(y))` and `x*sin(radians(y))`, with *Tier radius → x* and the Addition *→ y*, and an *Addition* of the tier heights and *Step* (the top of each slab). Wire them into a *Construct Point* (Vector).
+. Place an *Interpolate* (Curve) and a *Pipe* (Surface) with *R* `0.35`: one spiral rib per corner.
+. Turn menu:Preview[] off on the Polygon, Planar Surface, Construct Point and Interpolate.
+
+.The finished definition
+image::whirlpool-canvas.png[The whirlpool ziggurat definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::whirlpool-preview.png[The red preview of the whirlpool ziggurat]
+
+== What is happening
+
+For a regular polygon, putting the new corners a fraction _t_ along each edge is the same as rotating and scaling the old polygon, by the same amounts every time. The two Expressions compute them exactly from _t_ and the number of sides; tier _k_ is then the base polygon turned _k_ times and shrunk by the _k_-th power. At _t_ = 0.5 (midpoints) the turn is half the corner angle and the shrink is cos(π/_n_): 30° and 0.866 for a hexagon. Each corner moves in a fixed direction relative to the centre while shrinking geometrically, which is what makes the ribs logarithmic spirals.
+
+The geometry tests check, for several tiers, that every corner lies exactly _t_ of the way along an edge of the tier below. The ziggurat updates in under a second, most of it drawing the slabs and ribs.
+
+== Things to try
+
+* Set *Sides* to 4 for the classic four mice chasing round a square.
+* Set *Pursuit* to 0.5: midpoint polygons, a bold half-corner twist per tier.
+* Lower *Pursuit* to 0.02 and raise *Tiers* to 60 with *Step* 0.3 for a slow, smooth whirl.

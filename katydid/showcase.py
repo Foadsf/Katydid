@@ -1299,6 +1299,235 @@ def build_enneper(scene) -> dict:
     return c
 
 
+def build_stadium(scene) -> dict:
+    """A woven-bowl stadium roof: arcs from a ground ring over a raised rim to
+    an inner oculus, each turned a few places one way and one family the
+    other, under a translucent roof between rim and oculus."""
+    c = {
+        "R": _slider("Radius", 50, 25, 90),
+        "rim_s": _slider("Rim scale", 0.7, 0.4, 0.95, 2),
+        "rim_h": _slider("Rim height", 18, 5, 40),
+        "ocu_s": _slider("Oculus scale", 0.35, 0.1, 0.6, 2),
+        "ocu_h": _slider("Oculus height", 14, 2, 40),
+        "n": _slider("Arches", 36, 12, 72, 0),
+        "a": _slider("Rim turn", 4, 0, 12, 0),
+        "b": _slider("Oculus turn", 8, 0, 24, 0),
+        "member": _slider("Member radius", 0.5, 0.1, 1.5, 2),
+        "r1": lib.Multiplication(), "r2": lib.Multiplication(),
+        "base": lib.Circle(), "rim": lib.Circle(), "ocu": lib.Circle(),
+        "d0": lib.DivideCurve(), "d1": lib.DivideCurve(), "d2": lib.DivideCurve(),
+        "na": lib.Multiplication(), "nb": lib.Multiplication(),
+        "s1p": lib.ShiftList(), "s2p": lib.ShiftList(), "s1n": lib.ShiftList(), "s2n": lib.ShiftList(),
+        "ap": lib.Arc3Pt(), "an": lib.Arc3Pt(), "pp": lib.Pipe(), "pn": lib.Pipe(),
+        "ring_r": lib.Multiplication(), "rim_p": lib.Pipe(), "ocu_p": lib.Pipe(), "base_p": lib.Pipe(),
+        "roof": lib.Loft(),
+    }
+    for key, nick in (("base", "Ground ring"), ("rim", "Rim"), ("ocu", "Oculus"), ("ap", "Arches +"),
+                      ("an", "Arches −"), ("roof", "Roof")):
+        c[key].nickname = nick
+    _set(c["na"], B=-1.0)
+    _set(c["nb"], B=-1.0)
+    _set(c["ring_r"], B=2.0)
+    for key in ("base", "rim", "ocu", "d0", "d1", "d2", "s1p", "s2p", "s1n", "s2n", "ap", "an"):
+        c[key].preview = False
+    _place(scene, c, {
+        "R": (-860, -300), "rim_s": (-860, -240), "rim_h": (-860, -180), "ocu_s": (-860, -80),
+        "ocu_h": (-860, -20), "n": (-860, 80), "a": (-860, 180), "b": (-860, 240), "member": (-860, 340),
+        "r1": (-560, -260), "r2": (-560, -120), "base": (-400, -340), "rim": (-400, -230), "ocu": (-400, -100),
+        "d0": (-240, -340), "d1": (-240, -230), "d2": (-240, -100), "na": (-560, 160), "nb": (-560, 260),
+        "s1p": (-60, -260), "s2p": (-60, -160), "s1n": (-60, -40), "s2n": (-60, 60),
+        "ap": (120, -230), "an": (120, -40), "pp": (300, -230), "pn": (300, -40), "ring_r": (120, 180),
+        "rim_p": (300, 120), "ocu_p": (300, 220), "base_p": (300, 320), "roof": (120, 320)})
+    _wire(scene, c, [
+        ("R", 0, "r1", 0), ("rim_s", 0, "r1", 1), ("R", 0, "r2", 0), ("ocu_s", 0, "r2", 1),
+        ("R", 0, "base", 0), ("r1", 0, "rim", 0), ("rim_h", 0, "rim", 1), ("r2", 0, "ocu", 0), ("ocu_h", 0, "ocu", 1),
+        ("base", 0, "d0", 0), ("rim", 0, "d1", 0), ("ocu", 0, "d2", 0),
+        ("n", 0, "d0", 1), ("n", 0, "d1", 1), ("n", 0, "d2", 1),
+        ("a", 0, "na", 0), ("b", 0, "nb", 0),
+        ("d1", 0, "s1p", 0), ("a", 0, "s1p", 1), ("d2", 0, "s2p", 0), ("b", 0, "s2p", 1),
+        ("d1", 0, "s1n", 0), ("na", 0, "s1n", 1), ("d2", 0, "s2n", 0), ("nb", 0, "s2n", 1),
+        ("d0", 0, "ap", 0), ("s1p", 0, "ap", 1), ("s2p", 0, "ap", 2),
+        ("d0", 0, "an", 0), ("s1n", 0, "an", 1), ("s2n", 0, "an", 2),
+        ("ap", 0, "pp", 0), ("member", 0, "pp", 1), ("an", 0, "pn", 0), ("member", 0, "pn", 1),
+        ("member", 0, "ring_r", 0), ("rim", 0, "rim_p", 0), ("ring_r", 0, "rim_p", 1),
+        ("ocu", 0, "ocu_p", 0), ("ring_r", 0, "ocu_p", 1), ("base", 0, "base_p", 0), ("ring_r", 0, "base_p", 1),
+        ("rim", 0, "roof", 0), ("ocu", 0, "roof", 0)])
+    return c
+
+
+def build_whirlpool(scene) -> dict:
+    """A whirlpool ziggurat: each tier is the polygon whose corners lie a
+    fraction t along the edges of the one below (the 'mice problem'), so it
+    turns and shrinks by a fixed amount, stacked as slabs with spiral ribs
+    through the corners."""
+    c = {
+        "n": _slider("Sides", 6, 3, 12, 0),
+        "tiers": _slider("Tiers", 24, 4, 60, 0),
+        "R": _slider("Radius", 30, 10, 60),
+        "t": _slider("Pursuit", 0.12, 0.02, 0.5, 3),
+        "step": _slider("Step", 0.8, 0.2, 3, 2),
+        "alpha": lib.Expression(), "s": lib.Expression(), "k": lib.Series(),
+        "Rk": lib.Expression(), "Ak": lib.Multiplication(), "Zk": lib.Multiplication(),
+        "poly": lib.RegularPolygon(), "face": lib.PlanarSurface(), "up": lib.VectorXYZ(), "tiers_s": lib.Extrude(),
+        "j": lib.Series(), "jang": lib.Expression(), "ang": lib.Addition(), "top": lib.Addition(),
+        "cx": lib.Expression(), "cy": lib.Expression(), "corners": lib.ConstructPoint(),
+        "spiral": lib.Interpolate(), "ribs": lib.Pipe(),
+    }
+    for key, nick, f in (("alpha", "Turn per tier", "degrees(atan2(x*sin(2*pi/y), 1 - x + x*cos(2*pi/y)))"),
+                         ("s", "Shrink per tier", "sqrt((1 - x)**2 + x**2 + 2*x*(1 - x)*cos(2*pi/y))"),
+                         ("Rk", "Tier radius", "z*y**x"), ("jang", "Corner angle", "360*x/y"),
+                         ("cx", "X", "x*cos(radians(y))"), ("cy", "Y", "x*sin(radians(y))")):
+        c[key].nickname = nick
+        _set(c[key], F=f)
+    c["k"].nickname = "Tier no."
+    c["j"].nickname = "Corner no."
+    c["tiers_s"].nickname = "Tiers"
+    _set(c["ribs"], R=0.35)
+    c["ang"].inputs[1].modifier = "graft"   # one branch per corner, the tiers in order along it
+    for key in ("poly", "face", "corners", "spiral"):
+        c[key].preview = False
+    _place(scene, c, {
+        "n": (-820, -220), "tiers": (-820, -160), "R": (-820, -60), "t": (-820, 0), "step": (-820, 100),
+        "alpha": (-520, -260), "s": (-520, -140), "k": (-520, -20), "Rk": (-340, -120), "Ak": (-340, -20),
+        "Zk": (-340, 80), "poly": (-160, -120), "face": (20, -160), "up": (20, -40), "tiers_s": (200, -120),
+        "j": (-520, 220), "jang": (-340, 220), "ang": (-160, 120), "top": (-160, 240), "cx": (20, 100),
+        "cy": (20, 200), "corners": (200, 160), "spiral": (360, 160), "ribs": (520, 160)})
+    _wire(scene, c, [
+        ("t", 0, "alpha", 1), ("n", 0, "alpha", 2), ("t", 0, "s", 1), ("n", 0, "s", 2),
+        ("tiers", 0, "k", 2),
+        ("k", 0, "Rk", 1), ("s", 0, "Rk", 2), ("R", 0, "Rk", 3),
+        ("k", 0, "Ak", 0), ("alpha", 0, "Ak", 1), ("k", 0, "Zk", 0), ("step", 0, "Zk", 1),
+        ("Rk", 0, "poly", 0), ("n", 0, "poly", 1), ("Ak", 0, "poly", 2), ("Zk", 0, "poly", 3),
+        ("poly", 0, "face", 0), ("step", 0, "up", 2), ("face", 0, "tiers_s", 0), ("up", 0, "tiers_s", 1),
+        ("n", 0, "j", 2), ("j", 0, "jang", 1), ("n", 0, "jang", 2),
+        ("Ak", 0, "ang", 0), ("jang", 0, "ang", 1), ("Zk", 0, "top", 0), ("step", 0, "top", 1),
+        ("Rk", 0, "cx", 1), ("ang", 0, "cx", 2), ("Rk", 0, "cy", 1), ("ang", 0, "cy", 2),
+        ("cx", 0, "corners", 0), ("cy", 0, "corners", 1), ("top", 0, "corners", 2),
+        ("corners", 0, "spiral", 0), ("spiral", 0, "ribs", 0)])
+    return c
+
+
+def build_impeller(scene) -> dict:
+    """A turbine impeller in a cut-away shroud: twisted blades lofted through
+    three turned radial lines and arrayed round a hub, with the tip clearance
+    as a live tolerance stack-up (shroud bore, blade tip, hub runout)."""
+    c = {
+        "blades": _slider("Blades", 12, 3, 24, 0),
+        "hub_r": _slider("Hub radius", 8, 4, 15),
+        "tip_r": _slider("Tip radius", 30, 15, 50),
+        "h": _slider("Height", 16, 6, 30),
+        "twist": _slider("Twist", 40, 0, 90),
+        "gap": _slider("Nominal clearance", 0.6, 0.1, 2, 2),
+        # one blade
+        "root": lib.ConstructPoint(), "tip": lib.ConstructPoint(), "line": lib.Line(),
+        "lz": lib.Range(), "la": lib.Range(), "lifted": lib.Move(), "turned": lib.Rotate(), "blade": lib.Loft(),
+        "step": lib.Expression(), "angles": lib.Series(), "rotor": lib.Rotate(),
+        # hub and shroud
+        "hub": lib.Cylinder(), "nose": lib.Sphere(), "nose_at": lib.Move(),
+        "bore": lib.Addition(), "outer_r": lib.Addition(), "outer": lib.Cylinder(), "inner": lib.Cylinder(),
+        "inner_dn": lib.Move(), "ring": lib.Difference(), "cut": lib.Box(), "cut_at": lib.Move(), "cut_turn": lib.Rotate(),
+        "shroud": lib.Difference(),
+        # tip clearance stack-up
+        "d_bore": lib.Dimension(), "d_tip": lib.Dimension(), "d_run": lib.Dimension(), "stack": lib.StackUp(),
+        "mc": lib.MonteCarlo(), "report": lib.Panel(),
+    }
+    for key, nick in (("line", "Blade line"), ("lz", "Section heights"), ("la", "Section turns"), ("blade", "Blade"),
+                      ("rotor", "Rotor"), ("hub", "Hub"), ("ring", "Shroud ring"), ("shroud", "Shroud"),
+                      ("stack", "Tip clearance"), ("mc", "Monte Carlo")):
+        c[key].nickname = nick
+    _set(c["lz"], S=0.0, N=2.0)
+    _set(c["la"], S=0.0, N=2.0)
+    _set(c["step"], F="360/x")
+    _set(c["angles"], S=0.0)
+    _set(c["outer_r"], B=2.0)
+    _set(c["inner"], L=40.0)
+    _set(c["inner_dn"], Z=-10.0)
+    _set(c["cut"], X=80.0, Y=80.0, Z=60.0)
+    _set(c["cut_at"], X=40.0, Y=40.0, Z=-10.0)
+    _set(c["cut_turn"], A=30.0)   # off the cylinders' seams on +X: a cut through a seam is fragile
+    _set(c["d_bore"], U=0.1, L=-0.1, D=1.0, Nm="Shroud bore radius")
+    _set(c["d_tip"], U=0.05, L=-0.05, D=-1.0, Nm="Blade tip radius")
+    _set(c["d_run"], N=0.0, U=0.05, L=-0.05, D=-1.0, Nm="Hub runout")
+    _set(c["mc"], LSL=0.3)
+    c["rotor"].inputs[1].modifier = "graft"   # every blade turned by every angle: the array
+    c["report"].size = (300, 150)
+    for key in ("root", "tip", "line", "lifted", "turned", "blade", "outer", "inner", "inner_dn", "ring", "cut",
+                "cut_at", "cut_turn", "nose"):
+        c[key].preview = False
+    _place(scene, c, {
+        "blades": (-900, -320), "hub_r": (-900, -260), "tip_r": (-900, -200), "h": (-900, -140),
+        "twist": (-900, -80), "gap": (-900, 40),
+        "root": (-600, -360), "tip": (-600, -260), "line": (-440, -320), "lz": (-600, -150), "la": (-600, -40),
+        "lifted": (-280, -300), "turned": (-120, -280), "blade": (40, -280), "step": (-440, 60),
+        "angles": (-280, 60), "rotor": (200, -220),
+        "hub": (-440, 160), "nose": (-600, 260), "nose_at": (-440, 260),
+        "bore": (-600, 380), "outer_r": (-440, 380), "outer": (-280, 340), "inner": (-280, 440),
+        "inner_dn": (-120, 440), "ring": (40, 380), "cut": (-120, 560), "cut_at": (40, 560),
+        "cut_turn": (200, 560), "shroud": (360, 420),
+        "d_bore": (200, 40), "d_tip": (200, 160), "d_run": (200, 280), "stack": (420, 120), "mc": (420, 280),
+        "report": (620, 80)})
+    wires = [
+        ("hub_r", 0, "root", 0), ("tip_r", 0, "tip", 0), ("root", 0, "line", 0), ("tip", 0, "line", 1),
+        ("h", 0, "lz", 1), ("twist", 0, "la", 1),
+        ("line", 0, "lifted", 0), ("lz", 0, "lifted", 3), ("lifted", 0, "turned", 0), ("la", 0, "turned", 1),
+        ("turned", 0, "blade", 0),
+        ("blades", 0, "step", 1), ("step", 0, "angles", 1), ("blades", 0, "angles", 2),
+        ("blade", 0, "rotor", 0), ("angles", 0, "rotor", 1),
+        ("hub_r", 0, "hub", 0), ("h", 0, "hub", 1), ("hub_r", 0, "nose", 0), ("nose", 0, "nose_at", 0),
+        ("h", 0, "nose_at", 3),
+        ("tip_r", 0, "bore", 0), ("gap", 0, "bore", 1), ("bore", 0, "outer_r", 0),
+        ("outer_r", 0, "outer", 0), ("h", 0, "outer", 1), ("bore", 0, "inner", 0), ("inner", 0, "inner_dn", 0),
+        ("outer", 0, "ring", 0), ("inner_dn", 0, "ring", 1),
+        ("cut", 0, "cut_at", 0), ("cut_at", 0, "cut_turn", 0), ("ring", 0, "shroud", 0), ("cut_turn", 0, "shroud", 1),
+        ("bore", 0, "d_bore", 0), ("tip_r", 0, "d_tip", 0),
+        # three dimensions into one input: the chain, in order
+        ("d_bore", 0, "stack", 0), ("d_tip", 0, "stack", 0), ("d_run", 0, "stack", 0),
+        ("d_bore", 0, "mc", 0), ("d_tip", 0, "mc", 0), ("d_run", 0, "mc", 0),
+        ("stack", 8, "report", 0)]
+    _wire(scene, c, wires)
+    return c
+
+
+def build_morph(scene) -> dict:
+    """The helicoid-catenoid morph: one family of minimal surfaces, bent
+    isometrically from a helicoid (0°) into a catenoid (90°) by one slider."""
+    c = {
+        "alpha": _slider("Morph", 45, 0, 90),
+        "grid": _slider("Grid", 40, 10, 60, 0),
+        "vr": _slider("Height range", 1.5, 0.5, 2.2, 2),
+        "size": _slider("Size", 12, 4, 30),
+        "u": lib.Range(), "nv": lib.Multiplication(), "v": lib.Range(),
+        "x": lib.Expression(), "y": lib.Expression(), "z": lib.Expression(), "pts": lib.ConstructPoint(),
+        "n": lib.Addition(), "surface": lib.SurfaceFromPoints(), "scaled": lib.Scale(),
+    }
+    c["u"].nickname = "u"
+    c["v"].nickname = "v"
+    _set(c["u"], S=-3.14159265, E=3.14159265)
+    _set(c["nv"], B=-1.0)
+    _set(c["x"], F="cos(radians(z))*sinh(y)*sin(x) + sin(radians(z))*cosh(y)*cos(x)")
+    _set(c["y"], F="-cos(radians(z))*sinh(y)*cos(x) + sin(radians(z))*cosh(y)*sin(x)")
+    _set(c["z"], F="x*cos(radians(z)) + y*sin(radians(z))")
+    _set(c["n"], B=1.0)
+    for key in ("x", "y", "z"):
+        c[key].inputs[2].modifier = "graft"   # y = v: one branch per row
+    c["surface"].inputs[0].modifier = "flatten"
+    for key in ("pts", "surface"):
+        c[key].preview = False
+    _place(scene, c, {
+        "alpha": (-760, -200), "grid": (-760, -100), "vr": (-760, -40), "size": (-760, 60),
+        "u": (-460, -260), "nv": (-460, -140), "v": (-300, -140), "x": (-120, -260), "y": (-120, -140),
+        "z": (-120, -20), "pts": (60, -140), "n": (60, 20), "surface": (220, -100), "scaled": (380, -80)})
+    _wire(scene, c, [
+        ("grid", 0, "u", 2), ("vr", 0, "nv", 0), ("nv", 0, "v", 0), ("vr", 0, "v", 1), ("grid", 0, "v", 2),
+        ("u", 0, "x", 1), ("v", 0, "x", 2), ("alpha", 0, "x", 3),
+        ("u", 0, "y", 1), ("v", 0, "y", 2), ("alpha", 0, "y", 3),
+        ("u", 0, "z", 1), ("v", 0, "z", 2), ("alpha", 0, "z", 3),
+        ("x", 0, "pts", 0), ("y", 0, "pts", 1), ("z", 0, "pts", 2),
+        ("grid", 0, "n", 0), ("pts", 0, "surface", 0), ("n", 0, "surface", 1),
+        ("surface", 0, "scaled", 0), ("size", 0, "scaled", 1)])
+    return c
+
+
 SHOWCASE = {"voronoi": build_voronoi, "tower": build_tower, "waffle": build_waffle, "wave": build_wave,
             "phyllotaxis": build_phyllotaxis, "hyperboloid": build_hyperboloid,
             "staircase": build_staircase, "city": build_city, "weave": build_weave,
@@ -1306,4 +1535,5 @@ SHOWCASE = {"voronoi": build_voronoi, "tower": build_tower, "waffle": build_waff
             "slats": build_slats, "monolith": build_monolith, "flange": build_flange,
             "bridge": build_bridge, "shell": build_shell, "origami": build_origami, "rose": build_rose,
             "mashrabiya": build_mashrabiya, "columns": build_columns, "pendants": build_pendants,
-            "enneper": build_enneper}
+            "enneper": build_enneper, "stadium": build_stadium, "whirlpool": build_whirlpool,
+            "impeller": build_impeller, "morph": build_morph}

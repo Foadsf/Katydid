@@ -41,10 +41,11 @@ LOW_VIEW = {"tower-render.png", "tower-preview.png", "hyperboloid-render.png", "
 ZOOM = {"voronoi": 0.88, "waffle": 0.72, "wave": 0.7, "phyllotaxis": 0.78, "city": 0.8, "weave": 0.75,
         "staircase": 0.85, "knot": 0.8, "ring": 0.8, "frames": 0.85, "hypar": 0.8, "slats": 0.8,
         "monolith": 0.95, "flange": 0.85, "bridge": 0.75, "shell": 0.85, "origami": 0.85, "rose": 0.85,
-        "mashrabiya": 0.85, "columns": 0.85, "pendants": 0.8, "enneper": 0.8}
+        "mashrabiya": 0.85, "columns": 0.85, "pendants": 0.8, "enneper": 0.8,
+        "stadium": 0.75, "whirlpool": 0.8, "impeller": 0.6, "morph": 1.0}
 TILT = {"phyllotaxis": 35, "knot": 30, "ring": 50, "rose": 25,   # degrees back from a top view
         "enneper": 55, "pendants": 120}                         # over 90: from below, looking up
-SMOOTH = {"knot", "ring"}   # not "shell": its big loft hung the render at this deviation
+SMOOTH = {"knot", "ring", "morph"}   # not "shell": its big loft hung the render at this deviation
 SHADED = {"shell"}          # no edge lines, default mesh
 SPIN = {"ring": 270, "pendants": 45}   # turn the closed loft's seam (on +X) to the back   # fitAll fits a bounding sphere: close in
 
@@ -104,6 +105,13 @@ RENDERS = {  # showcase key -> [(component, colour, transparency %, lift in mm)]
     "pendants": [("orbs", (1.00, 0.84, 0.52), 0, 0.0), ("cables", (0.55, 0.55, 0.58), 0, 0.0),
                  ("ceiling_at", (0.85, 0.85, 0.83), 0, 0.0)],
     "enneper": [("surface", (0.32, 0.62, 0.66), 0, 0.0), ("contours", (0.98, 0.86, 0.45), 0, 0.15)],
+    "stadium": [("pp", (0.92, 0.92, 0.90), 0, 0.0), ("pn", (0.92, 0.92, 0.90), 0, 0.0),
+                ("rim_p", (0.92, 0.92, 0.90), 0, 0.0), ("ocu_p", (0.92, 0.92, 0.90), 0, 0.0),
+                ("base_p", (0.92, 0.92, 0.90), 0, 0.0), ("roof", (0.55, 0.78, 0.90), 65, 0.0)],
+    "whirlpool": [("tiers_s", (0.86, 0.78, 0.66), 0, 0.0), ("ribs", (0.55, 0.32, 0.20), 0, 0.0)],
+    "impeller": [("rotor", (0.80, 0.82, 0.86), 0, 0.0), ("hub", (0.45, 0.47, 0.52), 0, 0.0),
+                 ("nose_at", (0.45, 0.47, 0.52), 0, 0.0), ("shroud", (0.82, 0.55, 0.25), 0, 0.0)],
+    "morph": [("scaled", (0.80, 0.40, 0.55), 0, 0.0)],
 }
 
 

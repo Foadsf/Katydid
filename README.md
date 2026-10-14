@@ -30,7 +30,9 @@ Each of these loads from the canvas's **Examples** menu and has a step-by-step t
 | ![Network-arch bridge](docs/images/bridge-render.png) **Network-arch bridge:** twin leaning arches with crossing hangers | ![Spiral shell](docs/images/shell-render.png) **Spiral shell:** a self-similar logarithmic spiral, lofted |
 | ![Miura-ori fold](docs/images/origami-render.png) **Miura-ori fold:** flat parallelogram facets from a straight loft | ![Guilloché rose](docs/images/rose-render.png) **Guilloché rose:** three-point arcs between turned rings, in brass wire |
 | ![Mashrabiya facade](docs/images/mashrabiya-render.png) **Mashrabiya facade:** hexagonal louvres that close towards the sun | ![Mushroom columns](docs/images/columns-render.png) **Mushroom columns:** fluted, scalloped canopies lofted and arrayed |
-| ![Pendant cloud](docs/images/pendants-render.png) **Pendant cloud:** hanging orbs tracing a damped ripple | ![Enneper surface](docs/images/enneper-render.png) **Enneper surface:** a minimal surface from its formula, with contours | Tested on FreeCAD 1.1 on Windows; it should run wherever FreeCAD 1.0+ with PySide6 runs.
+| ![Pendant cloud](docs/images/pendants-render.png) **Pendant cloud:** hanging orbs tracing a damped ripple | ![Enneper surface](docs/images/enneper-render.png) **Enneper surface:** a minimal surface from its formula, with contours |
+| ![Woven-bowl stadium roof](docs/images/stadium-render.png) **Woven-bowl stadium roof:** arches from ground over rim to oculus | ![Whirlpool ziggurat](docs/images/whirlpool-render.png) **Whirlpool ziggurat:** pursuit polygons as slabs, with spiral ribs |
+| ![Impeller](docs/images/impeller-render.png) **Impeller with tip clearance:** twisted blades and a live stack-up | ![Helicoid–catenoid morph](docs/images/morph-render.png) **Helicoid–catenoid morph:** one slider through a family of minimal surfaces | Tested on FreeCAD 1.1 on Windows; it should run wherever FreeCAD 1.0+ with PySide6 runs.
 
 ## Install
 

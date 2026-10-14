@@ -29,9 +29,10 @@ EXAMPLES = [  # (menu label, key); None draws a separator
     ("Slatted wave ceiling", "slats"), ("Carved monolith", "monolith"), ("Network-arch bridge", "bridge"),
     ("Spiral shell", "shell"), ("Miura-ori fold", "origami"), ("Guilloché rose", "rose"),
     ("Mashrabiya facade", "mashrabiya"), ("Mushroom columns", "columns"), ("Pendant cloud", "pendants"),
-    ("Enneper surface", "enneper"), (None, None),
+    ("Enneper surface", "enneper"), ("Woven-bowl stadium roof", "stadium"), ("Whirlpool ziggurat", "whirlpool"),
+    ("Helicoid–catenoid morph", "morph"), (None, None),
     ("Tolerance stack-up", "stackup"), ("GD&T calculators", "gdt"),
-    ("Flange with tolerance zones", "flange")]
+    ("Flange with tolerance zones", "flange"), ("Impeller with tip clearance", "impeller")]
 
 
 class KatydidPanel(QtWidgets.QWidget):
