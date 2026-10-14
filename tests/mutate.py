@@ -34,9 +34,11 @@ MUTATIONS = [
      "vc, rc = mmc + geometric, lmc + geometric + size_tol"),
     ("LMC modifier measures from MMC", "katydid/tolerance.py",
      "b = abs(actual - lmc)", "b = abs(actual - mmc)"),
+    ("home page strip misses an example", "docs/index.adoc",
+     "image::amphitheatre-render.png[", "image::amphitheatre-gone.png["),
 ]
 TESTS = ["tests/test_tree.py", "tests/test_engine.py", "tests/test_document.py",
-         "tests/test_components.py", "tests/test_tolerance.py", "tests/test_geom2d.py"]
+         "tests/test_components.py", "tests/test_tolerance.py", "tests/test_geom2d.py", "tests/test_docs.py"]
 
 
 def run_suite(root):

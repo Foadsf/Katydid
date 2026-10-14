@@ -13,27 +13,41 @@ image::attractor-canvas.png[The attractor grid on the Katydid canvas]
 
 [.hero-strip]
 --
-image::voronoi-render.png[Voronoi screen,link=gallery.html]
-image::tower-render.png[Twisted tower,link=gallery.html]
-image::waffle-render.png[Waffle dome,link=gallery.html]
-image::wave-render.png[Wave surface with contours,link=gallery.html]
-image::phyllotaxis-render.png[Sunflower,link=gallery.html]
-image::hyperboloid-render.png[Shukhov tower,link=gallery.html]
-image::city-render.png[Voronoi city,link=gallery.html]
-image::weave-render.png[Woven mat,link=gallery.html]
-image::knot-render.png[Torus knot,link=gallery.html]
-image::frames-render.png[Frame tunnel,link=gallery.html]
-image::hypar-render.png[Hypar umbrella,link=gallery.html]
-image::slats-render.png[Slatted wave ceiling,link=gallery.html]
-image::monolith-render.png[Carved monolith,link=gallery.html]
-image::flange-render.png[Flange with tolerance zones,link=gallery.html]
-image::bridge-render.png[Network-arch bridge,link=gallery.html]
-image::shell-render.png[Spiral shell,link=gallery.html]
-image::origami-render.png[Miura-ori fold,link=gallery.html]
-image::rose-render.png[Guilloché rose,link=gallery.html]
+image::amphitheatre-render.png[Stepped amphitheatre,link=tutorial-amphitheatre.html]
+image::auxetic-render.png[Auxetic lattice,link=tutorial-auxetic.html]
+image::lotus-render.png[Blooming lotus,link=tutorial-lotus.html]
+image::tensegrity-render.png[Tensegrity tower,link=tutorial-tensegrity.html]
+image::morph-render.png[Helicoid–catenoid morph,link=tutorial-morph.html]
+image::impeller-render.png[Impeller with tip clearance,link=tutorial-impeller.html]
+image::whirlpool-render.png[Whirlpool ziggurat,link=tutorial-whirlpool.html]
+image::stadium-render.png[Woven-bowl stadium roof,link=tutorial-stadium.html]
+image::enneper-render.png[Enneper surface,link=tutorial-enneper.html]
+image::pendants-render.png[Pendant cloud,link=tutorial-pendants.html]
+image::columns-render.png[Mushroom columns,link=tutorial-columns.html]
+image::mashrabiya-render.png[Mashrabiya facade,link=tutorial-mashrabiya.html]
+image::rose-render.png[Guilloché rose,link=tutorial-rose.html]
+image::origami-render.png[Miura-ori fold,link=tutorial-origami.html]
+image::shell-render.png[Spiral shell,link=tutorial-shell.html]
+image::bridge-render.png[Network-arch bridge,link=tutorial-bridge.html]
+image::flange-render.png[Flange with tolerance zones,link=tutorial-flange.html]
+image::monolith-render.png[Carved monolith,link=tutorial-monolith.html]
+image::slats-render.png[Slatted wave ceiling,link=tutorial-slats.html]
+image::hypar-render.png[Hypar umbrella,link=tutorial-hypar.html]
+image::frames-render.png[Frame tunnel,link=tutorial-frames.html]
+image::ring-render.png[Twisted lobed ring,link=tutorial-ring.html]
+image::knot-render.png[Torus knot,link=tutorial-knot.html]
+image::weave-render.png[Woven mat,link=tutorial-weave.html]
+image::city-render.png[Voronoi city,link=tutorial-city.html]
+image::staircase-render.png[Spiral staircase,link=tutorial-staircase.html]
+image::hyperboloid-render.png[Shukhov tower,link=tutorial-hyperboloid.html]
+image::phyllotaxis-render.png[Sunflower,link=tutorial-phyllotaxis.html]
+image::wave-render.png[Wave surface,link=tutorial-wave.html]
+image::waffle-render.png[Waffle dome,link=tutorial-waffle.html]
+image::tower-render.png[Twisted tower,link=tutorial-tower.html]
+image::voronoi-render.png[Voronoi screen,link=tutorial-voronoi.html]
 --
 
-Made with Katydid: Voronoi screens and cities, twisted and lattice towers, a waffle dome, a contoured wave, a sunflower, a woven mat, a torus knot, a frame tunnel, a hypar umbrella, a slatted ceiling and more. Each loads from the btn:[Examples] menu and has a step-by-step tutorial; see the xref:gallery.adoc[gallery].
+Made with Katydid, newest first: all 32 designs from the xref:gallery.adoc[gallery]. Each loads from the btn:[Examples] menu; click a picture for its step-by-step tutorial.
 
 [.cards]
 --
@@ -76,7 +90,7 @@ Lists, data trees, the attractor grid, tolerance stack-ups and GD&T, step by ste
 ****
 *xref:gallery.adoc[Gallery]*
 
-Voronoi screens, twisted towers, waffle structures and contoured surfaces, with tutorials.
+All 32 showcase designs side by side, each with a tutorial.
 ****
 
 [.card]
