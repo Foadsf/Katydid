@@ -650,6 +650,7 @@ How to read the tables: *Access* says how an input takes its data (see xref:data
 |Input |Nick |Access |Default |Description
 |Curves |`C` |list |_wire it_ |Section curves, in order
 |Closed |`Cl` |item |`False` |Loft from the last section back to the first (a ring)
+|Straight |`St` |item |`False` |Straight (ruled) faces from section to section, no smoothing
 |===
 
 [cols="3,1,1,7",options="header",role="params"]

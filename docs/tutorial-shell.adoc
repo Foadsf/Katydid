@@ -1,0 +1,57 @@
+= Tutorial 23: A spiral shell
+:page-id: tutorial-shell
+include::_attributes.adoc[]
+
+[.lead]
+Many sea shells grow without changing shape: each turn is a scaled copy of the last. The rule is a logarithmic spiral, r = a·e^(bφ), with the tube's size and the spire's drop both proportional to r. You will place a circle square to the spiral at each step and loft through them, then mark every ring with a growth line.
+
+image::shell-render.png[A pearly spiral shell with bronze growth lines]
+
+Reference: choose menu:Examples[Spiral shell] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== The spiral
+
+. Place six sliders: _Turns: 3 (1 – 5)_, _Start radius: 1 (0.5 – 5)_, _Spire: 1.6 (0 – 3)_ and _Opening: 0.7 (0.2 – 0.9)_ with Decimals `2`; _Rings: 60 (20 – 120)_ with Decimals `0`; and _Growth: 0.14 (0.05 – 0.25)_ with Decimals `3`.
+. Place an *Expression* (Maths), _End angle_, `2*pi*x`, with *Turns → x*. Place a *Range* (Maths), _φ_, with *End angle → E* and *Rings → N*.
+. Place an *Expression*, _Spiral radius_, `y*exp(z*x)`, with *φ → x*, *Start radius → y* and *Growth → z*.
+. Place three *Expression* components for the ring centres: _X_ `x*cos(y)` and _Y_ `x*sin(y)` (*Spiral radius → x*, *φ → y*), and _Z_ `-x*y` (*Spiral radius → x*, *Spire → y*). Wire them into a *Construct Point* (Vector).
+
+=== Rings square to the spiral
+
+[start=5]
+. Place three *Expression* components for the tangent, the derivative of the centre with respect to φ:
+** _Tangent X_: `x*(z*cos(y) - sin(y))`.
+** _Tangent Y_: `x*(z*sin(y) + cos(y))`.
+** Wire *Spiral radius → x*, *φ → y* and *Growth → z* on both.
+** _Tangent Z_: `-x*y*z`, with *Spiral radius → x*, *Spire → y* and *Growth → z*.
+** Wire all three into a *Vector XYZ* (Vector).
+. Place a *Multiplication* (Maths) and wire *Spiral radius → A* and *Opening → B*: each ring's radius.
+. Place a *Circle CNR* (Curve). Wire *Construct Point → C*, *Vector XYZ → N* and the Multiplication *→ R*: 61 rings, each square to the spiral.
+
+=== Shell and growth lines
+
+[start=8]
+. Place a *Loft* (Surface), wire the circles *→ C* and tick menu:Flatten[] on *C*.
+. Place a *Multiplication* with *B* `0.05` after the ring radius, and a *Pipe* (Surface), _Growth lines_: *Circle → C*, the Multiplication *→ R*. Each ring gets a ridge proportional to its size.
+. Turn menu:Preview[] off on Construct Point and Circle CNR.
+
+.The finished definition
+image::shell-canvas.png[The spiral shell definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::shell-preview.png[The red preview of the spiral shell]
+
+== What is happening
+
+Everything is proportional to r: the distance from the axis, the drop down the spire (z = −Spire·r) and the tube's radius (Opening·r). Multiplying r by a constant therefore scales the whole cross-section about the apex, which is what makes the shell self-similar. Each turn multiplies r by e^(2πb); with the defaults that is 2.4, and with Opening at 0.7 each whorl nearly touches the one before. The geometry tests check the growth ratio between neighbouring rings and that every ring's centre sits at z = −Spire·r.
+
+The tangent is the derivative of the centre's position, so each circle is square to the spiral and the loft does not twist. The shell updates in about a second.
+
+== Things to try
+
+* Set *Spire* to 0 and *Opening* to 0.3 for a flat, ammonite-like coil (with a wider opening the flat whorls run into each other), or *Spire* to 3 for a tall turret shell.
+* Lower *Opening* to 0.4: the whorls separate into an open horn.
+* Raise *Growth* to 0.2 and lower *Turns* to 2 for a fast-flaring shell like a conch.
+* Delete the growth lines for a smooth, porcelain shell.

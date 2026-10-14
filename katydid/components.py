@@ -337,14 +337,16 @@ class Loft(Component):
     def setup(self):
         self.add_input("Curves", "C", "Section curves, in order", access=LIST)
         self.add_input("Closed", "Cl", "Loft from the last section back to the first (a ring)", default=False)
+        self.add_input("Straight", "St", "Straight (ruled) faces from section to section, no smoothing",
+                       default=False)
         self.add_output("Loft", "L", "Resulting surface")
 
-    def solve_instance(self, curves, closed):
+    def solve_instance(self, curves, closed, straight):
         if len(curves) < (3 if closed else 2):
             raise ValueError("A loft needs at least two section curves (three when closed)")
         _, Part = _part()
         wires = [c if c.ShapeType == "Wire" else Part.Wire(c.Edges) for c in curves]
-        return Part.makeLoft(wires, False, False, bool(closed))
+        return Part.makeLoft(wires, False, bool(straight), bool(closed))
 
 
 class RuledSurface(Component):
@@ -674,7 +676,10 @@ class CircleCNR(Component):
         normal = _point(n)
         if normal.Length == 0:
             raise ValueError("Normal must not be zero")
-        return Part.makeCircle(r, _point(c), normal)
+        # Part.Circle, not Part.makeCircle: the two start their circles at different
+        # points, and rows of makeCircle circles fail to loft far more often (the
+        # spiral shell lofted at 14 of 16 settings with Part.Circle, 7 with makeCircle).
+        return Part.Circle(_point(c), normal, r).toShape()
 
 
 class Line(Component):

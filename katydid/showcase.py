@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-"""Showcase definitions: a Voronoi screen, a twisted tower, a waffle dome and
-a wave surface with contour lines. Each builder places and wires real
-components on a scene (the canvas, or a stand-in in the tests) and returns
-them by name, exactly as the tutorials describe them.
+"""Showcase definitions for the gallery (see SHOWCASE at the end). Each builder
+places and wires real components on a scene (the canvas, or a stand-in in the
+tests) and returns them by name, exactly as the tutorials describe them.
 """
 
 from __future__ import annotations
@@ -848,8 +847,239 @@ def build_flange(scene) -> dict:
     return c
 
 
+def build_bridge(scene) -> dict:
+    """A network-arch bridge: twin arches leaning towards each other over a
+    cambered deck, each hung from it by two crossing families of hangers."""
+    c = {
+        "span": _slider("Span", 120, 60, 200),
+        "rise": _slider("Rise", 40, 15, 70),
+        "lean": _slider("Lean", 6, 0, 15),
+        "width": _slider("Deck width", 16, 8, 30),
+        "camber": _slider("Camber", 3, 0.5, 10),
+        "hangers": _slider("Hangers", 24, 6, 48, 0),
+        "drift": _slider("Hanger slope", 0.08, 0, 0.12, 3),   # t ± slope stays within 0..1
+        "arch_r": _slider("Arch radius", 1.4, 0.4, 3, 2),
+        # arch
+        "sx": lib.Expression(), "nsx": lib.Multiplication(), "ey": lib.Expression(), "ay": lib.Expression(),
+        "s0": lib.ConstructPoint(), "apex": lib.ConstructPoint(), "s1": lib.ConstructPoint(), "arch": lib.Arc3Pt(),
+        # deck
+        "half": lib.Expression(), "nhalf": lib.Multiplication(), "d0": lib.ConstructPoint(),
+        "dm": lib.ConstructPoint(), "d1": lib.ConstructPoint(), "deck_c": lib.Arc3Pt(), "wy": lib.Multiplication(),
+        "left": lib.Move(), "right": lib.Move(), "face": lib.RuledSurface(), "down": lib.VectorXYZ(),
+        "deck": lib.Extrude(),
+        # hangers
+        "t": lib.Range(), "tp": lib.Addition(), "tm": lib.Expression(), "ap": lib.EvaluateCurve(),
+        "dp": lib.EvaluateCurve(), "dmn": lib.EvaluateCurve(), "h1": lib.Line(), "h2": lib.Line(),
+        "arch_p": lib.Pipe(), "hp1": lib.Pipe(), "hp2": lib.Pipe(),
+        "arch_m": lib.Mirror(), "hm1": lib.Mirror(), "hm2": lib.Mirror(),
+    }
+    for key, nick in (("sx", "Spring X"), ("ey", "Edge Y"), ("ay", "Apex Y"), ("s0", "Spring 1"),
+                      ("apex", "Apex"), ("s1", "Spring 2"), ("half", "Half span"), ("deck_c", "Deck line"),
+                      ("left", "Deck edge"), ("t", "Hanger t"), ("ap", "On arch"), ("dp", "On deck +"),
+                      ("dmn", "On deck −"), ("h1", "Hangers 1"), ("h2", "Hangers 2")):
+        c[key].nickname = nick
+    _set(c["sx"], F="x/2 + 6")      # the arch springs from abutments beyond the deck ends...
+    _set(c["nsx"], B=-1.0)
+    _set(c["ey"], F="-x/2")
+    _set(c["ay"], F="z - x/2")      # ...and leans in by Lean at the crown
+    _set(c["s0"], Z=-5.0)
+    _set(c["s1"], Z=-5.0)
+    _set(c["half"], F="x/2")
+    _set(c["nhalf"], B=-1.0)
+    _set(c["wy"], B=-1.0)
+    _set(c["down"], Z=-1.5)
+    _set(c["t"], S=0.12, E=0.88)
+    _set(c["tm"], F="x - y")
+    _set(c["hp1"], R=0.22)
+    _set(c["hp2"], R=0.22)
+    for key in ("arch_m", "hm1", "hm2"):
+        _set(c[key], N=(0.0, 1.0, 0.0))   # mirror in the deck's centre plane
+    for key in ("s0", "apex", "s1", "arch", "d0", "dm", "d1", "deck_c", "left", "right", "face",
+                "ap", "dp", "dmn", "h1", "h2"):
+        c[key].preview = False
+    _place(scene, c, {
+        "span": (-900, -320), "rise": (-900, -260), "lean": (-900, -200), "width": (-900, -100),
+        "camber": (-900, -40), "hangers": (-900, 80), "drift": (-900, 140), "arch_r": (-900, 260),
+        "sx": (-600, -360), "nsx": (-440, -400), "ey": (-600, -240), "ay": (-600, -130),
+        "s0": (-280, -420), "apex": (-280, -300), "s1": (-280, -180), "arch": (-110, -300),
+        "half": (-600, 0), "nhalf": (-440, 0), "d0": (-280, -40), "dm": (-280, 60), "d1": (-280, 160),
+        "deck_c": (-110, 60), "wy": (-440, 120), "left": (60, 0), "right": (60, 120), "face": (230, 60),
+        "down": (230, 180), "deck": (400, 100),
+        "t": (-440, 300), "tp": (-280, 300), "tm": (-280, 400), "ap": (230, -300), "dp": (230, 300),
+        "dmn": (230, 400), "h1": (400, -200), "h2": (400, -60), "arch_p": (560, -360),
+        "hp1": (560, -220), "hp2": (560, -80), "arch_m": (720, -360), "hm1": (720, -220), "hm2": (720, -80)})
+    _wire(scene, c, [
+        ("span", 0, "sx", 1), ("sx", 0, "nsx", 0), ("width", 0, "ey", 1),
+        ("width", 0, "ay", 1), ("lean", 0, "ay", 3),
+        ("nsx", 0, "s0", 0), ("ey", 0, "s0", 1), ("ay", 0, "apex", 1), ("rise", 0, "apex", 2),
+        ("sx", 0, "s1", 0), ("ey", 0, "s1", 1),
+        ("s0", 0, "arch", 0), ("apex", 0, "arch", 1), ("s1", 0, "arch", 2),
+        ("span", 0, "half", 1), ("half", 0, "nhalf", 0),
+        ("nhalf", 0, "d0", 0), ("camber", 0, "dm", 2), ("half", 0, "d1", 0),
+        ("d0", 0, "deck_c", 0), ("dm", 0, "deck_c", 1), ("d1", 0, "deck_c", 2),
+        ("ey", 0, "wy", 0),
+        ("deck_c", 0, "left", 0), ("ey", 0, "left", 2), ("deck_c", 0, "right", 0), ("wy", 0, "right", 2),
+        ("left", 0, "face", 0), ("right", 0, "face", 1), ("face", 0, "deck", 0), ("down", 0, "deck", 1),
+        ("hangers", 0, "t", 2), ("t", 0, "tp", 0), ("drift", 0, "tp", 1), ("t", 0, "tm", 1), ("drift", 0, "tm", 2),
+        ("arch", 0, "ap", 0), ("t", 0, "ap", 1),
+        ("left", 0, "dp", 0), ("tp", 0, "dp", 1), ("left", 0, "dmn", 0), ("tm", 0, "dmn", 1),
+        ("ap", 0, "h1", 0), ("dp", 0, "h1", 1), ("ap", 0, "h2", 0), ("dmn", 0, "h2", 1),
+        ("arch", 0, "arch_p", 0), ("arch_r", 0, "arch_p", 1), ("h1", 0, "hp1", 0), ("h2", 0, "hp2", 0),
+        ("arch_p", 0, "arch_m", 0), ("hp1", 0, "hm1", 0), ("hp2", 0, "hm2", 0)])
+    return c
+
+
+def build_shell(scene) -> dict:
+    """A spiral shell: circles that grow exponentially along a logarithmic
+    spiral which also drops in proportion to its radius, so the shell is
+    self-similar, lofted into a horn with a thin growth line on every ring."""
+    c = {
+        "turns": _slider("Turns", 3, 1, 5, 2),
+        "steps": _slider("Rings", 60, 20, 120, 0),
+        "a": _slider("Start radius", 1, 0.5, 5, 2),
+        "b": _slider("Growth", 0.14, 0.05, 0.25, 3),
+        "spire": _slider("Spire", 1.6, 0, 3, 2),
+        "open": _slider("Opening", 0.7, 0.2, 0.9, 2),
+        "end": lib.Expression(), "phi": lib.Range(), "r": lib.Expression(),
+        "cx": lib.Expression(), "cy": lib.Expression(), "cz": lib.Expression(),
+        "tx": lib.Expression(), "ty": lib.Expression(), "tz": lib.Expression(),
+        "centre": lib.ConstructPoint(), "normal": lib.VectorXYZ(),
+        "size": lib.Multiplication(), "ring": lib.CircleCNR(), "shell": lib.Loft(),
+        "line_r": lib.Multiplication(), "lines": lib.Pipe(),
+    }
+    for key, nick, f in (("end", "End angle", "2*pi*x"), ("r", "Spiral radius", "y*exp(z*x)"),
+                         ("cx", "X", "x*cos(y)"), ("cy", "Y", "x*sin(y)"), ("cz", "Z", "-x*y"),
+                         ("tx", "Tangent X", "x*(z*cos(y) - sin(y))"), ("ty", "Tangent Y", "x*(z*sin(y) + cos(y))"),
+                         ("tz", "Tangent Z", "-x*y*z")):
+        c[key].nickname = nick
+        _set(c[key], F=f)
+    c["phi"].nickname = "φ"
+    c["lines"].nickname = "Growth lines"
+    _set(c["line_r"], B=0.05)
+    c["shell"].inputs[0].modifier = "flatten"
+    for key in ("centre", "ring"):
+        c[key].preview = False
+    _place(scene, c, {
+        "turns": (-820, -240), "steps": (-820, -180), "a": (-820, -80), "b": (-820, -20), "spire": (-820, 80),
+        "open": (-820, 180),
+        "end": (-520, -240), "phi": (-360, -200), "r": (-200, -140), "cx": (-40, -300), "cy": (-40, -190),
+        "cz": (-40, -80), "tx": (-40, 30), "ty": (-40, 140), "tz": (-40, 250), "centre": (140, -190),
+        "normal": (140, 60), "size": (140, 200), "ring": (320, -40), "shell": (500, -120),
+        "line_r": (320, 160), "lines": (500, 80)})
+    _wire(scene, c, [
+        ("turns", 0, "end", 1), ("end", 0, "phi", 1), ("steps", 0, "phi", 2),
+        ("phi", 0, "r", 1), ("a", 0, "r", 2), ("b", 0, "r", 3),
+        ("r", 0, "cx", 1), ("phi", 0, "cx", 2), ("r", 0, "cy", 1), ("phi", 0, "cy", 2),
+        ("r", 0, "cz", 1), ("spire", 0, "cz", 2),
+        ("r", 0, "tx", 1), ("phi", 0, "tx", 2), ("b", 0, "tx", 3),
+        ("r", 0, "ty", 1), ("phi", 0, "ty", 2), ("b", 0, "ty", 3),
+        ("r", 0, "tz", 1), ("spire", 0, "tz", 2), ("b", 0, "tz", 3),
+        ("cx", 0, "centre", 0), ("cy", 0, "centre", 1), ("cz", 0, "centre", 2),
+        ("tx", 0, "normal", 0), ("ty", 0, "normal", 1), ("tz", 0, "normal", 2),
+        ("r", 0, "size", 0), ("open", 0, "size", 1),
+        ("centre", 0, "ring", 0), ("normal", 0, "ring", 1), ("size", 0, "ring", 2),
+        ("ring", 0, "shell", 0),
+        ("size", 0, "line_r", 0), ("ring", 0, "lines", 0), ("line_r", 0, "lines", 1)])
+    return c
+
+
+def build_origami(scene) -> dict:
+    """A Miura-ori fold: rows of zigzags, each shifted alternately left and
+    right, lofted with straight faces, so every facet is a flat parallelogram."""
+    c = {
+        "pleats": _slider("Pleats", 16, 4, 40, 0),
+        "rows": _slider("Rows", 12, 2, 30, 0),
+        "width": _slider("Pleat width", 6, 2, 12),
+        "depth": _slider("Pleat depth", 6, 0, 10),
+        "height": _slider("Row height", 6, 2, 12),
+        "shear": _slider("Shear", 2.5, 0, 6),
+        "np": lib.Addition(), "nr": lib.Addition(), "i": lib.Series(), "k": lib.Series(),
+        "ix": lib.Multiplication(), "shift": lib.Expression(), "x": lib.Addition(), "y": lib.Expression(),
+        "z": lib.Multiplication(), "pts": lib.ConstructPoint(), "row": lib.Polyline(), "sheet": lib.Loft(),
+    }
+    for key, nick in (("i", "Point no."), ("k", "Row no."), ("shift", "Row shift"), ("y", "Zigzag"),
+                      ("x", "X"), ("z", "Z"), ("row", "Rows")):
+        c[key].nickname = nick
+    _set(c["np"], B=1.0)
+    _set(c["nr"], B=1.0)
+    _set(c["shift"], F="y*(x % 2)")
+    _set(c["y"], F="y*(x % 2)")
+    _set(c["sheet"], St=True)
+    c["shift"].inputs[1].modifier = "graft"   # x = row number: one branch per row
+    c["z"].inputs[0].modifier = "graft"
+    c["sheet"].inputs[0].modifier = "flatten"
+    for key in ("pts", "row"):
+        c[key].preview = False
+    _place(scene, c, {
+        "pleats": (-760, -200), "rows": (-760, -140), "width": (-760, -40), "depth": (-760, 20),
+        "height": (-760, 120), "shear": (-760, 180),
+        "np": (-480, -230), "nr": (-480, -120), "i": (-320, -230), "k": (-320, -120), "ix": (-160, -260),
+        "shift": (-160, -150), "x": (0, -220), "y": (0, -90), "z": (0, 30), "pts": (160, -120),
+        "row": (320, -120), "sheet": (480, -120)})
+    _wire(scene, c, [
+        ("pleats", 0, "np", 0), ("rows", 0, "nr", 0), ("np", 0, "i", 2), ("nr", 0, "k", 2),
+        ("i", 0, "ix", 0), ("width", 0, "ix", 1),
+        ("k", 0, "shift", 1), ("shear", 0, "shift", 2),
+        ("ix", 0, "x", 0), ("shift", 0, "x", 1),
+        ("i", 0, "y", 1), ("depth", 0, "y", 2),
+        ("k", 0, "z", 0), ("height", 0, "z", 1),
+        ("x", 0, "pts", 0), ("y", 0, "pts", 1), ("z", 0, "pts", 2),
+        ("pts", 0, "row", 0), ("row", 0, "sheet", 0)])
+    return c
+
+
+def build_rose(scene) -> dict:
+    """A guilloché rose: arcs from every point of an inner ring, through a
+    middle ring and out to an outer ring, turned k places one way and k the
+    other, piped into interlacing filigree."""
+    c = {
+        "r1": _slider("Inner radius", 8, 3, 20),
+        "r2": _slider("Middle radius", 20, 8, 35),
+        "r3": _slider("Outer radius", 32, 15, 50),
+        "n": _slider("Points", 48, 12, 96, 0),
+        "k": _slider("Outer turn", 8, 1, 24, 0),
+        "m": _slider("Middle turn", 5, 0, 24, 0),
+        "wire": _slider("Wire radius", 0.3, 0.1, 1, 2),
+        "c1": lib.Circle(), "c2": lib.Circle(), "c3": lib.Circle(),
+        "d1": lib.DivideCurve(), "d2": lib.DivideCurve(), "d3": lib.DivideCurve(),
+        "nk": lib.Multiplication(), "nm": lib.Multiplication(),
+        "s2p": lib.ShiftList(), "s3p": lib.ShiftList(), "s2n": lib.ShiftList(), "s3n": lib.ShiftList(),
+        "ap": lib.Arc3Pt(), "an": lib.Arc3Pt(), "pp": lib.Pipe(), "pn": lib.Pipe(),
+        "ring_r": lib.Multiplication(), "inner": lib.Pipe(), "outer": lib.Pipe(),
+    }
+    for key, nick in (("c1", "Inner"), ("c2", "Middle"), ("c3", "Outer"), ("ap", "Arcs +"), ("an", "Arcs −"),
+                      ("inner", "Inner ring"), ("outer", "Outer ring")):
+        c[key].nickname = nick
+    _set(c["nk"], B=-1.0)
+    _set(c["nm"], B=-1.0)
+    _set(c["ring_r"], B=2.5)
+    for key in ("c1", "c2", "c3", "d1", "d2", "d3", "s2p", "s3p", "s2n", "s3n", "ap", "an"):
+        c[key].preview = False
+    _place(scene, c, {
+        "r1": (-820, -260), "r2": (-820, -200), "r3": (-820, -140), "n": (-820, -40), "k": (-820, 60),
+        "m": (-820, 120), "wire": (-820, 240),
+        "c1": (-520, -280), "c2": (-520, -180), "c3": (-520, -80), "d1": (-360, -280), "d2": (-360, -180),
+        "d3": (-360, -80), "nk": (-520, 60), "nm": (-520, 160), "s2p": (-180, -200), "s3p": (-180, -100),
+        "s2n": (-180, 20), "s3n": (-180, 120), "ap": (0, -180), "an": (0, 40), "pp": (180, -180),
+        "pn": (180, 40), "ring_r": (0, 220), "inner": (180, 200), "outer": (180, 300)})
+    _wire(scene, c, [
+        ("r1", 0, "c1", 0), ("r2", 0, "c2", 0), ("r3", 0, "c3", 0),
+        ("c1", 0, "d1", 0), ("c2", 0, "d2", 0), ("c3", 0, "d3", 0),
+        ("n", 0, "d1", 1), ("n", 0, "d2", 1), ("n", 0, "d3", 1),
+        ("k", 0, "nk", 0), ("m", 0, "nm", 0),
+        ("d2", 0, "s2p", 0), ("m", 0, "s2p", 1), ("d3", 0, "s3p", 0), ("k", 0, "s3p", 1),
+        ("d2", 0, "s2n", 0), ("nm", 0, "s2n", 1), ("d3", 0, "s3n", 0), ("nk", 0, "s3n", 1),
+        ("d1", 0, "ap", 0), ("s2p", 0, "ap", 1), ("s3p", 0, "ap", 2),
+        ("d1", 0, "an", 0), ("s2n", 0, "an", 1), ("s3n", 0, "an", 2),
+        ("ap", 0, "pp", 0), ("wire", 0, "pp", 1), ("an", 0, "pn", 0), ("wire", 0, "pn", 1),
+        ("wire", 0, "ring_r", 0), ("c1", 0, "inner", 0), ("ring_r", 0, "inner", 1),
+        ("c3", 0, "outer", 0), ("ring_r", 0, "outer", 1)])
+    return c
+
+
 SHOWCASE = {"voronoi": build_voronoi, "tower": build_tower, "waffle": build_waffle, "wave": build_wave,
             "phyllotaxis": build_phyllotaxis, "hyperboloid": build_hyperboloid,
             "staircase": build_staircase, "city": build_city, "weave": build_weave,
             "knot": build_knot, "ring": build_ring, "frames": build_frames, "hypar": build_hypar,
-            "slats": build_slats, "monolith": build_monolith, "flange": build_flange}
+            "slats": build_slats, "monolith": build_monolith, "flange": build_flange,
+            "bridge": build_bridge, "shell": build_shell, "origami": build_origami, "rose": build_rose}

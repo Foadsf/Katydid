@@ -233,6 +233,46 @@ image::flange-render.png[A flange with tolerance zones]
 Bonus tolerance and virtual condition, drawn in 3D. +
 menu:Examples[Flange with tolerance zones]
 ****
+
+[.card]
+****
+image::bridge-render.png[A network-arch bridge]
+
+*xref:tutorial-bridge.adoc[22. A network-arch bridge]*
+
+Arcs, Evaluate Curve and Mirror. +
+menu:Examples[Network-arch bridge]
+****
+
+[.card]
+****
+image::shell-render.png[A spiral shell]
+
+*xref:tutorial-shell.adoc[23. A spiral shell]*
+
+A self-similar logarithmic spiral, lofted. +
+menu:Examples[Spiral shell]
+****
+
+[.card]
+****
+image::origami-render.png[A Miura-ori fold]
+
+*xref:tutorial-origami.adoc[24. A Miura-ori fold]*
+
+Flat parallelogram facets from a straight loft. +
+menu:Examples[Miura-ori fold]
+****
+
+[.card]
+****
+image::rose-render.png[A guilloché rose]
+
+*xref:tutorial-rose.adoc[25. A guilloché rose]*
+
+Shifted rings and three-point arcs. +
+menu:Examples[Guilloché rose]
+****
 --
 
 == Conventions

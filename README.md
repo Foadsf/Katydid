@@ -26,7 +26,9 @@ Each of these loads from the canvas's **Examples** menu and has a step-by-step t
 | ![Spiral staircase](docs/images/staircase-render.png) **Spiral staircase:** treads, column, balusters and an interpolated handrail | ![Torus knot](docs/images/knot-render.png) **Torus knot:** a closed space curve from three formulas, piped into a tube |
 | ![Twisted lobed ring](docs/images/ring-render.png) **Twisted lobed ring:** a lobed profile swept round a circle while it turns | ![Frame tunnel](docs/images/frames-render.png) **Frame tunnel:** one frame, forty copies, each scaled and turned a little more |
 | ![Hypar umbrella](docs/images/hypar-render.png) **Hypar umbrella:** straight members on four doubly ruled saddles round a column | ![Slatted wave ceiling](docs/images/slats-render.png) **Slatted wave ceiling:** ruled timber boards following a drifting wave |
-| ![Carved monolith](docs/images/monolith-render.png) **Carved monolith:** attractor-sized spherical voids subtracted from a block | ![Flange with tolerance zones](docs/images/flange-render.png) **Flange with tolerance zones:** bonus tolerance and virtual condition drawn in 3D | Tested on FreeCAD 1.1 on Windows; it should run wherever FreeCAD 1.0+ with PySide6 runs.
+| ![Carved monolith](docs/images/monolith-render.png) **Carved monolith:** attractor-sized spherical voids subtracted from a block | ![Flange with tolerance zones](docs/images/flange-render.png) **Flange with tolerance zones:** bonus tolerance and virtual condition drawn in 3D |
+| ![Network-arch bridge](docs/images/bridge-render.png) **Network-arch bridge:** twin leaning arches with crossing hangers | ![Spiral shell](docs/images/shell-render.png) **Spiral shell:** a self-similar logarithmic spiral, lofted |
+| ![Miura-ori fold](docs/images/origami-render.png) **Miura-ori fold:** flat parallelogram facets from a straight loft | ![Guilloché rose](docs/images/rose-render.png) **Guilloché rose:** three-point arcs between turned rings, in brass wire | Tested on FreeCAD 1.1 on Windows; it should run wherever FreeCAD 1.0+ with PySide6 runs.
 
 ## Install
 

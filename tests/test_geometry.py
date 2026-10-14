@@ -396,7 +396,7 @@ class Demos(unittest.TestCase):
         mirror = lib.Mirror().solve_instance(curve, (14, 45, 0), (0, 1, 0))
         mid = lib.EvaluateCurve().solve_instance(curve, 0.5)[0].Point
         middle = lib.Interpolate().solve_instance([V(14, 45, 0), V(mid.x, 45, mid.z), V(44, 45, 84)], False)
-        surface = lib.Loft().solve_instance([curve, middle, mirror], False)
+        surface = lib.Loft().solve_instance([curve, middle, mirror], False, False)
         contour = lib.Contour()
         for y in (25.0, 30.0, 45.0, 65.0):
             curves = contour.solve_instance(surface, (0, 1, 0), y)
@@ -440,6 +440,70 @@ class Demos(unittest.TestCase):
         pin = list(c["pins"].outputs[0].data)[0]
         r_pin = next(f.Surface.Radius for f in pin.Faces if hasattr(f.Surface, "Radius"))
         self.assertAlmostEqual(2 * r_pin, 9.0 - pos, places=9)
+
+    def test_network_arch_bridge(self):
+        from katydid import showcase
+        c = self.build(showcase.build_bridge)
+        n = int(c["hangers"].value) + 1
+        arch = list(c["arch"].outputs[0].data)[0]
+        edge = list(c["left"].outputs[0].data)[0]
+        for fam in ("h1", "h2"):
+            lines = list(c[fam].outputs[0].data)
+            self.assertEqual(len(lines), n)
+            for ln in lines[::5]:   # every hanger runs from the arch to the deck edge
+                self.assertLess(arch.distToShape(ln.Vertexes[0])[0], 1e-6)
+                self.assertLess(edge.distToShape(ln.Vertexes[-1])[0], 1e-6)
+        a, m = list(c["arch_p"].outputs[0].data)[0].BoundBox, list(c["arch_m"].outputs[0].data)[0].BoundBox
+        self.assertAlmostEqual(a.YMin, -m.YMax, places=6)   # the twin arch is the mirror image
+        self.assertTrue(list(c["deck"].outputs[0].data)[0].isValid())
+
+    def test_spiral_shell_is_self_similar(self):
+        from katydid import showcase
+        c = self.build(showcase.build_shell)
+        rings = list(c["ring"].outputs[0].data)
+        phi = list(c["phi"].outputs[0].data)
+        b, spire = c["b"].value, c["spire"].value
+        r1, r2 = rings[10].Curve.Radius, rings[11].Curve.Radius
+        self.assertAlmostEqual(r2 / r1, math.exp(b * (phi[11] - phi[10])), places=9)
+        ctr = rings[30].Curve.Center
+        self.assertAlmostEqual(ctr.z, -spire * math.hypot(ctr.x, ctr.y), places=6)
+        self.assertTrue(list(c["shell"].outputs[0].data)[0].isValid())
+
+    def test_spiral_shell_lofts_across_settings(self):
+        # With Part.makeCircle in Circle CNR all three of these failed to loft.
+        from katydid import showcase
+        for b, turns, opening in ((0.2, 2, 0.7), (0.18, 3, 0.7), (0.25, 2, 0.4)):
+            scene = FakeScene()
+            c = showcase.build_shell(scene)
+            c["b"].set_value(b)
+            c["turns"].set_value(turns)
+            c["open"].set_value(opening)
+            scene.graph.solve()
+            self.assertEqual(c["shell"].state, "ok", (b, turns, opening, c["shell"].messages))
+
+    def test_miura_facets_are_flat(self):
+        from katydid import showcase
+        c = self.build(showcase.build_origami)
+        sheet = list(c["sheet"].outputs[0].data)[0]
+        self.assertEqual(len(sheet.Faces), int(c["pleats"].value) * int(c["rows"].value))
+        for f in sheet.Faces[::7]:
+            pts = [v.Point for v in f.Vertexes]
+            n = (pts[1] - pts[0]).cross(pts[2] - pts[0])
+            n.normalize()
+            self.assertLess(max(abs((p - pts[0]).dot(n)) for p in pts), 1e-6)   # a flat parallelogram
+
+    def test_guilloche_rose(self):
+        from katydid import showcase
+        c = self.build(showcase.build_rose)
+        n = int(c["n"].value)
+        for fam in ("ap", "an"):
+            arcs = list(c[fam].outputs[0].data)
+            self.assertEqual(len(arcs), n)
+            for a in arcs[::6]:
+                s, e = a.Vertexes[0].Point, a.Vertexes[-1].Point
+                self.assertAlmostEqual(s.Length, c["r1"].value, places=6)
+                self.assertAlmostEqual(e.Length, c["r3"].value, places=6)
+        self.assertTrue(all(p.isValid() for p in c["pp"].outputs[0].data))
 
     def test_surface_from_points_passes_through_its_grid(self):
         pts = [V(x, y, (x * y) / 50.0) for y in range(0, 40, 10) for x in range(0, 50, 10)]

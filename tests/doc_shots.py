@@ -34,14 +34,15 @@ def canvas(panel, name, run):
 
 
 LOW_VIEW = {"tower-render.png", "tower-preview.png", "hyperboloid-render.png", "hyperboloid-preview.png",
-            "staircase-render.png", "staircase-preview.png"}
+            "staircase-render.png", "staircase-preview.png", "origami-render.png", "origami-preview.png"}
 
 
 ZOOM = {"voronoi": 0.88, "waffle": 0.72, "wave": 0.7, "phyllotaxis": 0.78, "city": 0.8, "weave": 0.75,
         "staircase": 0.85, "knot": 0.8, "ring": 0.8, "frames": 0.85, "hypar": 0.8, "slats": 0.8,
-        "monolith": 0.95, "flange": 0.85}
-TILT = {"phyllotaxis": 35, "knot": 30, "ring": 50}   # degrees back from a top view
-SMOOTH = {"knot", "ring"}
+        "monolith": 0.95, "flange": 0.85, "bridge": 0.75, "shell": 0.85, "origami": 0.85, "rose": 0.85}
+TILT = {"phyllotaxis": 35, "knot": 30, "ring": 50, "rose": 25}   # degrees back from a top view
+SMOOTH = {"knot", "ring"}   # not "shell": its big loft hung the render at this deviation
+SHADED = {"shell"}          # no edge lines, default mesh
 SPIN = {"ring": 270}   # turn the closed loft's seam (on +X) to the back   # fitAll fits a bounding sphere: close in
 
 
@@ -87,6 +88,14 @@ RENDERS = {  # showcase key -> [(component, colour, transparency %, lift in mm)]
     "monolith": [("carved", (0.88, 0.80, 0.68), 0, 0.0)],
     "flange": [("flange", (0.72, 0.74, 0.78), 0, 0.0), ("hub_bored", (0.72, 0.74, 0.78), 0, 0.0),
                ("pins", (0.25, 0.75, 0.35), 70, 0.0), ("zones", (0.92, 0.20, 0.15), 0, 0.0)],
+    "bridge": [("deck", (0.62, 0.62, 0.60), 0, 0.0), ("arch_p", (0.93, 0.93, 0.92), 0, 0.0),
+               ("arch_m", (0.93, 0.93, 0.92), 0, 0.0), ("hp1", (0.80, 0.82, 0.86), 0, 0.0),
+               ("hp2", (0.80, 0.82, 0.86), 0, 0.0), ("hm1", (0.80, 0.82, 0.86), 0, 0.0),
+               ("hm2", (0.80, 0.82, 0.86), 0, 0.0)],
+    "shell": [("shell", (0.94, 0.89, 0.82), 0, 0.0), ("lines", (0.68, 0.42, 0.22), 0, 0.0)],
+    "origami": [("sheet", (0.95, 0.94, 0.90), 0, 0.0)],
+    "rose": [("pp", (0.86, 0.70, 0.36), 0, 0.0), ("pn", (0.86, 0.70, 0.36), 0, 0.0),
+             ("inner", (0.86, 0.70, 0.36), 0, 0.0), ("outer", (0.86, 0.70, 0.36), 0, 0.0)],
 }
 
 
@@ -105,6 +114,8 @@ def render(panel, d, parts, name, run):
                 vo.Deviation = 0.05
                 vo.AngularDeflection = 8.0
                 vo.DisplayMode = "Shaded"  # no edge lines: seams on a smooth form are distracting
+            elif name.split("-")[0] in SHADED and o.Shape.Faces:
+                vo.DisplayMode = "Shaded"
             if o.Shape.Faces:
                 vo.ShapeColor = colour
                 vo.LineColor = tuple(c * 0.45 for c in colour)

@@ -4,7 +4,7 @@ include::_attributes.adoc[]
 :toc!:
 
 [.lead]
-Sixteen parametric designs, each built only from the components that ship with Katydid. Load any of them with btn:[Examples] on the canvas toolbar, drag the sliders, and bake the result into your document. Each one has a step-by-step tutorial.
+Twenty parametric designs, each built only from the components that ship with Katydid. Load any of them with btn:[Examples] on the canvas toolbar, drag the sliders, and bake the result into your document. Each one has a step-by-step tutorial.
 
 [.cards.gallery]
 --
@@ -167,13 +167,53 @@ image::flange-render.png[A steel flange with gauge pins and tolerance zones in i
 GD&T made visible: bonus tolerance zones that grow with the hole size, and gauge pins at virtual condition. +
 menu:Examples[Flange with tolerance zones]
 ****
+
+[.card]
+****
+image::bridge-render.png[A network-arch bridge with twin leaning arches]
+
+*xref:tutorial-bridge.adoc[Network-arch bridge]*
+
+Twin leaning arches and crossing hangers placed with Evaluate Curve. +
+menu:Examples[Network-arch bridge]
+****
+
+[.card]
+****
+image::shell-render.png[A pearly spiral shell with bronze growth lines]
+
+*xref:tutorial-shell.adoc[Spiral shell]*
+
+A self-similar logarithmic spiral: rings square to the spiral, lofted. +
+menu:Examples[Spiral shell]
+****
+
+[.card]
+****
+image::origami-render.png[A white Miura-ori folded sheet]
+
+*xref:tutorial-origami.adoc[Miura-ori fold]*
+
+Shifted zigzag rows lofted with straight faces: every facet a flat parallelogram. +
+menu:Examples[Miura-ori fold]
+****
+
+[.card]
+****
+image::rose-render.png[A brass guilloché rosette]
+
+*xref:tutorial-rose.adoc[Guilloché rose]*
+
+Three-point arcs between turned rings, piped into interlacing filigree. +
+menu:Examples[Guilloché rose]
+****
 --
 
 == The Examples menu
 
 image::ui-examples-menu.png[The Examples menu on the canvas toolbar]
 
-btn:[Examples] lists every ready-made definition: the sixteen above, the tutorial definitions and the tolerance examples. Choosing one replaces what is on the canvas, so save first if you want to keep your own work. Each loads in a second or two; the preview then updates as you drag.
+btn:[Examples] lists every ready-made definition: the twenty above, the tutorial definitions and the tolerance examples. Choosing one replaces what is on the canvas, so save first if you want to keep your own work. Each loads in a second or two; the preview then updates as you drag.
 
 These pictures come from the same definitions. The red preview is what you see while you work; the colours come from baking the final components and setting their colour in FreeCAD, which is how you would prepare a render of your own.
 
@@ -198,6 +238,10 @@ These pictures come from the same definitions. The red preview is what you see w
 |xref:tutorial-slats.adoc[Slatted wave ceiling] |A phase per branch, *Ruled Surface* between paired curves, boards from *Extrude*
 |xref:tutorial-monolith.adoc[Carved monolith] |An attractor driving solids: *Sphere* sizes from *Remap*, one *Solid Difference* with a list
 |xref:tutorial-flange.adoc[Flange with tolerance zones] |Geometry and tolerance together: *Bonus Tolerance*, *Virtual & Resultant Condition*, a *Panel*
+|xref:tutorial-bridge.adoc[Network-arch bridge] |*Arc 3Pt*, *Evaluate Curve* at offset parameters, *Mirror*
+|xref:tutorial-shell.adoc[Spiral shell] |A tangent from a derivative, *Circle CNR* square to a curve, a self-similar *Loft*
+|xref:tutorial-origami.adoc[Miura-ori fold] |`%` for alternation, *Polyline*, *Loft* with *Straight* faces
+|xref:tutorial-rose.adoc[Guilloché rose] |*Shift List* as a rotation, *Arc 3Pt* through three rings
 |===
 
 If you are new to Katydid, do the xref:quick-start.adoc[quick start] and the xref:tutorial-attractor.adoc[attractor grid] first: these examples use the same moves at a larger scale.
