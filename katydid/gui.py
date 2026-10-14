@@ -33,7 +33,8 @@ EXAMPLES = [  # (menu label, key); None draws a separator
     ("Helicoid–catenoid morph", "morph"), ("Tensegrity tower", "tensegrity"), ("Blooming lotus", "lotus"),
     ("Auxetic lattice", "auxetic"), ("Stepped amphitheatre", "amphitheatre"),
     ("Tri-axial grid-shell", "gridshell"), ("Gaudí double-twist columns", "gaudi"), ("Pangolin-scale tower", "pangolin"),
-    ("Dini's surface", "dini"), (None, None),
+    ("Dini's surface", "dini"), ("Kumiko asanoha panel", "kumiko"), ("Menger sponge", "menger"),
+    ("Continuum robot", "continuum"), (None, None),
     ("Tolerance stack-up", "stackup"), ("GD&T calculators", "gdt"),
     ("Flange with tolerance zones", "flange"), ("Impeller with tip clearance", "impeller")]
 

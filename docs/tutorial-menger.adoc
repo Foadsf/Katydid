@@ -1,0 +1,56 @@
+= Tutorial 43: A Menger sponge
+:page-id: tutorial-menger
+include::_attributes.adoc[]
+
+[.lead]
+Split a cube into 27, remove the centre and the six face centres, and repeat on each of the 20 cubes left. The limit is the Menger sponge. Each level keeps 20/27 of the volume, so the volume tends to nothing while the surface grows without bound. Cut it through its centre, square to a long diagonal, and the holes appear as six-pointed stars.
+
+image::menger-render.png[A cube riddled with square tunnels, cut diagonally to show a pattern of star-shaped holes]
+
+Reference: choose menu:Examples[Menger sponge] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== Holes for every level
+
+. Place three sliders: _Size: 27 (9 – 60)_, _Level: 2 (1 – 3)_ with Decimals `0`, and _Cut offset: 0 (-20 – 20)_.
+. Place a *Series* (Sets), _Level no._, with *S* `1`, *N* `1` and *Level → C*: 1, 2, … up to the level.
+. Place four *Expression* (Maths) components on it: _Holes per side_ `3**(x - 1)`, _Hole width_ `y/3**x` (with *Size*), _Hole pitch_ `y/x` (holes per side, *Size*) and _Holes per face_ `x*x`.
+. Place a *Series*, _Hole no._, with the holes per face *→ C*: one list per level.
+. Place two *Expression* components, _First coordinate_ `(x % y - (y - 1)/2)*z` and _Second coordinate_ `(floor(x/y) - (y - 1)/2)*z`, with the hole numbers, the holes per side and the pitch, with menu:Graft[] on *y* and *z*: hole _q_ sits at column _q_ % _m_ and row ⌊_q_/_m_⌋ of the level's grid, centred on the cube.
+
+=== Bars and the cube
+
+[start=6]
+. Place a *Multiplication* (Maths), *Size* × `1.1` (bar length), and three *Center Box* (Surface) components for bars along X (length, width, width), Y (width, length, width) and Z (width, width, length), with menu:Graft[] on the width inputs.
+. Place an *Expression*, _Bar bottom_, `x - y/2`, of the second coordinate and the width (grafted), and three *Move* (Transform) components: X bars to (0, first, bottom), Y bars to (first, 0, bottom), Z bars to (first, second, −length/2).
+. Place a *Center Box* of *Size* on all three sides, moved down by half its size, and a *Solid Difference* (Intersect), _Sponge_, with the cube *→ A* and the three sets of bars wired into *B*, with menu:Flatten[] on *B*.
+
+=== The diagonal cut
+
+[start=9]
+. Place a *Multiplication*, *Size* × `4`, and a *Center Box* of that size: a block standing on z = 0.
+. Place a *Rotate* (Transform) with *A* `54.735610317245346` and *X* (axis) `1, 1, 0`: the block's bottom turns square to the diagonal (1, −1, 1), and the block fills the half beyond it.
+. Place an *Expression*, `x/sqrt(3)`, of *Cut offset*, a *Multiplication* of that by `-1`, and a *Move* by (shift, −shift, shift): along the diagonal.
+. Place a *Solid Difference*, _Diagonal cut_, of the sponge and the block.
+. Turn menu:Preview[] off on everything except the cut.
+
+.The finished definition
+image::menger-canvas.png[The Menger sponge definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::menger-preview.png[The red preview of the Menger sponge]
+
+== What is happening
+
+A point is removed at some level when two of its three coordinates fall in the middle third of their cell at that level. That is exactly a square bar through the whole cube, along the third axis. So the whole sponge is one cube minus 3 × (1 + 9 + 81 …) bars, one Boolean. A tempting shortcut, a 3 × 3 grid of crosses in one plane, misses most of the second level's tunnels: along each axis there are 9 tunnels at level 2, not 3.
+
+The geometry tests check the volume, _Size_³ × (20/27)^*Level*^, and that the centred cut keeps exactly half. The angle 54.7356° is the angle between a cube's edge and its long diagonal, arccos(1/√3).
+
+At *Level* 2 the sponge updates in about a second and a half. *Level* 3 has 273 bars and over 7 000 faces, and FreeCAD's Boolean takes a minute or more.
+
+== Things to try
+
+* Drag *Cut offset* away from 0 and watch the pattern of holes change as the plane moves along the diagonal.
+* Set *Level* to 1 for the first step, a cube with a cross of tunnels.
+* Set *Level* to 3 and wait a minute or more for the next level of detail.

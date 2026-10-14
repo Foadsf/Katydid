@@ -433,6 +433,36 @@ image::dini-render.png[Dini's surface]
 A twisted pseudosphere from three formulas. +
 menu:Examples[Dini's surface]
 ****
+
+[.card]
+****
+image::kumiko-render.png[Kumiko asanoha panel]
+
+*xref:tutorial-kumiko.adoc[42. Kumiko asanoha panel]*
+
+Hemp-leaf stars from one sector turned six times, three strip depths. +
+menu:Examples[Kumiko asanoha panel]
+****
+
+[.card]
+****
+image::menger-render.png[Menger sponge]
+
+*xref:tutorial-menger.adoc[43. Menger sponge]*
+
+Three levels of square tunnels in one Boolean; a diagonal cut shows stars. +
+menu:Examples[Menger sponge]
+****
+
+[.card]
+****
+image::continuum-render.png[Continuum robot]
+
+*xref:tutorial-continuum.adoc[44. Continuum robot]*
+
+A tendon-driven robot on a circular arc, with the tendon pull in a Panel. +
+menu:Examples[Continuum robot]
+****
 --
 
 == Conventions

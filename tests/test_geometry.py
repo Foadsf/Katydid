@@ -782,6 +782,54 @@ class Demos(unittest.TestCase):
             p = V(math.cos(u) * math.sin(v), math.sin(u) * math.sin(v), math.cos(v) + math.log(math.tan(v / 2)) + b * u)
             self.assertLess(surf.distToShape(Part.Vertex(p))[0], 1e-6, (i, j))
 
+    def test_continuum_tendon_lengths_follow_the_bend(self):
+        from katydid import showcase
+        c = self.build(showcase.build_continuum)
+        L, theta, re, k = c["L"].value, math.radians(c["theta"].value), c["re"].value, int(c["k"].value)
+        self.assertEqual(len(list(c["spine"].outputs[0].data)), int(c["n"].value))
+        core = list(c["c_crv"].outputs[0].data)[0]
+        self.assertAlmostEqual(core.Length, L, delta=1e-4 * L)   # the backbone keeps its length
+        tendons = [items[0] for _, items in c["t_crv"].outputs[0].data.branches()]
+        self.assertEqual(len(tendons), k)
+        pulls = list(c["dl"].outputs[0].data)
+        for i, crv in enumerate(tendons):   # constant curvature: L_i = L - theta * re * cos(alpha_i)
+            want = -theta * re * math.cos(2 * math.pi * i / k)
+            self.assertAlmostEqual(pulls[i], want, places=9)
+            self.assertAlmostEqual(crv.Length - L, want, delta=1e-4 * L)
+
+    def test_kumiko_spokes_join_centres_to_lattice_points(self):
+        from katydid import showcase
+        c = self.build(showcase.build_kumiko)
+        N, a = int(c["N"].value), c["a"].value
+        h, R = a * math.sqrt(3) / 2, N * a
+        spokes = list(c["spokes"].outputs[0].data)
+        self.assertEqual(len(spokes), 18 * N * N)   # three per small triangle, 6 N^2 triangles
+        normals = [V(math.cos(math.radians(t)), math.sin(math.radians(t)), 0) for t in (30, 90, 150)]
+        for sp in spokes:
+            self.assertAlmostEqual(sp.Length, a / math.sqrt(3), places=9)
+            p, q = (v.Point for v in sp.Vertexes)
+            for pt in (p, q):   # inside the hexagon
+                self.assertLessEqual(max(abs(pt.dot(n)) for n in normals), R * math.sqrt(3) / 2 + 1e-9)
+            v = q.y / h
+            u = (q.x - v * a / 2) / a
+            self.assertAlmostEqual(v, round(v), places=6)   # the outer end is a grid point
+            self.assertAlmostEqual(u, round(u), places=6)
+        self.assertEqual(len(list(c["grid_s"].outputs[0].data)), 18 * N)
+
+    def test_menger_sponge_volume_and_star_cut(self):
+        from katydid import showcase
+        c = self.build(showcase.build_menger)
+        S, n = c["S"].value, int(c["level"].value)
+        sponge = list(c["sponge"].outputs[0].data)[0]
+        self.assertTrue(sponge.isValid())
+        self.assertAlmostEqual(sponge.Volume, S ** 3 * (20 / 27) ** n, places=6)   # 20 of 27 cubes kept per level
+        cut = list(c["cut"].outputs[0].data)[0]
+        self.assertAlmostEqual(cut.Volume, sponge.Volume / 2, places=6)   # the sponge is symmetric about its centre
+        diag = V(1, -1, 1).normalize()
+        faces = [f for f in cut.Faces if f.Surface.TypeId == "Part::GeomPlane" and abs(abs(f.normalAt(0, 0).dot(diag)) - 1) < 1e-9]
+        self.assertTrue(faces)
+        self.assertGreater(sum(len(f.Wires) for f in faces), 1)   # the cut face has holes in it
+
     def test_surface_from_points_passes_through_its_grid(self):
         pts = [V(x, y, (x * y) / 50.0) for y in range(0, 40, 10) for x in range(0, 50, 10)]
         srf = lib.SurfaceFromPoints().solve_instance(pts, 5)

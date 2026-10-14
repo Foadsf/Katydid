@@ -30,7 +30,8 @@ SHOWS = [("Voronoi screen", "seed"), ("Twisted tower", "twist"), ("Waffle dome",
          ("Tensegrity tower", "taper"), ("Blooming lotus", "bloom"), ("Auxetic lattice", "theta"),
          ("Stepped amphitheatre", "sweep"),
          ("Tri-axial grid-shell", "p"), ("Gaudí double-twist columns", "R"), ("Pangolin-scale tower", "ax"),
-         ("Dini's surface", "b")]
+         ("Dini's surface", "b"), ("Kumiko asanoha panel", "a"), ("Menger sponge", "S"),
+         ("Continuum robot", "theta")]
 
 
 def body(run):

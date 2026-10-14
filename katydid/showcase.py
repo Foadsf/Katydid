@@ -2123,6 +2123,267 @@ def build_dini(scene) -> dict:
     return c
 
 
+def build_continuum(scene) -> dict:
+    """A tendon-driven continuum robot: one drilled vertebra copied along a
+    constant-curvature arc, tendons threaded through the eyelets (straight or
+    helical), and the tendon length changes that bending demands."""
+    c = {
+        "n": _slider("Disks", 14, 4, 30, 0),
+        "L": _slider("Length", 60, 20, 120),
+        "theta": _slider("Bend", 120, 1, 270),
+        "r": _slider("Disk radius", 6, 3, 12),
+        "t": _slider("Disk thickness", 1.5, 0.5, 4, 2),
+        "k": _slider("Tendons", 4, 2, 8, 0),
+        "re": _slider("Eyelet radius", 4.5, 1.5, 10, 2),
+        "tau": _slider("Routing twist", 0, -30, 30),
+        "tr": _slider("Tendon radius", 0.3, 0.1, 1, 2),
+        # one vertebra
+        "disk": lib.Cylinder(), "half_t": lib.Multiplication(), "disk_c": lib.Move(),
+        "ring": lib.Circle(), "eyes": lib.DivideCurve(), "exyz": lib.Deconstruct(),
+        "hole_r": lib.Multiplication(), "hole_l": lib.Addition(), "hole": lib.Cylinder(), "hole_z": lib.Expression(),
+        "holes": lib.Move(), "core_h": lib.Cylinder(), "core_hz": lib.Move(), "vertebra": lib.Difference(),
+        # the bend
+        "j": lib.Series(), "phi": lib.Expression(), "spin": lib.Multiplication(), "Rb": lib.Expression(),
+        "centre": lib.ConstructPoint(), "spun": lib.Rotate(), "spine": lib.Rotate(),
+        # tendons and core
+        "t_spun": lib.Rotate(), "t_bent": lib.Rotate(), "t_crv": lib.Interpolate(), "tendons": lib.Pipe(),
+        "origin": lib.ConstructPoint(), "c_bent": lib.Rotate(), "c_crv": lib.Interpolate(), "core": lib.Pipe(),
+        "base": lib.Cylinder(), "base_r": lib.Addition(), "base_z": lib.Expression(), "base_at": lib.Move(),
+        # how much each tendon must be pulled in
+        "i": lib.Series(), "alpha": lib.Expression(), "dl": lib.Expression(), "report": lib.Panel(),
+    }
+    for key, nick, f in (("hole_z", "Hole bottom", "-x/2 - 1"), ("phi", "Disk angle", "x*y/(z - 1)"),
+                         ("Rb", "Bend radius", "x/radians(y)"), ("base_z", "Base bottom", "-x/2 - 3"),
+                         ("alpha", "Tendon angle", "360*x/y"), ("dl", "Length change", "-radians(x)*y*cos(radians(z))")):
+        c[key].nickname = nick
+        _set(c[key], F=f)
+    for key, nick in (("vertebra", "Vertebra"), ("j", "Disk no."), ("spine", "Vertebrae"), ("tendons", "Tendons"),
+                      ("core", "Backbone"), ("base_at", "Base"), ("i", "Tendon no."), ("report", "Tendon pull")):
+        c[key].nickname = nick
+    _set(c["half_t"], B=-0.5)
+    _set(c["hole_r"], B=1.6)
+    _set(c["hole_l"], B=2.0)
+    _set(c["core_h"], R=1.0)
+    _set(c["core"], R=0.8)
+    _set(c["base_r"], B=3.0)
+    _set(c["base"], L=3.0)
+    for key in ("spine", "t_bent", "c_bent"):
+        _set(c[key], X=(0.0, 1.0, 0.0))   # bend about Y, through the centre of curvature
+    c["t_spun"].inputs[0].modifier = "graft"   # one branch per tendon, its eyelet at every disk
+    c["report"].size = (220, 150)
+    for key in ("disk", "disk_c", "ring", "eyes", "hole", "holes", "core_h", "core_hz", "vertebra", "centre",
+                "spun", "t_spun", "t_bent", "t_crv", "origin", "c_bent", "c_crv", "base"):
+        c[key].preview = False
+    _place(scene, c, {
+        "n": (-980, -340), "L": (-980, -280), "theta": (-980, -220), "r": (-980, -120), "t": (-980, -60),
+        "k": (-980, 40), "re": (-980, 100), "tau": (-980, 200), "tr": (-980, 260),
+        "disk": (-700, -380), "half_t": (-700, -280), "disk_c": (-540, -380), "ring": (-700, -180),
+        "eyes": (-540, -180), "exyz": (-380, -180), "hole_r": (-700, -80), "hole_l": (-700, 10), "hole": (-540, -60),
+        "hole_z": (-540, 40), "holes": (-220, -120), "core_h": (-380, -300), "core_hz": (-220, -300),
+        "vertebra": (-60, -280),
+        "j": (-700, 140), "phi": (-540, 140), "spin": (-540, 240), "Rb": (-540, 340), "centre": (-380, 340),
+        "spun": (100, -260), "spine": (260, -240),
+        "t_spun": (100, -100), "t_bent": (260, -80), "t_crv": (420, -80), "tendons": (580, -80),
+        "origin": (100, 60), "c_bent": (260, 80), "c_crv": (420, 80), "core": (580, 80),
+        "base_r": (-60, 440), "base_z": (-60, 540), "base": (100, 440), "base_at": (260, 460),
+        "i": (-700, 460), "alpha": (-540, 460), "dl": (-380, 500), "report": (-220, 480)})
+    _wire(scene, c, [
+        ("r", 0, "disk", 0), ("t", 0, "disk", 1), ("t", 0, "half_t", 0), ("disk", 0, "disk_c", 0),
+        ("half_t", 0, "disk_c", 3),
+        ("re", 0, "ring", 0), ("ring", 0, "eyes", 0), ("k", 0, "eyes", 1), ("eyes", 0, "exyz", 0),
+        ("tr", 0, "hole_r", 0), ("t", 0, "hole_l", 0), ("hole_r", 0, "hole", 0), ("hole_l", 0, "hole", 1),
+        ("t", 0, "hole_z", 1), ("hole", 0, "holes", 0), ("exyz", 0, "holes", 1), ("exyz", 1, "holes", 2),
+        ("hole_z", 0, "holes", 3), ("hole_l", 0, "core_h", 1), ("core_h", 0, "core_hz", 0),
+        ("hole_z", 0, "core_hz", 3),
+        ("disk_c", 0, "vertebra", 0), ("holes", 0, "vertebra", 1), ("core_hz", 0, "vertebra", 1),
+        ("n", 0, "j", 2), ("j", 0, "phi", 1), ("theta", 0, "phi", 2), ("n", 0, "phi", 3),
+        ("j", 0, "spin", 0), ("tau", 0, "spin", 1), ("L", 0, "Rb", 1), ("theta", 0, "Rb", 2), ("Rb", 0, "centre", 0),
+        ("vertebra", 0, "spun", 0), ("spin", 0, "spun", 1),
+        ("spun", 0, "spine", 0), ("phi", 0, "spine", 1), ("centre", 0, "spine", 2),
+        ("eyes", 0, "t_spun", 0), ("spin", 0, "t_spun", 1),
+        ("t_spun", 0, "t_bent", 0), ("phi", 0, "t_bent", 1), ("centre", 0, "t_bent", 2),
+        ("t_bent", 0, "t_crv", 0), ("t_crv", 0, "tendons", 0), ("tr", 0, "tendons", 1),
+        ("origin", 0, "c_bent", 0), ("phi", 0, "c_bent", 1), ("centre", 0, "c_bent", 2),
+        ("c_bent", 0, "c_crv", 0), ("c_crv", 0, "core", 0),
+        ("r", 0, "base_r", 0), ("base_r", 0, "base", 0), ("t", 0, "base_z", 1), ("base", 0, "base_at", 0),
+        ("base_z", 0, "base_at", 3),
+        ("k", 0, "i", 2), ("i", 0, "alpha", 1), ("k", 0, "alpha", 2),
+        ("theta", 0, "dl", 1), ("re", 0, "dl", 2), ("alpha", 0, "dl", 3), ("dl", 0, "report", 0)])
+    return c
+
+
+def build_kumiko(scene) -> dict:
+    """A kumiko asanoha (hemp-leaf) panel: a triangular grid in a hexagonal
+    frame, every small triangle split by three spokes from its centroid,
+    built in one 60° sector and turned six times; three strip depths."""
+    c = {
+        "N": _slider("Cells", 3, 2, 6, 0),
+        "a": _slider("Cell size", 12, 6, 30),
+        "fw": _slider("Frame width", 3, 1, 8),
+        "fd": _slider("Frame depth", 12, 4, 30),
+        "gd": _slider("Grid depth", 8, 2, 30),
+        "sd": _slider("Spoke depth", 5, 1, 30),
+        "R": lib.Multiplication(), "h": lib.Expression(),
+        # grid lines of one sector: one family, turned about the sector's centre
+        "j": lib.Series(), "y0": lib.Multiplication(), "x0": lib.Expression(), "x1": lib.Expression(),
+        "p0": lib.ConstructPoint(), "p1": lib.ConstructPoint(), "line": lib.Line(),
+        "gx": lib.Multiplication(), "gy": lib.Expression(), "G": lib.ConstructPoint(), "fam": lib.Series(),
+        "families": lib.Rotate(),
+        # spokes of one sector
+        "nn": lib.Multiplication(), "q": lib.Series(), "pu": lib.Expression(), "pd": lib.Expression(),
+        "qu": lib.CullPattern(), "qd": lib.CullPattern(), "ux": lib.Expression(), "uy": lib.Expression(),
+        "dx": lib.Expression(), "dy": lib.Expression(), "ell": lib.Expression(), "tip": lib.ConstructPoint(),
+        "spoke": lib.Line(), "au": lib.Series(), "ad": lib.Series(), "su": lib.Rotate(), "sdn": lib.Rotate(),
+        "up": lib.Move(), "down": lib.Move(),
+        # six sectors, strips and frame
+        "sec": lib.Series(), "grid": lib.Rotate(), "spokes": lib.Rotate(),
+        "gv": lib.VectorXYZ(), "sv": lib.VectorXYZ(), "fv": lib.VectorXYZ(),
+        "grid_s": lib.Extrude(), "spoke_s": lib.Extrude(),
+        "Ro": lib.Expression(), "inner": lib.RegularPolygon(), "outer": lib.RegularPolygon(),
+        "band": lib.RuledSurface(), "frame": lib.Extrude(),
+    }
+    for key, nick, f in (("h", "Row height", "x*sqrt(3)/2"), ("x0", "Line start", "x*y/2"),
+                         ("x1", "Line end", "z*(y - x/2)"), ("gy", "Centre Y", "x/(2*sqrt(3))"),
+                         ("pu", "Up triangle?", "max(0, 1 - floor((x % y + floor(x/y))/y))"),
+                         ("pd", "Down triangle?", "max(0, 1 - floor((x % y + floor(x/y) + 1)/y))"),
+                         ("ux", "Up centre X", "z*(x % y + floor(x/y)/2 + 0.5)"),
+                         ("uy", "Up centre Y", "z*sqrt(3)/2*(floor(x/y) + 1/3)"),
+                         ("dx", "Down centre X", "z*(x % y + floor(x/y)/2 + 1)"),
+                         ("dy", "Down centre Y", "z*sqrt(3)/2*(floor(x/y) + 2/3)"),
+                         ("ell", "Spoke length", "x/sqrt(3)"), ("Ro", "Frame outside", "x + y*2/sqrt(3)")):
+        c[key].nickname = nick
+        _set(c[key], F=f)
+    for key, nick in (("j", "Line no."), ("families", "Three families"), ("q", "Triangle no."),
+                      ("au", "Up spoke angles"), ("ad", "Down spoke angles"), ("up", "Up spokes"),
+                      ("down", "Down spokes"), ("sec", "Sector angles"), ("grid_s", "Grid strips"),
+                      ("spoke_s", "Spoke strips"), ("frame", "Frame")):
+        c[key].nickname = nick
+    _set(c["gx"], B=0.5)
+    _set(c["fam"], S=0.0, N=120.0, C=3.0)
+    _set(c["au"], S=90.0, N=120.0, C=3.0)
+    _set(c["ad"], S=30.0, N=120.0, C=3.0)
+    _set(c["sec"], S=0.0, N=60.0, C=6.0)
+    _set(c["inner"], S=6.0)
+    _set(c["outer"], S=6.0)
+    c["families"].inputs[1].modifier = "graft"
+    for key in ("su", "sdn"):
+        c[key].inputs[1].modifier = "graft"   # one branch per spoke direction
+    for key in ("grid", "spokes"):
+        c[key].inputs[0].modifier = "flatten"
+        c[key].inputs[1].modifier = "graft"   # every strip of the sector, once per sector
+    for key in ("p0", "p1", "line", "G", "families", "tip", "spoke", "su", "sdn", "up", "down", "grid", "spokes",
+                "inner", "outer", "band"):
+        c[key].preview = False
+    _place(scene, c, {
+        "N": (-980, -300), "a": (-980, -240), "fw": (-980, -140), "fd": (-980, -80), "gd": (-980, -20),
+        "sd": (-980, 40),
+        "R": (-700, -400), "h": (-700, -300), "j": (-700, -200), "y0": (-540, -240), "x0": (-540, -340),
+        "x1": (-540, -140), "p0": (-380, -320), "p1": (-380, -200), "line": (-220, -260), "gx": (-540, -440),
+        "gy": (-380, -440), "G": (-220, -420), "fam": (-220, -140), "families": (-60, -300),
+        "nn": (-700, 120), "q": (-540, 120), "pu": (-380, 60), "pd": (-380, 160), "qu": (-220, 60),
+        "qd": (-220, 160), "ux": (-60, 20), "uy": (-60, 100), "dx": (-60, 180), "dy": (-60, 260),
+        "ell": (-540, 300), "tip": (-380, 300), "spoke": (-220, 300), "au": (-220, 400), "ad": (-220, 480),
+        "su": (100, 340), "sdn": (100, 440), "up": (260, 120), "down": (260, 240),
+        "sec": (100, -120), "grid": (260, -260), "spokes": (420, 160), "gv": (420, -360), "sv": (420, 300),
+        "grid_s": (580, -260), "spoke_s": (580, 160), "Ro": (-540, -540), "inner": (-380, -560),
+        "outer": (-220, -560), "band": (-60, -560), "fv": (100, -640), "frame": (260, -560)})
+    _wire(scene, c, [
+        ("N", 0, "R", 0), ("a", 0, "R", 1), ("a", 0, "h", 1),
+        ("N", 0, "j", 2), ("j", 0, "y0", 0), ("h", 0, "y0", 1), ("j", 0, "x0", 1), ("a", 0, "x0", 2),
+        ("j", 0, "x1", 1), ("N", 0, "x1", 2), ("a", 0, "x1", 3),
+        ("x0", 0, "p0", 0), ("y0", 0, "p0", 1), ("x1", 0, "p1", 0), ("y0", 0, "p1", 1), ("p0", 0, "line", 0),
+        ("p1", 0, "line", 1), ("R", 0, "gx", 0), ("R", 0, "gy", 1), ("gx", 0, "G", 0), ("gy", 0, "G", 1),
+        ("line", 0, "families", 0), ("fam", 0, "families", 1), ("G", 0, "families", 2),
+        ("N", 0, "nn", 0), ("N", 0, "nn", 1), ("nn", 0, "q", 2),
+        ("q", 0, "pu", 1), ("N", 0, "pu", 2), ("q", 0, "pd", 1), ("N", 0, "pd", 2),
+        ("q", 0, "qu", 0), ("pu", 0, "qu", 1), ("q", 0, "qd", 0), ("pd", 0, "qd", 1),
+        ("qu", 0, "ux", 1), ("N", 0, "ux", 2), ("a", 0, "ux", 3), ("qu", 0, "uy", 1), ("N", 0, "uy", 2),
+        ("a", 0, "uy", 3), ("qd", 0, "dx", 1), ("N", 0, "dx", 2), ("a", 0, "dx", 3), ("qd", 0, "dy", 1),
+        ("N", 0, "dy", 2), ("a", 0, "dy", 3),
+        ("a", 0, "ell", 1), ("ell", 0, "tip", 0), ("tip", 0, "spoke", 1),
+        ("spoke", 0, "su", 0), ("au", 0, "su", 1), ("spoke", 0, "sdn", 0), ("ad", 0, "sdn", 1),
+        ("su", 0, "up", 0), ("ux", 0, "up", 1), ("uy", 0, "up", 2),
+        ("sdn", 0, "down", 0), ("dx", 0, "down", 1), ("dy", 0, "down", 2),
+        ("families", 0, "grid", 0), ("sec", 0, "grid", 1),
+        ("up", 0, "spokes", 0), ("down", 0, "spokes", 0), ("sec", 0, "spokes", 1),
+        ("gd", 0, "gv", 2), ("sd", 0, "sv", 2), ("fd", 0, "fv", 2),
+        ("grid", 0, "grid_s", 0), ("gv", 0, "grid_s", 1), ("spokes", 0, "spoke_s", 0), ("sv", 0, "spoke_s", 1),
+        ("R", 0, "Ro", 1), ("fw", 0, "Ro", 2), ("R", 0, "inner", 0), ("Ro", 0, "outer", 0),
+        ("inner", 0, "band", 0), ("outer", 0, "band", 1), ("band", 0, "frame", 0), ("fv", 0, "frame", 1)])
+    return c
+
+
+def build_menger(scene) -> dict:
+    """A Menger sponge as one Boolean: square bars through the cube along X, Y
+    and Z at every level, then a cut through the centre square to a body
+    diagonal (1, -1, 1), where the holes show as six-pointed stars."""
+    c = {
+        "S": _slider("Size", 27, 9, 60),
+        "level": _slider("Level", 2, 1, 3, 0),
+        "d": _slider("Cut offset", 0, -20, 20),
+        "lv": lib.Series(), "m": lib.Expression(), "w": lib.Expression(), "step": lib.Expression(),
+        "cnt": lib.Expression(), "q": lib.Series(), "a": lib.Expression(), "b": lib.Expression(),
+        "zc": lib.Expression(), "L": lib.Multiplication(), "nL": lib.Multiplication(),
+        "bx": lib.Box(), "by": lib.Box(), "bz": lib.Box(), "mx": lib.Move(), "my": lib.Move(), "mz": lib.Move(),
+        "cube": lib.Box(), "nS": lib.Multiplication(), "cube_c": lib.Move(), "sponge": lib.Difference(),
+        "big": lib.Multiplication(), "half": lib.Box(), "tilt": lib.Rotate(), "dd": lib.Expression(),
+        "ndd": lib.Multiplication(), "half_at": lib.Move(), "cut": lib.Difference(),
+    }
+    for key, nick, f in (("m", "Holes per side", "3**(x - 1)"), ("w", "Hole width", "y/3**x"),
+                         ("step", "Hole pitch", "y/x"), ("cnt", "Holes per face", "x*x"),
+                         ("a", "First coordinate", "(x % y - (y - 1)/2)*z"),
+                         ("b", "Second coordinate", "(floor(x/y) - (y - 1)/2)*z"), ("zc", "Bar bottom", "x - y/2"),
+                         ("dd", "Shift", "x/sqrt(3)")):
+        c[key].nickname = nick
+        _set(c[key], F=f)
+    for key, nick in (("lv", "Level no."), ("q", "Hole no."), ("mx", "Bars along X"), ("my", "Bars along Y"),
+                      ("mz", "Bars along Z"), ("sponge", "Sponge"), ("half", "Half space"), ("cut", "Diagonal cut")):
+        c[key].nickname = nick
+    _set(c["lv"], S=1.0, N=1.0)
+    _set(c["L"], B=1.1)
+    _set(c["nL"], B=-0.5)
+    _set(c["nS"], B=-0.5)
+    _set(c["big"], B=4.0)
+    _set(c["ndd"], B=-1.0)
+    # the box above z = 0 turns to lie beyond the plane square to (1, -1, 1), the
+    # isometric view direction, so the cut face looks straight at the viewer
+    _set(c["tilt"], A=54.735610317245346, X=(1.0, 1.0, 0.0))
+    for key, i in (("a", 2), ("a", 3), ("b", 2), ("b", 3), ("zc", 2), ("bx", 1), ("bx", 2), ("by", 0), ("by", 2),
+                   ("bz", 0), ("bz", 1)):
+        c[key].inputs[i].modifier = "graft"   # one branch per level, matching the hole numbers
+    c["sponge"].inputs[1].modifier = "flatten"   # all bars of all levels in one cut
+    for key in ("bx", "by", "bz", "mx", "my", "mz", "cube", "cube_c", "sponge", "half", "tilt", "half_at"):
+        c[key].preview = False
+    _place(scene, c, {
+        "S": (-900, -240), "level": (-900, -180), "d": (-900, 200),
+        "lv": (-660, -200), "m": (-500, -280), "w": (-500, -180), "step": (-340, -280), "cnt": (-340, -380),
+        "q": (-180, -380), "a": (-20, -340), "b": (-20, -240), "zc": (140, -200), "L": (-500, -60),
+        "nL": (-340, -60), "bx": (-180, -120), "by": (-180, -20), "bz": (-180, 80), "mx": (300, -320),
+        "my": (300, -200), "mz": (300, -80), "cube": (-500, 60), "nS": (-660, 60), "cube_c": (-340, 60),
+        "sponge": (460, -140), "big": (-660, 260), "half": (-500, 260), "tilt": (-340, 280),
+        "dd": (-500, 400), "ndd": (-340, 400), "half_at": (-180, 300), "cut": (620, 0)})
+    _wire(scene, c, [
+        ("level", 0, "lv", 2), ("lv", 0, "m", 1), ("lv", 0, "w", 1), ("S", 0, "w", 2),
+        ("m", 0, "step", 1), ("S", 0, "step", 2), ("m", 0, "cnt", 1), ("cnt", 0, "q", 2),
+        ("q", 0, "a", 1), ("m", 0, "a", 2), ("step", 0, "a", 3), ("q", 0, "b", 1), ("m", 0, "b", 2),
+        ("step", 0, "b", 3), ("b", 0, "zc", 1), ("w", 0, "zc", 2),
+        ("S", 0, "L", 0), ("L", 0, "nL", 0),
+        ("L", 0, "bx", 0), ("w", 0, "bx", 1), ("w", 0, "bx", 2),
+        ("w", 0, "by", 0), ("L", 0, "by", 1), ("w", 0, "by", 2),
+        ("w", 0, "bz", 0), ("w", 0, "bz", 1), ("L", 0, "bz", 2),
+        ("bx", 0, "mx", 0), ("a", 0, "mx", 2), ("zc", 0, "mx", 3),
+        ("by", 0, "my", 0), ("a", 0, "my", 1), ("zc", 0, "my", 3),
+        ("bz", 0, "mz", 0), ("a", 0, "mz", 1), ("b", 0, "mz", 2), ("nL", 0, "mz", 3),
+        ("S", 0, "cube", 0), ("S", 0, "cube", 1), ("S", 0, "cube", 2), ("S", 0, "nS", 0),
+        ("cube", 0, "cube_c", 0), ("nS", 0, "cube_c", 3),
+        ("cube_c", 0, "sponge", 0), ("mx", 0, "sponge", 1), ("my", 0, "sponge", 1), ("mz", 0, "sponge", 1),
+        ("S", 0, "big", 0), ("big", 0, "half", 0), ("big", 0, "half", 1), ("big", 0, "half", 2),
+        ("half", 0, "tilt", 0), ("d", 0, "dd", 1), ("dd", 0, "ndd", 0),
+        ("tilt", 0, "half_at", 0), ("dd", 0, "half_at", 1), ("ndd", 0, "half_at", 2), ("dd", 0, "half_at", 3),
+        ("sponge", 0, "cut", 0), ("half_at", 0, "cut", 1)])
+    return c
+
+
 SHOWCASE = {"voronoi": build_voronoi, "tower": build_tower, "waffle": build_waffle, "wave": build_wave,
             "phyllotaxis": build_phyllotaxis, "hyperboloid": build_hyperboloid,
             "staircase": build_staircase, "city": build_city, "weave": build_weave,
@@ -2133,4 +2394,5 @@ SHOWCASE = {"voronoi": build_voronoi, "tower": build_tower, "waffle": build_waff
             "enneper": build_enneper, "stadium": build_stadium, "whirlpool": build_whirlpool,
             "impeller": build_impeller, "morph": build_morph, "tensegrity": build_tensegrity,
             "lotus": build_lotus, "auxetic": build_auxetic, "amphitheatre": build_amphitheatre,
-            "gridshell": build_gridshell, "gaudi": build_gaudi, "pangolin": build_pangolin, "dini": build_dini}
+            "gridshell": build_gridshell, "gaudi": build_gaudi, "pangolin": build_pangolin, "dini": build_dini,
+            "continuum": build_continuum, "kumiko": build_kumiko, "menger": build_menger}

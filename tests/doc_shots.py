@@ -45,9 +45,10 @@ ZOOM = {"voronoi": 0.88, "waffle": 0.72, "wave": 0.7, "phyllotaxis": 0.78, "city
         "mashrabiya": 0.85, "columns": 0.85, "pendants": 0.8, "enneper": 0.8,
         "stadium": 0.75, "whirlpool": 0.8, "impeller": 0.6, "morph": 1.0,
         "tensegrity": 1.05, "lotus": 0.8, "auxetic": 0.85, "amphitheatre": 0.8,
-        "gridshell": 0.8, "gaudi": 0.85, "pangolin": 0.7, "dini": 0.9}
+        "gridshell": 0.8, "gaudi": 0.85, "pangolin": 0.7, "dini": 0.9,
+        "continuum": 0.85, "kumiko": 0.85, "menger": 1.15}
 TILT = {"phyllotaxis": 35, "knot": 30, "ring": 50, "rose": 25,   # degrees back from a top view
-        "enneper": 55, "pendants": 120, "lotus": 55, "amphitheatre": 50}                         # over 90: from below, looking up
+        "enneper": 55, "pendants": 120, "lotus": 55, "amphitheatre": 50, "kumiko": 20}                         # over 90: from below, looking up
 SMOOTH = {"knot", "ring", "morph", "dini"}   # not "shell": its big loft hung the render at this deviation
 SHADED = {"shell", "lotus"}        # no edge lines, default mesh
 SPIN = {"ring": 270, "pendants": 45, "amphitheatre": 180}   # turn the closed loft's seam (on +X) to the back   # fitAll fits a bounding sphere: close in
@@ -128,6 +129,11 @@ RENDERS = {  # showcase key -> [(component, colour, transparency %, lift in mm)]
               ("ribx", (0.70, 0.55, 0.40), 0, 0.0)],
     "pangolin": [("scales", (0.62, 0.46, 0.32), 0, 0.0), ("core", (0.25, 0.25, 0.27), 0, 0.0)],
     "dini": [("scaled", (0.40, 0.62, 0.80), 0, 0.0)],
+    "continuum": [("spine", (0.80, 0.82, 0.86), 0, 0.0), ("tendons", (0.85, 0.25, 0.15), 0, 0.0),
+                  ("core", (0.25, 0.25, 0.27), 0, 0.0), ("base_at", (0.35, 0.36, 0.40), 0, 0.0)],
+    "kumiko": [("grid_s", (0.86, 0.70, 0.50), 0, 0.0), ("spoke_s", (0.93, 0.82, 0.62), 0, 0.0),
+               ("frame", (0.66, 0.48, 0.30), 0, 0.0)],
+    "menger": [("cut", (0.88, 0.86, 0.82), 0, 0.0)],
 }
 
 
@@ -341,7 +347,10 @@ def body(run):
 
     # Showcase: canvas, red preview and a material render of each
     from katydid import showcase
+    only = os.environ.get("KATYDID_SHOWCASE")   # e.g. "menger,kumiko": redo just these images
     for key, builder in showcase.SHOWCASE.items():
+        if only and key not in only.split(","):
+            continue
         d, bad = load(panel, builder)
         while panel.scene._pending:
             pump(50)

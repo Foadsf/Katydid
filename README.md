@@ -37,6 +37,8 @@ Each of these loads from the canvas's **Examples** menu and has a step-by-step t
 | ![Auxetic lattice](docs/images/auxetic-render.png) **Auxetic lattice:** bow-tie cells with a live negative Poisson's ratio | ![Stepped amphitheatre](docs/images/amphitheatre-render.png) **Stepped amphitheatre:** ruled tiers round an orchestra, with a band shell |
 | ![Tri-axial grid-shell](docs/images/gridshell-render.png) **Tri-axial grid-shell:** timber ribs from three families of contours, in a kagome weave | ![Gaudí double-twist columns](docs/images/gaudi-render.png) **Gaudí double-twist columns:** two counter-twisted prisms intersected, under catenary vaults |
 | ![Pangolin-scale tower](docs/images/pangolin-render.png) **Pangolin-scale tower:** overlapping scales that flare open near an attractor | ![Dini's surface](docs/images/dini-render.png) **Dini's surface:** a twisted pseudosphere from three formulas |
+| ![Kumiko asanoha panel](docs/images/kumiko-render.png) **Kumiko asanoha panel:** hemp-leaf stars in timber strips of three depths | ![Menger sponge](docs/images/menger-render.png) **Menger sponge:** square tunnels at every level, cut to show six-pointed stars |
+| ![Continuum robot](docs/images/continuum-render.png) **Continuum robot:** drilled disks on a bent backbone, with the tendon pull in a Panel | |
 
 Tested on FreeCAD 1.1 on Windows; it should run wherever FreeCAD 1.0+ with PySide6 runs.
 

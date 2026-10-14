@@ -1,0 +1,54 @@
+= Tutorial 42: A kumiko asanoha panel
+:page-id: tutorial-kumiko
+include::_attributes.adoc[]
+
+[.lead]
+Kumiko is Japanese lattice woodwork assembled from thin strips without nails. _Asanoha_, the hemp-leaf pattern, splits every triangle of a triangular grid with three spokes from its centre to its corners. Around every grid point the spokes form a six-pointed star. Here the panel is built in one 60° sector and turned six times inside a hexagonal frame, with three strip depths.
+
+image::kumiko-render.png[A hexagonal timber panel filled with the asanoha star pattern in strips of three depths]
+
+Reference: choose menu:Examples[Kumiko asanoha panel] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== The grid in one sector
+
+. Place six sliders: _Cells: 3 (2 – 6)_ with Decimals `0`, _Cell size: 12 (6 – 30)_, _Frame width: 3 (1 – 8)_, _Frame depth: 12 (4 – 30)_, _Grid depth: 8 (2 – 30)_ and _Spoke depth: 5 (1 – 30)_.
+. Place a *Multiplication* (Maths), *Cells* × *Cell size* (the sector's side _R_), and an *Expression* (Maths), _Row height_, `x*sqrt(3)/2`, with *Cell size*.
+. Place a *Series* (Sets), _Line no._, with *Cells → C*, a *Multiplication* of it by the row height, and two *Expression* components, _Line start_ `x*y/2` (line no., *Cell size*) and _Line end_ `z*(y - x/2)` (line no., *Cells*, *Cell size*). Place two *Construct Point* (Vector) components and a *Line* (Curve): the grid lines parallel to the sector's base.
+. Place a *Construct Point* at the sector's centre (_R_/2, `x/(2*sqrt(3))` of _R_), a *Series*, `0`, `120`, `3`, and a *Rotate* (Transform), _Three families_, about that centre with menu:Graft[] on *A*: the sector is an equilateral triangle, so turning one family by 120° and 240° gives the other two.
+
+=== The spokes in one sector
+
+[start=5]
+. Place a *Multiplication*, *Cells* × *Cells*, and a *Series*, _Triangle no._, with it as *C*. Triangle _q_ sits in row ⌊_q_/*Cells*⌋ at position _q_ % *Cells*.
+. Place two *Expression* components, _Up triangle?_ `max(0, 1 - floor((x % y + floor(x/y))/y))` and _Down triangle?_ `max(0, 1 - floor((x % y + floor(x/y) + 1)/y))`, with the triangle numbers and *Cells*, and two *Cull Pattern* (Sets): keep the triangles that fit in the sector.
+. Place four *Expression* components for their centres, with the kept numbers, *Cells* and *Cell size*: `z*(x % y + floor(x/y)/2 + 0.5)` and `z*sqrt(3)/2*(floor(x/y) + 1/3)` for the up triangles, `z*(x % y + floor(x/y)/2 + 1)` and `z*sqrt(3)/2*(floor(x/y) + 2/3)` for the down ones.
+. Place an *Expression*, _Spoke length_, `x/sqrt(3)`, a *Construct Point* at (length, 0, 0) and a *Line* from the origin to it: one spoke pointing along X.
+. Place two *Series*, `90`, `120`, `3` and `30`, `120`, `3`, and two *Rotate* components of the spoke with menu:Graft[] on *A*: the three spokes of an up triangle and of a down triangle. Place two *Move* (Transform) components to put them at the centres.
+
+=== Six sectors, strips and frame
+
+[start=10]
+. Place a *Series*, _Sector angles_, `0`, `60`, `6`, and two *Rotate* components: the three families, and the up and down spokes wired into one *G*, each with menu:Flatten[] on *G* and menu:Graft[] on *A*.
+. Place three *Vector XYZ* (Vector) components with the three depths as *Z*, and two *Extrude* (Surface) components, _Grid strips_ and _Spoke strips_.
+. For the frame, place an *Expression*, `x + y*2/sqrt(3)`, with _R_ and *Frame width*, two *Regular Polygon* (Curve) components with *S* `6` (radius _R_ and that), a *Ruled Surface* (Surface) between them and an *Extrude*, _Frame_, by the frame depth.
+. Turn menu:Preview[] off on everything except the strips and the frame.
+
+.The finished definition
+image::kumiko-canvas.png[The kumiko definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::kumiko-preview.png[The red preview of the kumiko panel]
+
+== What is happening
+
+The hexagon splits into six equilateral sectors, and each sector into *Cells*² small triangles: rows of up-pointing triangles (_i_ + _j_ ≤ *Cells* − 1) with down-pointing ones between them (_i_ + _j_ ≤ *Cells* − 2). The two *Cull Pattern* formulas are those two tests written with `floor`, because *Expression* has no comparisons: `max(0, 1 - floor(s/y))` is 1 when _s_ < _y_ and 0 otherwise. A spoke runs from a triangle's centre to a corner, so each spoke is _a_/√3 long and its outer end is a grid point. The geometry tests check both of these for every spoke, and that all of them lie inside the hexagon. Turning a spoke the wrong way makes them fail.
+
+The strips are ribbons standing on the panel's back face, so the three depths read as three levels from the front, as the frame, the grid (_jigumi_) and the infill pieces of a kumiko panel often differ in depth. The panel updates in about a third of a second.
+
+== Things to try
+
+* Set *Cells* to 5 for a fine pattern of 450 spokes.
+* Set *Spoke depth* to 8, equal to *Grid depth*, for a flush face.
+* Set *Frame width* to 8 for a heavy border.
