@@ -4,7 +4,7 @@ include::_attributes.adoc[]
 :toc!:
 
 [.lead]
-Fourteen classic parametric designs, each built only from the components that ship with Katydid. Load any of them with btn:[Examples] on the canvas toolbar, drag the sliders, and bake the result into your document. Each one has a step-by-step tutorial.
+Sixteen parametric designs, each built only from the components that ship with Katydid. Load any of them with btn:[Examples] on the canvas toolbar, drag the sliders, and bake the result into your document. Each one has a step-by-step tutorial.
 
 [.cards.gallery]
 --
@@ -147,13 +147,33 @@ image::slats-render.png[An undulating ceiling of timber slats]
 Ruled-surface boards whose edges follow a drifting wave. +
 menu:Examples[Slatted wave ceiling]
 ****
+
+[.card]
+****
+image::monolith-render.png[A sandstone block eroded by spherical voids]
+
+*xref:tutorial-monolith.adoc[Carved monolith]*
+
+Sixty spheres sized by an attractor, subtracted from a block in one Boolean. +
+menu:Examples[Carved monolith]
+****
+
+[.card]
+****
+image::flange-render.png[A steel flange with gauge pins and tolerance zones in its bolt holes]
+
+*xref:tutorial-flange.adoc[Flange with tolerance zones]*
+
+GD&T made visible: bonus tolerance zones that grow with the hole size, and gauge pins at virtual condition. +
+menu:Examples[Flange with tolerance zones]
+****
 --
 
 == The Examples menu
 
 image::ui-examples-menu.png[The Examples menu on the canvas toolbar]
 
-btn:[Examples] lists every ready-made definition: the fourteen above, the tutorial definitions and the tolerance examples. Choosing one replaces what is on the canvas, so save first if you want to keep your own work. Each loads in a second or two; the preview then updates as you drag.
+btn:[Examples] lists every ready-made definition: the sixteen above, the tutorial definitions and the tolerance examples. Choosing one replaces what is on the canvas, so save first if you want to keep your own work. Each loads in a second or two; the preview then updates as you drag.
 
 These pictures come from the same definitions. The red preview is what you see while you work; the colours come from baking the final components and setting their colour in FreeCAD, which is how you would prepare a render of your own.
 
@@ -176,6 +196,8 @@ These pictures come from the same definitions. The red preview is what you see w
 |xref:tutorial-frames.adoc[Frame tunnel] |One Boolean, many copies: *Scale*, *Rotate* about a centre, *Move* with lists
 |xref:tutorial-hypar.adoc[Hypar umbrella] |Doubly ruled surfaces, *Ruled Surface*, copies by grafting *Rotate*'s angles
 |xref:tutorial-slats.adoc[Slatted wave ceiling] |A phase per branch, *Ruled Surface* between paired curves, boards from *Extrude*
+|xref:tutorial-monolith.adoc[Carved monolith] |An attractor driving solids: *Sphere* sizes from *Remap*, one *Solid Difference* with a list
+|xref:tutorial-flange.adoc[Flange with tolerance zones] |Geometry and tolerance together: *Bonus Tolerance*, *Virtual & Resultant Condition*, a *Panel*
 |===
 
 If you are new to Katydid, do the xref:quick-start.adoc[quick start] and the xref:tutorial-attractor.adoc[attractor grid] first: these examples use the same moves at a larger scale.

@@ -38,7 +38,8 @@ LOW_VIEW = {"tower-render.png", "tower-preview.png", "hyperboloid-render.png", "
 
 
 ZOOM = {"voronoi": 0.88, "waffle": 0.72, "wave": 0.7, "phyllotaxis": 0.78, "city": 0.8, "weave": 0.75,
-        "staircase": 0.85, "knot": 0.8, "ring": 0.8, "frames": 0.85, "hypar": 0.8, "slats": 0.8}
+        "staircase": 0.85, "knot": 0.8, "ring": 0.8, "frames": 0.85, "hypar": 0.8, "slats": 0.8,
+        "monolith": 0.95, "flange": 0.85}
 TILT = {"phyllotaxis": 35, "knot": 30, "ring": 50}   # degrees back from a top view
 SMOOTH = {"knot", "ring"}
 SPIN = {"ring": 270}   # turn the closed loft's seam (on +X) to the back   # fitAll fits a bounding sphere: close in
@@ -83,6 +84,9 @@ RENDERS = {  # showcase key -> [(component, colour, transparency %, lift in mm)]
     "hypar": [("rot1", (0.86, 0.86, 0.84), 0, 0.0), ("rot2", (0.86, 0.86, 0.84), 0, 0.0),
               ("roof", (0.30, 0.70, 0.78), 55, 0.0), ("column", (0.86, 0.86, 0.84), 0, 0.0)],
     "slats": [("slat", (0.82, 0.62, 0.40), 0, 0.0)],
+    "monolith": [("carved", (0.88, 0.80, 0.68), 0, 0.0)],
+    "flange": [("flange", (0.72, 0.74, 0.78), 0, 0.0), ("hub_bored", (0.72, 0.74, 0.78), 0, 0.0),
+               ("pins", (0.25, 0.75, 0.35), 70, 0.0), ("zones", (0.92, 0.20, 0.15), 0, 0.0)],
 }
 
 

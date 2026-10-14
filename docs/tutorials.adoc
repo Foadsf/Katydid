@@ -213,6 +213,26 @@ image::slats-render.png[A slatted wave ceiling]
 Ruled boards following a drifting wave. +
 menu:Examples[Slatted wave ceiling]
 ****
+
+[.card]
+****
+image::monolith-render.png[A carved monolith]
+
+*xref:tutorial-monolith.adoc[20. A carved monolith]*
+
+Attractor-sized voids and one big Boolean. +
+menu:Examples[Carved monolith]
+****
+
+[.card]
+****
+image::flange-render.png[A flange with tolerance zones]
+
+*xref:tutorial-flange.adoc[21. A flange with visible tolerance zones]*
+
+Bonus tolerance and virtual condition, drawn in 3D. +
+menu:Examples[Flange with tolerance zones]
+****
 --
 
 == Conventions

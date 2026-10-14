@@ -727,8 +727,129 @@ def build_slats(scene) -> dict:
     return c
 
 
+def build_monolith(scene) -> dict:
+    """A carved monolith: a block hollowed by spherical voids that grow towards
+    one corner, all subtracted in one Solid Difference."""
+    c = {
+        "w": _slider("Width", 60, 30, 120),
+        "d": _slider("Depth", 40, 20, 80),
+        "h": _slider("Height", 30, 15, 60),
+        "voids": _slider("Voids", 60, 10, 150, 0),
+        "seed": _slider("Seed", 4, 1, 50, 0),
+        "small": _slider("Smallest void", 3, 1, 8, 2),
+        "large": _slider("Largest void", 9, 3, 15, 2),
+        "ax": _slider("Attractor X", -30, -60, 60),
+        "ay": _slider("Attractor Y", -20, -40, 40),
+        "az": _slider("Attractor Z", 30, 0, 60),
+        "block": lib.Box(), "pop": lib.Populate2D(), "xy": lib.Deconstruct(), "z": lib.Expression(),
+        "centres": lib.ConstructPoint(), "attractor": lib.ConstructPoint(), "dist": lib.Distance(),
+        "bounds": lib.Bounds(), "remap": lib.Remap(), "sphere": lib.Sphere(), "voids_at": lib.Move(),
+        "carved": lib.Difference(),
+    }
+    for key, nick in (("z", "Heights"), ("centres", "Void centres"), ("attractor", "Attractor"),
+                      ("voids_at", "Voids")):
+        c[key].nickname = nick
+    _set(c["pop"], R=1.0)
+    _set(c["z"], F="z*(0.1 + 0.8*abs(sin(x*1.7 + y*2.3)))")   # repeatable "random" heights
+    c["bounds"].inputs[0].modifier = "flatten"
+    for key in ("block", "pop", "centres", "attractor", "sphere", "voids_at"):
+        c[key].preview = False
+    _place(scene, c, {
+        "w": (-800, -240), "d": (-800, -180), "h": (-800, -120), "voids": (-800, -20), "seed": (-800, 40),
+        "small": (-800, 140), "large": (-800, 200), "ax": (-800, 300), "ay": (-800, 360), "az": (-800, 420),
+        "block": (-480, -250), "pop": (-480, -60), "xy": (-320, -60), "z": (-160, 0), "centres": (0, -60),
+        "attractor": (-480, 340), "dist": (160, 120), "bounds": (320, 200), "remap": (480, 140),
+        "sphere": (640, 140), "voids_at": (800, 0), "carved": (960, -120)})
+    _wire(scene, c, [
+        ("w", 0, "block", 0), ("d", 0, "block", 1), ("h", 0, "block", 2),
+        ("w", 0, "pop", 0), ("d", 0, "pop", 1), ("voids", 0, "pop", 2), ("seed", 0, "pop", 3),
+        ("pop", 0, "xy", 0), ("xy", 0, "z", 1), ("xy", 1, "z", 2), ("h", 0, "z", 3),
+        ("xy", 0, "centres", 0), ("xy", 1, "centres", 1), ("z", 0, "centres", 2),
+        ("ax", 0, "attractor", 0), ("ay", 0, "attractor", 1), ("az", 0, "attractor", 2),
+        ("centres", 0, "dist", 0), ("attractor", 0, "dist", 1), ("dist", 0, "bounds", 0),
+        ("dist", 0, "remap", 0), ("bounds", 0, "remap", 1), ("bounds", 1, "remap", 2),
+        ("large", 0, "remap", 3), ("small", 0, "remap", 4),
+        ("remap", 0, "sphere", 0),
+        ("sphere", 0, "voids_at", 0), ("xy", 0, "voids_at", 1), ("xy", 1, "voids_at", 2), ("z", 0, "voids_at", 3),
+        ("block", 0, "carved", 0), ("voids_at", 0, "carved", 1)])
+    return c
+
+
+def build_flange(scene) -> dict:
+    """A bolted flange with its GD&T made visible: each hole's position
+    tolerance zone (bonus included, exaggerated) and a gauge pin at the
+    holes' virtual condition. Drag the actual hole size and the zones grow."""
+    MMC, LMC = 9.0, 9.3   # hole size limits, mm
+    c = {
+        "R": _slider("Flange radius", 40, 25, 60),
+        "t": _slider("Thickness", 8, 4, 16),
+        "bc": _slider("Bolt circle", 28, 15, 50),
+        "bolts": _slider("Bolts", 6, 3, 12, 0),
+        "actual": _slider("Actual hole Ø", 9.15, MMC, LMC, 3),
+        "pos": _slider("Position Ø", 0.2, 0.05, 0.5, 3),
+        "scale": _slider("Zone scale", 15, 1, 40, 0),
+        # the part
+        "disc": lib.Cylinder(), "hub": lib.Cylinder(), "bore": lib.Cylinder(), "bore_dn": lib.Move(),
+        "circle": lib.Circle(), "div": lib.DivideCurve(), "xy": lib.Deconstruct(),
+        "hole_r": lib.Expression(), "hole_l": lib.Addition(), "hole": lib.Cylinder(), "holes": lib.Move(),
+        "drilled": lib.Difference(), "flange": lib.Difference(), "hub_bored": lib.Difference(),
+        # the tolerance
+        "bonus": lib.BonusTolerance(), "bounds": lib.SizeBoundaries(), "panel": lib.Panel(),
+        "zone_r": lib.Expression(), "zone": lib.Cylinder(), "zones": lib.Move(),
+        "pin_r": lib.Multiplication(), "pin": lib.Cylinder(), "pins": lib.Move(),
+    }
+    for key, nick in (("disc", "Disc"), ("hub", "Hub"), ("bore", "Bore"), ("hole", "Hole"), ("holes", "Holes"),
+                      ("zone", "Zone"), ("zones", "Zones"), ("pin", "Gauge pin"), ("pins", "Gauge pins"),
+                      ("zone_r", "Zone radius"), ("hole_r", "Hole radius")):
+        c[key].nickname = nick
+    _set(c["hub"], R=15.0, L=22.0)
+    _set(c["bore"], R=8.0, L=30.0)
+    _set(c["bore_dn"], Z=-2.0)
+    _set(c["hole_r"], F="x/2")
+    _set(c["hole_l"], B=2.0)
+    _set(c["holes"], Z=-1.0)
+    _set(c["bonus"], MMC=MMC, LMC=LMC)
+    _set(c["bounds"], MMC=MMC, LMC=LMC)
+    _set(c["zone_r"], F="x*y/2")
+    _set(c["zone"], L=14.0)
+    _set(c["zones"], Z=-3.0)
+    _set(c["pin_r"], B=0.5)
+    _set(c["pin"], L=20.0)
+    _set(c["pins"], Z=-6.0)
+    c["panel"].size = (170, 70)
+    for key in ("disc", "hub", "bore", "bore_dn", "circle", "div", "hole", "holes", "drilled", "zone", "pin"):
+        c[key].preview = False
+    _place(scene, c, {
+        "R": (-880, -380), "t": (-880, -320), "bc": (-880, -200), "bolts": (-880, -140), "actual": (-880, 0),
+        "pos": (-880, 60), "scale": (-880, 200),
+        "disc": (-580, -400), "hub": (-580, -290), "bore": (-580, -180), "circle": (-580, -60),
+        "hole_r": (-580, 60), "hole_l": (-580, 190), "bonus": (-580, 320), "bounds": (-580, 490),
+        "bore_dn": (-400, -180), "div": (-400, -60), "hole": (-400, 140), "panel": (-400, 330),
+        "xy": (-220, -60), "zone_r": (-220, 280), "pin_r": (-220, 490),
+        "holes": (-40, -20), "zone": (-40, 280), "pin": (-40, 490),
+        "zones": (140, 240), "pins": (140, 440),
+        "drilled": (320, -330), "hub_bored": (320, -180), "flange": (500, -330)})
+    _wire(scene, c, [
+        ("R", 0, "disc", 0), ("t", 0, "disc", 1),
+        ("bore", 0, "bore_dn", 0),
+        ("bc", 0, "circle", 0), ("circle", 0, "div", 0), ("bolts", 0, "div", 1), ("div", 0, "xy", 0),
+        ("actual", 0, "hole_r", 1), ("t", 0, "hole_l", 0),
+        ("hole_r", 0, "hole", 0), ("hole_l", 0, "hole", 1),
+        ("hole", 0, "holes", 0), ("xy", 0, "holes", 1), ("xy", 1, "holes", 2),
+        ("disc", 0, "drilled", 0), ("holes", 0, "drilled", 1),
+        ("drilled", 0, "flange", 0), ("bore_dn", 0, "flange", 1),
+        ("hub", 0, "hub_bored", 0), ("bore_dn", 0, "hub_bored", 1),
+        ("actual", 0, "bonus", 0), ("pos", 0, "bonus", 3), ("pos", 0, "bounds", 2),
+        ("bonus", 1, "panel", 0),
+        ("bonus", 1, "zone_r", 1), ("scale", 0, "zone_r", 2), ("zone_r", 0, "zone", 0),
+        ("zone", 0, "zones", 0), ("xy", 0, "zones", 1), ("xy", 1, "zones", 2),
+        ("bounds", 0, "pin_r", 0), ("pin_r", 0, "pin", 0),
+        ("pin", 0, "pins", 0), ("xy", 0, "pins", 1), ("xy", 1, "pins", 2)])
+    return c
+
+
 SHOWCASE = {"voronoi": build_voronoi, "tower": build_tower, "waffle": build_waffle, "wave": build_wave,
             "phyllotaxis": build_phyllotaxis, "hyperboloid": build_hyperboloid,
             "staircase": build_staircase, "city": build_city, "weave": build_weave,
             "knot": build_knot, "ring": build_ring, "frames": build_frames, "hypar": build_hypar,
-            "slats": build_slats}
+            "slats": build_slats, "monolith": build_monolith, "flange": build_flange}

@@ -26,8 +26,9 @@ EXAMPLES = [  # (menu label, key); None draws a separator
     ("Shukhov tower (hyperboloid)", "hyperboloid"), ("Spiral staircase", "staircase"),
     ("Voronoi city", "city"), ("Woven mat", "weave"), ("Torus knot", "knot"),
     ("Twisted lobed ring", "ring"), ("Frame tunnel", "frames"), ("Hypar umbrella", "hypar"),
-    ("Slatted wave ceiling", "slats"), (None, None),
-    ("Tolerance stack-up", "stackup"), ("GD&T calculators", "gdt")]
+    ("Slatted wave ceiling", "slats"), ("Carved monolith", "monolith"), (None, None),
+    ("Tolerance stack-up", "stackup"), ("GD&T calculators", "gdt"),
+    ("Flange with tolerance zones", "flange")]
 
 
 class KatydidPanel(QtWidgets.QWidget):

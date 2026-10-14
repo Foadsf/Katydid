@@ -404,6 +404,43 @@ class Demos(unittest.TestCase):
             self.assertEqual(len(curves), len(exact), y)
             self.assertAlmostEqual(curves[0].Length, exact[0].Length, delta=0.002 * exact[0].Length)
 
+    def test_carved_monolith(self):
+        from katydid import showcase
+        c = self.build(showcase.build_monolith)
+        carved = list(c["carved"].outputs[0].data)[0]
+        block = list(c["block"].outputs[0].data)[0]
+        spheres = list(c["voids_at"].outputs[0].data)
+        self.assertTrue(carved.isValid())
+        self.assertEqual(len(carved.Solids), 1)   # no loose shards at the default settings
+        self.assertEqual(len(spheres), int(c["voids"].value))
+        removed = block.common(spheres[0].multiFuse(spheres[1:])).Volume   # independent: fuse first
+        self.assertAlmostEqual(carved.Volume, block.Volume - removed, delta=1e-3 * block.Volume)
+        tight = carved.optimalBoundingBox()
+        self.assertLessEqual(tight.XLength, c["w"].value + 1e-6)
+        # the biggest void is the one nearest the attractor
+        radii = list(c["remap"].outputs[0].data)
+        dists = list(c["dist"].outputs[0].data)
+        self.assertAlmostEqual(radii[dists.index(min(dists))], c["large"].value, places=9)
+
+    def test_flange_and_its_tolerance_zones(self):
+        from katydid import showcase
+        c = self.build(showcase.build_flange)
+        n, t, R = int(c["bolts"].value), c["t"].value, c["R"].value
+        actual, pos, scale = c["actual"].value, c["pos"].value, c["scale"].value
+        flange = list(c["flange"].outputs[0].data)[0]
+        expected = math.pi * t * (R ** 2 - n * (actual / 2) ** 2 - 8.0 ** 2)
+        self.assertTrue(flange.isValid())
+        self.assertAlmostEqual(flange.Volume, expected, delta=1e-6 * expected)
+        # total position tolerance = stated + bonus (actual - MMC) at MMC; zones drawn x scale
+        zones = list(c["zones"].outputs[0].data)
+        self.assertEqual(len(zones), n)
+        r_zone = next(f.Surface.Radius for f in zones[0].Faces if hasattr(f.Surface, "Radius"))
+        self.assertAlmostEqual(r_zone, (pos + actual - 9.0) * scale / 2, places=9)
+        # gauge pins at the holes' virtual condition, MMC - tolerance
+        pin = list(c["pins"].outputs[0].data)[0]
+        r_pin = next(f.Surface.Radius for f in pin.Faces if hasattr(f.Surface, "Radius"))
+        self.assertAlmostEqual(2 * r_pin, 9.0 - pos, places=9)
+
     def test_surface_from_points_passes_through_its_grid(self):
         pts = [V(x, y, (x * y) / 50.0) for y in range(0, 40, 10) for x in range(0, 50, 10)]
         srf = lib.SurfaceFromPoints().solve_instance(pts, 5)

@@ -25,6 +25,10 @@ image::knot-render.png[Torus knot,link=gallery.html]
 image::frames-render.png[Frame tunnel,link=gallery.html]
 image::hypar-render.png[Hypar umbrella,link=gallery.html]
 image::slats-render.png[Slatted wave ceiling,link=gallery.html]
+image::monolith-render.png[Carved monolith,link=gallery.html]
+image::flange-render.png[Flange with tolerance zones,link=gallery.html]
+image::ring-render.png[Twisted lobed ring,link=gallery.html]
+image::staircase-render.png[Spiral staircase,link=gallery.html]
 --
 
 Made with Katydid: Voronoi screens and cities, twisted and lattice towers, a waffle dome, a contoured wave, a sunflower, a woven mat, a torus knot, a frame tunnel, a hypar umbrella, a slatted ceiling and more. Each loads from the btn:[Examples] menu and has a step-by-step tutorial; see the xref:gallery.adoc[gallery].

@@ -21,7 +21,8 @@ SHOWS = [("Voronoi screen", "seed"), ("Twisted tower", "twist"), ("Waffle dome",
          ("Shukhov tower (hyperboloid)", "twist"), ("Spiral staircase", "turn"),
          ("Voronoi city", "spread"), ("Woven mat", "amp"), ("Torus knot", "r"),
          ("Twisted lobed ring", "depth"), ("Frame tunnel", "turn"), ("Hypar umbrella", "edge_h"),
-         ("Slatted wave ceiling", "drift")]
+         ("Slatted wave ceiling", "drift"), ("Carved monolith", "seed"),
+         ("Flange with tolerance zones", "actual")]
 
 
 def body(run):

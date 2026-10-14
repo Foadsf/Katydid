@@ -1,0 +1,57 @@
+= Tutorial 20: A carved monolith
+:page-id: tutorial-monolith
+include::_attributes.adoc[]
+
+[.lead]
+A solid block hollowed by spherical voids that grow towards one corner, as if eroded. It is the attractor idea again, this time driving solid Booleans: sixty spheres, sized by their distance to a point, subtracted from a box in a single *Solid Difference*.
+
+image::monolith-render.png[A sandstone block eroded by spherical voids that grow towards one corner]
+
+Reference: choose menu:Examples[Carved monolith] on the canvas toolbar to load the finished definition.
+
+== Build it
+
+=== Block and void centres
+
+. Place ten sliders: _Width: 60 (30 – 120)_, _Depth: 40 (20 – 80)_, _Height: 30 (15 – 60)_; _Voids: 60 (10 – 150)_ and _Seed: 4 (1 – 50)_ with Decimals `0`; _Smallest void: 3 (1 – 8)_ and _Largest void: 9 (3 – 15)_ with Decimals `2`; and _Attractor X: -30 (-60 – 60)_, _Attractor Y: -20 (-40 – 40)_, _Attractor Z: 30 (0 – 60)_.
+. Place a *Center Box* (Surface) and wire *Width → X*, *Depth → Y* and *Height → Z*. It is centred in X and Y and stands on Z = 0.
+. Place a *Populate 2D* (Vector) with *R* set to `1`. Wire *Width → W*, *Depth → H*, *Voids → N* and *Seed → S*: void positions spread over the block's footprint.
+. Place a *Deconstruct* (Vector) and wire *Populate P → P*.
+. Place an *Expression* (Maths), _Heights_, with *F* set to `z*(0.1 + 0.8*abs(sin(x*1.7 + y*2.3)))`. Wire *Deconstruct X → x*, *Y → y* and *Height → z*: a repeatable "random" height between 10 % and 90 % of the block for each void.
+. Place a *Construct Point* (Vector), _Void centres_, and wire *X*, *Y* and *Heights* into it.
+
+=== Void sizes
+
+[start=7]
+. Place a *Construct Point*, _Attractor_, and wire the three attractor sliders into it: by default the top of one corner.
+. Place a *Distance* (Vector) and wire *Void centres → A* and *Attractor → B*.
+. Place a *Bounds* (Maths) with menu:Flatten[] on *N*, wire *Distance → N*, and a *Remap Numbers* (Maths). Wire *Distance → V*, *Bounds Min → S0*, *Bounds Max → S1*, *Largest void → T0* and *Smallest void → T1*: the nearest void gets the largest radius.
+
+=== Carving
+
+[start=10]
+. Place a *Sphere* (Surface) and wire *Remap R → R*: 60 spheres at the origin.
+. Place a *Move* (Transform), _Voids_. Wire *Sphere → G*, *Deconstruct X → X*, *Deconstruct Y → Y* and *Heights → Z*.
+. Place a *Solid Difference* (Intersect). Wire *Box → A* and *Voids G → B*.
+. Turn menu:Preview[] off on everything except the Solid Difference.
+
+.The finished definition
+image::monolith-canvas.png[The carved monolith definition on the canvas]
+
+.The preview in FreeCAD's 3D view
+image::monolith-preview.png[The red preview of the carved monolith]
+
+== What is happening
+
+The Solid Difference takes the box and all sixty spheres at once (its *B* input has list access), so OpenCascade sorts out every intersection between the voids in one operation. Spheres that overlap merge into larger caverns; spheres that cross a face of the block leave craters. The geometry tests check the volume against an independent calculation: the block minus its overlap with all the spheres fused together.
+
+With more or larger voids near the corner, the cavities can cut thin pieces right off the block, and the result is several solids. The default settings give one; more aggressive ones may not.
+
+If a Boolean component turns orange with "The Boolean result is not a valid solid", see xref:troubleshooting.adoc[Troubleshooting]. Each update takes about two and a half seconds, almost all of it in the Boolean.
+
+== Things to try
+
+* Drag *Seed* for a different pattern of voids.
+* Move the attractor to the centre of the top face (*X* 0, *Y* 0) for a crater.
+* Swap the Remap targets (*Smallest void → T0*, *Largest void → T1*) and the block erodes from the far corner instead.
+* Replace the Sphere with a *Center Box* for cubic voids, or with a *Cylinder* for drilled holes.

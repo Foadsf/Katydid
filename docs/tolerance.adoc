@@ -88,7 +88,7 @@ With an MMC modifier (Ⓜ) in the feature control frame, a feature gains *bonus 
 \text{bonus} = |\,\text{actual} - \text{MMC}\,| \qquad \text{total} = \text{geometric tolerance} + \text{bonus}
 ++++
 
-With an LMC modifier the bonus is measured from LMC instead; with RFS (no modifier) there is no bonus. An actual size outside the MMC–LMC range is an error: that part is rejected, not given a bonus. The component's results match Cogorno's Table 3-2 row by row (see the xref:tutorial-gdt.adoc[GD&T tutorial]).
+With an LMC modifier the bonus is measured from LMC instead; with RFS (no modifier) there is no bonus. An actual size outside the MMC–LMC range is an error: that part is rejected, not given a bonus. The component's results match Cogorno's Table 3-2 row by row (see the xref:tutorial-gdt.adoc[GD&T tutorial]). To see the bonus in 3D, load the xref:tutorial-flange.adoc[flange with tolerance zones]: each bolt hole's zone grows as you drag its actual size.
 
 === Virtual & Resultant Condition
 
